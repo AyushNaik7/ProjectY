@@ -1,0 +1,6640 @@
+node.exe : [{"filePath":"D:\
+\STARTUP\\creatordeal\\src\\
+app\\auth\\page.tsx","messag
+es":[{"ruleId":"@typescript-
+eslint/no-unused-vars","mess
+age":"Definition for rule '@
+typescript-eslint/no-unused-
+vars' was not found.","line"
+:1,"column":1,"endLine":1,"e
+ndColumn":2,"severity":2,"no
+deType":null},{"ruleId":"@ty
+pescript-eslint/no-explicit-
+any","message":"Definition 
+for rule '@typescript-eslint
+/no-explicit-any' was not fo
+und.","line":1,"column":1,"e
+ndLine":1,"endColumn":2,"sev
+erity":2,"nodeType":null}],"
+suppressedMessages":[],"erro
+rCount":2,"fatalErrorCount":
+0,"warningCount":0,"fixableE
+rrorCount":0,"fixableWarning
+Count":0,"source":"\"use 
+client\";\r\n\r\nimport 
+React, { useState } from 
+\"react\";\r\nimport { 
+useRouter } from \"next/navi
+gation\";\r\nimport { 
+motion, AnimatePresence } 
+from \"framer-motion\";\r\ni
+mport Link from 
+\"next/link\";\r\nimport { 
+Button } from \"@/components
+/ui/button\";\r\nimport { 
+Input } from \"@/components/
+ui/input\";\r\nimport { 
+Label } from \"@/components/
+ui/label\";\r\nimport { 
+Card, CardContent, 
+CardDescription, 
+CardHeader, CardTitle } 
+from \"@/components/ui/card\
+";\r\nimport { signUp, 
+signIn } from 
+\"@/lib/auth\";\r\nimport { 
+useAuth } from \"@/context/A
+uthContext\";\r\nimport { 
+Sparkles, ArrowLeft, Mail, 
+Lock, Loader2 } from \"lucid
+e-react\";\r\n\r\nexport 
+default function AuthPage() 
+{\r\n    const [isSignUp, 
+setIsSignUp] = 
+useState(false);\r\n    
+const [email, setEmail] = 
+useState(\"\");\r\n    
+const [password, 
+setPassword] = 
+useState(\"\");\r\n    
+const [confirmPassword, 
+setConfirmPassword] = 
+useState(\"\");\r\n    
+const [error, setError] = 
+useState(\"\");\r\n    
+const [loading, setLoading] 
+= useState(false);\r\n    
+const router = 
+useRouter();\r\n    const { 
+user, role, 
+onboardingComplete } = 
+useAuth();\r\n\r\n    // 
+Redirect if already logged 
+in\r\n    
+React.useEffect(() => {\r\n 
+       if (user) {\r\n      
+      if (!role) {\r\n      
+          router.push(\"/onb
+oarding/role\");\r\n        
+    } else if 
+(!onboardingComplete) {\r\n 
+               router.push(`
+/onboarding/${role}`);\r\n  
+          } else {\r\n      
+          router.push(`/dash
+board/${role}`);\r\n        
+    }\r\n        }\r\n    
+}, [user, role, 
+onboardingComplete, 
+router]);\r\n\r\n    const 
+handleSubmit = async (e: 
+React.FormEvent) => {\r\n   
+     
+e.preventDefault();\r\n     
+   setError(\"\");\r\n      
+  setLoading(true);\r\n\r\n 
+       try {\r\n            
+if (isSignUp) {\r\n         
+       if (password !== 
+confirmPassword) {\r\n      
+              
+setError(\"Passwords do not 
+match\");\r\n               
+     setLoading(false);\r\n 
+                   
+return;\r\n                
+}\r\n                if 
+(password.length < 6) {\r\n 
+                   
+setError(\"Password must be 
+at least 6 
+characters\");\r\n          
+          
+setLoading(false);\r\n      
+              return;\r\n   
+             }\r\n          
+      await signUp(email, 
+password);\r\n              
+  router.push(\"/onboarding/
+role\");\r\n            } 
+else {\r\n                
+await signIn(email, 
+password);\r\n              
+  // Router will handle 
+redirect via useEffect\r\n  
+          }\r\n        } 
+catch (err: unknown) {\r\n  
+          const 
+firebaseError = err as { 
+code?: string; message?: 
+string };\r\n            
+switch (firebaseError.code) 
+{\r\n                case \"
+auth/email-already-in-use\":
+\r\n                    
+setError(\"This email is 
+already registered. Try 
+signing in.\");\r\n         
+           break;\r\n       
+         case 
+\"auth/invalid-email\":\r\n 
+                   
+setError(\"Please enter a 
+valid email 
+address.\");\r\n            
+        break;\r\n          
+      case \"auth/user-not-f
+ound\":\r\n                 
+   setError(\"No account 
+found with this 
+email.\");\r\n              
+      break;\r\n            
+    case \"auth/wrong-passwo
+rd\":\r\n                   
+ setError(\"Incorrect 
+password. Please try 
+again.\");\r\n              
+      break;\r\n            
+    case \"auth/invalid-cred
+ential\":\r\n               
+     setError(\"Invalid 
+credentials. Please check 
+your email and 
+password.\");\r\n           
+         break;\r\n         
+       default:\r\n         
+           setError(firebase
+Error.message || \"An error 
+occurred. Please try 
+again.\");\r\n            
+}\r\n        } finally 
+{\r\n            
+setLoading(false);\r\n      
+  }\r\n    };\r\n\r\n    
+return (\r\n        <div 
+className=\"min-h-screen 
+flex items-center 
+justify-center p-6 
+relative\">\r\n            
+<div className=\"fixed 
+inset-0 gradient-mesh 
+pointer-events-none\" 
+/>\r\n\r\n            
+<motion.div\r\n             
+   initial={{ opacity: 0, 
+y: 20 }}\r\n                
+animate={{ opacity: 1, y: 0 
+}}\r\n                
+transition={{ duration: 0.5 
+}}\r\n                
+className=\"w-full max-w-md 
+relative z-10\"\r\n         
+   >\r\n                
+<Link\r\n                   
+ href=\"/\"\r\n             
+       
+className=\"inline-flex 
+items-center gap-2 text-sm 
+text-muted-foreground 
+hover:text-foreground 
+transition-colors 
+mb-8\"\r\n                
+>\r\n                    
+<ArrowLeft className=\"w-4 
+h-4\" />\r\n                
+    Back to home\r\n        
+        </Link>\r\n\r\n     
+           <Card className=\
+"border-border/50 
+bg-card/80 
+backdrop-blur-xl\">\r\n     
+               <CardHeader 
+className=\"text-center 
+pb-2\">\r\n                 
+       <div 
+className=\"flex 
+justify-center mb-4\">\r\n  
+                          
+<div className=\"w-12 h-12 
+rounded-xl gradient-primary 
+flex items-center 
+justify-center\">\r\n       
+                         
+<Sparkles className=\"w-6 
+h-6 text-white\" />\r\n     
+                       
+</div>\r\n                  
+      </div>\r\n            
+            <CardTitle 
+className=\"text-2xl\">\r\n 
+                           
+{isSignUp ? \"Create your 
+account\" : \"Welcome 
+back\"}\r\n                 
+       </CardTitle>\r\n     
+                   
+<CardDescription>\r\n       
+                     
+{isSignUp\r\n               
+                 ? \"Join 
+CreatorDeal and start your 
+journey\"\r\n               
+                 : \"Sign 
+in to your CreatorDeal 
+account\"}\r\n              
+          
+</CardDescription>\r\n      
+              
+</CardHeader>\r\n\r\n       
+             <CardContent 
+className=\"pt-6\">\r\n     
+                   <form 
+onSubmit={handleSubmit} clas
+sName=\"space-y-4\">\r\n    
+                        
+<div className=\"space-y-2\"
+>\r\n                       
+         <Label htmlFor=\"em
+ail\">Email</Label>\r\n     
+                           
+<div 
+className=\"relative\">\r\n 
+                            
+       <Mail 
+className=\"absolute left-3 
+top-1/2 -translate-y-1/2 
+w-4 h-4 
+text-muted-foreground\" 
+/>\r\n                      
+              <Input\r\n    
+                            
+        id=\"email\"\r\n    
+                            
+        type=\"email\"\r\n  
+                            
+          placeholder=\"you@
+example.com\"\r\n           
+                            
+ value={email}\r\n          
+                            
+  onChange={(e) => setEmail(
+e.target.value)}\r\n        
+                            
+    className=\"pl-10\"\r\n 
+                            
+           required\r\n     
+                            
+   />\r\n                   
+             </div>\r\n     
+                       
+</div>\r\n\r\n              
+              <div className
+=\"space-y-2\">\r\n         
+                       
+<Label htmlFor=\"password\">
+Password</Label>\r\n        
+                        
+<div 
+className=\"relative\">\r\n 
+                            
+       <Lock 
+className=\"absolute left-3 
+top-1/2 -translate-y-1/2 
+w-4 h-4 
+text-muted-foreground\" 
+/>\r\n                      
+              <Input\r\n    
+                            
+        id=\"password\"\r\n 
+                            
+           
+type=\"password\"\r\n       
+                            
+     placeholder=\"?????????
+???????????????\"\r\n       
+                            
+     value={password}\r\n   
+                            
+         onChange={(e) => se
+tPassword(e.target.value)}\r
+\n                          
+              
+className=\"pl-10\"\r\n     
+                            
+       required\r\n         
+                            
+   minLength={6}\r\n        
+                            
+/>\r\n                      
+          </div>\r\n        
+                    
+</div>\r\n\r\n              
+              
+<AnimatePresence 
+mode=\"wait\">\r\n          
+                      
+{isSignUp && (\r\n          
+                          
+<motion.div\r\n             
+                           
+initial={{ opacity: 0, 
+height: 0 }}\r\n            
+                            
+animate={{ opacity: 1, 
+height: \"auto\" }}\r\n     
+                            
+       exit={{ opacity: 0, 
+height: 0 }}\r\n            
+                            
+transition={{ duration: 0.2 
+}}\r\n                      
+                  
+className=\"space-y-2 
+overflow-hidden\"\r\n       
+                            
+ >\r\n                      
+                  <Label htm
+lFor=\"confirmPassword\">Con
+firm Password</Label>\r\n   
+                            
+         <div 
+className=\"relative\">\r\n 
+                            
+               <Lock 
+className=\"absolute left-3 
+top-1/2 -translate-y-1/2 
+w-4 h-4 
+text-muted-foreground\" 
+/>\r\n                      
+                      
+<Input\r\n                  
+                            
+  
+id=\"confirmPassword\"\r\n  
+                            
+                  
+type=\"password\"\r\n       
+                            
+             placeholder=\"?
+???????????????????????\"\r\
+n                           
+                     
+value={confirmPassword}\r\n 
+                            
+                   
+onChange={(e) => setConfirmP
+assword(e.target.value)}\r\n
+                            
+                    
+className=\"pl-10\"\r\n     
+                            
+               required\r\n 
+                            
+                   
+minLength={6}\r\n           
+                            
+     />\r\n                 
+                       
+</div>\r\n                  
+                  
+</motion.div>\r\n           
+                     )}\r\n 
+                           
+</AnimatePresence>\r\n\r\n  
+                          
+{error && (\r\n             
+                   
+<motion.p\r\n               
+                     
+initial={{ opacity: 0 
+}}\r\n                      
+              animate={{ 
+opacity: 1 }}\r\n           
+                         
+className=\"text-sm 
+text-destructive 
+bg-destructive/10 px-3 py-2 
+rounded-lg\"\r\n            
+                    >\r\n   
+                            
+     {error}\r\n            
+                    
+</motion.p>\r\n             
+               )}\r\n\r\n   
+                         
+<Button\r\n                 
+               
+type=\"submit\"\r\n         
+                       
+className=\"w-full\"\r\n    
+                            
+size=\"lg\"\r\n             
+                   
+disabled={loading}\r\n      
+                      >\r\n 
+                            
+   {loading ? (\r\n         
+                           
+<Loader2 className=\"w-4 
+h-4 animate-spin mr-2\" 
+/>\r\n                      
+          ) : null}\r\n     
+                           
+{isSignUp ? \"Create 
+Account\" : \"Sign 
+In\"}\r\n                   
+         </Button>\r\n      
+                  
+</form>\r\n\r\n             
+           <div 
+className=\"mt-6 
+text-center\">\r\n          
+                  
+<button\r\n                 
+               onClick={() 
+=> {\r\n                    
+                
+setIsSignUp(!isSignUp);\r\n 
+                            
+       setError(\"\");\r\n  
+                            
+  }}\r\n                    
+            
+className=\"text-sm 
+text-muted-foreground 
+hover:text-primary 
+transition-colors\"\r\n     
+                       
+>\r\n                       
+         {isSignUp\r\n      
+                            
+  ? \"Already have an 
+account? Sign in\"\r\n      
+                            
+  : \"Don't have an 
+account? Sign up\"}\r\n     
+                       
+</button>\r\n               
+         </div>\r\n         
+           
+</CardContent>\r\n          
+      </Card>\r\n           
+ </motion.div>\r\n        
+</div>\r\n    );\r\n}\r\n","
+usedDeprecatedRules":[]},{"f
+ilePath":"D:\\STARTUP\\creat
+ordeal\\src\\app\\campaigns\
+\new\\page.tsx","messages":[
+{"ruleId":"@typescript-eslin
+t/no-unused-vars","message":
+"Definition for rule '@types
+cript-eslint/no-unused-vars'
+ was not found.","line":1,"c
+olumn":1,"endLine":1,"endCol
+umn":2,"severity":2,"nodeTyp
+e":null},{"ruleId":"@typescr
+ipt-eslint/no-explicit-any",
+"message":"Definition for 
+rule '@typescript-eslint/no-
+explicit-any' was not found.
+","line":1,"column":1,"endLi
+ne":1,"endColumn":2,"severit
+y":2,"nodeType":null}],"supp
+ressedMessages":[],"errorCou
+nt":2,"fatalErrorCount":0,"w
+arningCount":0,"fixableError
+Count":0,"fixableWarningCoun
+t":0,"source":"\"use 
+client\";\r\n\r\nimport 
+React, { useState } from 
+\"react\";\r\nimport { 
+useRouter } from \"next/navi
+gation\";\r\nimport { 
+motion } from \"framer-motio
+n\";\r\nimport { 
+collection, addDoc, 
+serverTimestamp } from \"fir
+ebase/firestore\";\r\nimport
+ { db } from \"@/lib/firebas
+e\";\r\nimport { useAuth } 
+from \"@/context/AuthContext
+\";\r\nimport 
+DashboardShell from \"@/comp
+onents/DashboardShell\";\r\n
+import { Button } from \"@/c
+omponents/ui/button\";\r\nim
+port { Input } from \"@/comp
+onents/ui/input\";\r\nimport
+ { Label } from \"@/componen
+ts/ui/label\";\r\nimport { 
+Textarea } from \"@/componen
+ts/ui/textarea\";\r\nimport 
+{ Card, CardContent, 
+CardDescription, 
+CardHeader, CardTitle } 
+from \"@/components/ui/card\
+";\r\nimport { Megaphone, 
+ArrowRight, Loader2, 
+IndianRupee } from \"lucide-
+react\";\r\n\r\nconst 
+NICHE_OPTIONS = [\r\n    
+\"Fashion & 
+Lifestyle\",\r\n    \"Tech 
+& Gadgets\",\r\n    \"Food 
+& Cooking\",\r\n    
+\"Travel\",\r\n    
+\"Fitness & Health\",\r\n   
+ \"Beauty & Skincare\",\r\n 
+   \"Education\",\r\n    
+\"Finance & Business\",\r\n 
+   \"Entertainment & 
+Comedy\",\r\n    
+\"Gaming\",\r\n    
+\"Parenting\",\r\n    
+\"Automotive\",\r\n    
+\"Art & Design\",\r\n    
+\"Music\",\r\n    \"Any\",\r
+\n];\r\n\r\nexport default 
+function NewCampaignPage() 
+{\r\n    const { user, 
+role, loading: authLoading 
+} = useAuth();\r\n    const 
+router = useRouter();\r\n   
+ const [formData, 
+setFormData] = 
+useState({\r\n        
+title: \"\",\r\n        
+description: \"\",\r\n      
+  deliverableType: 
+\"Reel\",\r\n        
+budget: \"\",\r\n        
+timeline: \"\",\r\n        
+niche: \"\",\r\n    });\r\n 
+   const [loading, 
+setLoading] = 
+useState(false);\r\n    
+const [error, setError] = 
+useState(\"\");\r\n\r\n    
+React.useEffect(() => {\r\n 
+       if (!authLoading && 
+(!user || role !== 
+\"brand\")) {\r\n           
+ 
+router.push(\"/auth\");\r\n 
+       }\r\n    }, [user, 
+role, authLoading, 
+router]);\r\n\r\n    const 
+handleChange = (\r\n        
+e: React.ChangeEvent<HTMLInp
+utElement | 
+HTMLSelectElement | 
+HTMLTextAreaElement>\r\n    
+) => {\r\n        
+setFormData((prev) => ({ 
+...prev, [e.target.name]: 
+e.target.value }));\r\n    
+};\r\n\r\n    const 
+handleSubmit = async (e: 
+React.FormEvent) => {\r\n   
+     
+e.preventDefault();\r\n     
+   if (!user) return;\r\n   
+     setError(\"\");\r\n    
+    
+setLoading(true);\r\n\r\n   
+     try {\r\n            
+await addDoc(collection(db, 
+\"campaigns\"), {\r\n       
+         brandId: 
+user.uid,\r\n               
+ title: 
+formData.title.trim(),\r\n  
+              description: f
+ormData.description.trim(),\
+r\n                
+deliverableType: formData.de
+liverableType,\r\n          
+      budget: parseInt(formD
+ata.budget),\r\n            
+    timeline: formData.timel
+ine.trim(),\r\n             
+   niche: 
+formData.niche,\r\n         
+       status: 
+\"active\",\r\n             
+   createdAt: 
+serverTimestamp(),\r\n      
+          updatedAt: 
+serverTimestamp(),\r\n      
+      });\r\n\r\n           
+ router.push(\"/campaigns\")
+;\r\n        } catch (err) 
+{\r\n            
+console.error(\"Error 
+creating campaign:\", 
+err);\r\n            
+setError(\"Failed to create 
+campaign. Please try 
+again.\");\r\n        } 
+finally {\r\n            
+setLoading(false);\r\n      
+  }\r\n    };\r\n\r\n    if 
+(authLoading || !user) 
+{\r\n        return (\r\n   
+         <div 
+className=\"min-h-screen 
+flex items-center 
+justify-center\">\r\n       
+         <div 
+className=\"w-8 h-8 
+rounded-full border-2 
+border-primary 
+border-t-transparent 
+animate-spin\" />\r\n       
+     </div>\r\n        
+);\r\n    }\r\n\r\n    
+return (\r\n        
+<DashboardShell 
+role=\"brand\">\r\n         
+   <motion.div\r\n          
+      initial={{ opacity: 
+0, y: 20 }}\r\n             
+   animate={{ opacity: 1, 
+y: 0 }}\r\n                
+transition={{ duration: 0.5 
+}}\r\n                
+className=\"max-w-2xl 
+mx-auto\"\r\n            
+>\r\n                <Card c
+lassName=\"border-border/50\
+">\r\n                    
+<CardHeader className=\"text
+-center\">\r\n              
+          <div 
+className=\"flex 
+justify-center mb-4\">\r\n  
+                          
+<div className=\"w-14 h-14 
+rounded-xl 
+bg-gradient-to-br 
+from-blue-500 to-cyan-500 
+flex items-center 
+justify-center\">\r\n       
+                         
+<Megaphone className=\"w-7 
+h-7 text-white\" />\r\n     
+                       
+</div>\r\n                  
+      </div>\r\n            
+            <CardTitle class
+Name=\"text-2xl\">Create 
+New 
+Campaign</CardTitle>\r\n    
+                    
+<CardDescription>\r\n       
+                     Post a 
+campaign and we&apos;ll 
+match you with the best 
+creators.\r\n               
+         
+</CardDescription>\r\n      
+              
+</CardHeader>\r\n\r\n       
+             
+<CardContent>\r\n           
+             <form 
+onSubmit={handleSubmit} clas
+sName=\"space-y-6\">\r\n    
+                        
+<div className=\"space-y-2\"
+>\r\n                       
+         <Label 
+htmlFor=\"title\">Campaign 
+Title</Label>\r\n           
+                     
+<Input\r\n                  
+                  
+id=\"title\"\r\n            
+                        
+name=\"title\"\r\n          
+                          
+placeholder=\"e.g., Summer 
+Collection Launch 
+Reel\"\r\n                  
+                  
+value={formData.title}\r\n  
+                            
+      
+onChange={handleChange}\r\n 
+                            
+       required\r\n         
+                       
+/>\r\n                      
+      </div>\r\n\r\n        
+                    <div cla
+ssName=\"space-y-2\">\r\n   
+                            
+ <Label htmlFor=\"descriptio
+n\">Description</Label>\r\n 
+                            
+   <Textarea\r\n            
+                        
+id=\"description\"\r\n      
+                            
+  name=\"description\"\r\n  
+                            
+      
+placeholder=\"Describe what 
+you're looking for ??? 
+content style, key 
+messages, brand 
+guidelines...\"\r\n         
+                           v
+alue={formData.description}\
+r\n                         
+           
+onChange={handleChange}\r\n 
+                            
+       required\r\n         
+                           
+rows={4}\r\n                
+                />\r\n      
+                      
+</div>\r\n\r\n              
+              <div 
+className=\"grid 
+grid-cols-1 md:grid-cols-2 
+gap-4\">\r\n                
+                <div classNa
+me=\"space-y-2\">\r\n       
+                            
+ <Label htmlFor=\"deliverabl
+eType\">Deliverable 
+Type</Label>\r\n            
+                        
+<select\r\n                 
+                       
+id=\"deliverableType\"\r\n  
+                            
+          name=\"deliverable
+Type\"\r\n                  
+                      value=
+{formData.deliverableType}\r
+\n                          
+              
+onChange={handleChange}\r\n 
+                            
+           required\r\n     
+                            
+       className=\"flex 
+h-11 w-full rounded-lg 
+border border-input 
+bg-background px-4 py-2 
+text-sm 
+ring-offset-background 
+focus-visible:outline-none 
+focus-visible:ring-2 
+focus-visible:ring-ring 
+focus-visible:ring-offset-2 
+transition-all 
+duration-200\"\r\n          
+                          
+>\r\n                       
+                 <option 
+value=\"Reel\">???? 
+Reel</option>\r\n           
+                            
+ <option 
+value=\"Post\">???? 
+Post</option>\r\n           
+                            
+ <option 
+value=\"Story\">???? 
+Story</option>\r\n          
+                          
+</select>\r\n               
+                 
+</div>\r\n\r\n              
+                  <div class
+Name=\"space-y-2\">\r\n     
+                            
+   <Label 
+htmlFor=\"niche\">Target 
+Niche</Label>\r\n           
+                         
+<select\r\n                 
+                       
+id=\"niche\"\r\n            
+                            
+name=\"niche\"\r\n          
+                            
+  
+value={formData.niche}\r\n  
+                            
+          
+onChange={handleChange}\r\n 
+                            
+           required\r\n     
+                            
+       className=\"flex 
+h-11 w-full rounded-lg 
+border border-input 
+bg-background px-4 py-2 
+text-sm 
+ring-offset-background 
+focus-visible:outline-none 
+focus-visible:ring-2 
+focus-visible:ring-ring 
+focus-visible:ring-offset-2 
+transition-all 
+duration-200\"\r\n          
+                          
+>\r\n                       
+                 <option 
+value=\"\">Select 
+niche</option>\r\n          
+                            
+  
+{NICHE_OPTIONS.map((niche) 
+=> (\r\n                    
+                        
+<option key={niche} 
+value={niche}>\r\n          
+                            
+          {niche}\r\n       
+                            
+         </option>\r\n      
+                            
+      ))}\r\n               
+                     
+</select>\r\n               
+                 </div>\r\n 
+                           
+</div>\r\n\r\n              
+              <div 
+className=\"grid 
+grid-cols-1 md:grid-cols-2 
+gap-4\">\r\n                
+                <div classNa
+me=\"space-y-2\">\r\n       
+                            
+ <Label htmlFor=\"budget\" 
+className=\"flex 
+items-center gap-1.5\">\r\n 
+                            
+           <IndianRupee 
+className=\"w-3.5 h-3.5\" 
+/> Budget (???)\r\n         
+                           
+</Label>\r\n                
+                    
+<Input\r\n                  
+                      
+id=\"budget\"\r\n           
+                            
+ name=\"budget\"\r\n        
+                            
+    type=\"number\"\r\n     
+                            
+       
+placeholder=\"10000\"\r\n   
+                            
+         
+value={formData.budget}\r\n 
+                            
+           
+onChange={handleChange}\r\n 
+                            
+           required\r\n     
+                            
+       min={0}\r\n          
+                          
+/>\r\n                      
+          </div>\r\n\r\n    
+                            
+<div className=\"space-y-2\"
+>\r\n                       
+             <Label htmlFor=
+\"timeline\">Timeline</Label
+>\r\n                       
+             <Input\r\n     
+                            
+       id=\"timeline\"\r\n  
+                            
+          
+name=\"timeline\"\r\n       
+                            
+     placeholder=\"e.g., 2 
+weeks\"\r\n                 
+                       value
+={formData.timeline}\r\n    
+                            
+        
+onChange={handleChange}\r\n 
+                            
+           required\r\n     
+                            
+   />\r\n                   
+             </div>\r\n     
+                       
+</div>\r\n\r\n              
+              {error && 
+(\r\n                       
+         <p 
+className=\"text-sm 
+text-destructive 
+bg-destructive/10 px-3 py-2 
+rounded-lg\">\r\n           
+                         
+{error}\r\n                 
+               </p>\r\n     
+                       
+)}\r\n\r\n                  
+          <Button 
+type=\"submit\" 
+className=\"w-full\" 
+size=\"lg\" 
+disabled={loading}>\r\n     
+                           
+{loading ? <Loader2 
+className=\"w-4 h-4 
+animate-spin mr-2\" /> : 
+null}\r\n                   
+             Post 
+Campaign\r\n                
+                <ArrowRight 
+className=\"ml-2 w-4 h-4\" 
+/>\r\n                      
+      </Button>\r\n         
+               </form>\r\n  
+                  
+</CardContent>\r\n          
+      </Card>\r\n           
+ </motion.div>\r\n        
+</DashboardShell>\r\n    );\
+r\n}\r\n","usedDeprecatedRul
+es":[]},{"filePath":"D:\\STA
+RTUP\\creatordeal\\src\\app\
+\campaigns\\page.tsx","messa
+ges":[{"ruleId":"@typescript
+-eslint/no-unused-vars","mes
+sage":"Definition for rule '
+@typescript-eslint/no-unused
+-vars' was not found.","line
+":1,"column":1,"endLine":1,"
+endColumn":2,"severity":2,"n
+odeType":null},{"ruleId":"@t
+ypescript-eslint/no-explicit
+-any","message":"Definition 
+for rule '@typescript-eslint
+/no-explicit-any' was not fo
+und.","line":1,"column":1,"e
+ndLine":1,"endColumn":2,"sev
+erity":2,"nodeType":null},{"
+ruleId":"react-hooks/exhaust
+ive-deps","severity":1,"mess
+age":"React Hook useEffect 
+has a missing dependency: 
+'fetchCampaigns'. Either 
+include it or remove the 
+dependency array.","line":79
+,"column":8,"nodeType":"Arra
+yExpression","endLine":79,"e
+ndColumn":14,"suggestions":[
+{"desc":"Update the 
+dependencies array to be: 
+[fetchCampaigns, user]","fix
+":{"range":[2116,2122],"text
+":"[fetchCampaigns, user]"}}
+]}],"suppressedMessages":[],
+"errorCount":2,"fatalErrorCo
+unt":0,"warningCount":1,"fix
+ableErrorCount":0,"fixableWa
+rningCount":0,"source":"\"us
+e client\";\r\n\r\nimport 
+React, { useEffect, 
+useState } from 
+\"react\";\r\nimport { 
+useRouter } from \"next/navi
+gation\";\r\nimport { 
+motion } from \"framer-motio
+n\";\r\nimport {\r\n    
+collection,\r\n    
+query,\r\n    where,\r\n    
+getDocs,\r\n    
+orderBy,\r\n    limit,\r\n  
+  startAfter,\r\n    
+DocumentData,\r\n    
+QueryDocumentSnapshot,\r\n} 
+from \"firebase/firestore\";
+\r\nimport { db } from \"@/l
+ib/firebase\";\r\nimport { 
+useAuth } from \"@/context/A
+uthContext\";\r\nimport 
+DashboardShell from \"@/comp
+onents/DashboardShell\";\r\n
+import { Card, CardContent 
+} from \"@/components/ui/car
+d\";\r\nimport { Badge } 
+from \"@/components/ui/badge
+\";\r\nimport { Button } 
+from \"@/components/ui/butto
+n\";\r\nimport {\r\n    
+Megaphone,\r\n    
+IndianRupee,\r\n    
+Calendar,\r\n    Film,\r\n  
+  ImageIcon,\r\n    
+MessageSquare,\r\n    
+Loader2,\r\n    
+ChevronRight,\r\n} from \"lu
+cide-react\";\r\n\r\ninterfa
+ce CampaignItem {\r\n    
+id: string;\r\n    brandId: 
+string;\r\n    title: 
+string;\r\n    description: 
+string;\r\n    
+deliverableType: 
+string;\r\n    budget: 
+number;\r\n    timeline: 
+string;\r\n    niche?: 
+string;\r\n    status: 
+string;\r\n    matchScore?: 
+number;\r\n    createdAt: 
+Date;\r\n}\r\n\r\nconst 
+PAGE_SIZE = 
+12;\r\n\r\nconst 
+deliverableIcons: 
+Record<string, 
+React.ReactNode> = {\r\n    
+Reel: <Film className=\"w-4 
+h-4\" />,\r\n    Post: 
+<ImageIcon className=\"w-4 
+h-4\" />,\r\n    Story: 
+<MessageSquare 
+className=\"w-4 h-4\" 
+/>,\r\n};\r\n\r\nconst 
+fadeInUp = {\r\n    hidden: 
+{ opacity: 0, y: 20 },\r\n  
+  visible: { opacity: 1, y: 
+0 },\r\n};\r\n\r\nexport 
+default function 
+CampaignsPage() {\r\n    
+const { user, role, 
+loading: authLoading } = 
+useAuth();\r\n    const 
+router = useRouter();\r\n   
+ const [campaigns, 
+setCampaigns] = useState<Cam
+paignItem[]>([]);\r\n    
+const [loading, setLoading] 
+= useState(true);\r\n    
+const [loadingMore, 
+setLoadingMore] = 
+useState(false);\r\n    
+const [lastDoc, setLastDoc] 
+= useState<QueryDocumentSnap
+shot<DocumentData> | 
+null>(null);\r\n    const 
+[hasMore, setHasMore] = 
+useState(true);\r\n\r\n    
+useEffect(() => {\r\n       
+ if (!authLoading && !user) 
+{\r\n            
+router.push(\"/auth\");\r\n 
+       }\r\n    }, [user, 
+authLoading, 
+router]);\r\n\r\n    
+useEffect(() => {\r\n       
+ if (!user) return;\r\n     
+   fetchCampaigns();\r\n    
+}, [user]);\r\n\r\n    
+const fetchCampaigns = 
+async (loadMore = false) => 
+{\r\n        if (loadMore) 
+setLoadingMore(true);\r\n   
+     else 
+setLoading(true);\r\n\r\n   
+     try {\r\n            
+let campaignsQuery;\r\n\r\n 
+           if (role === 
+\"brand\") {\r\n            
+    // Brand sees their own 
+campaigns\r\n               
+ campaignsQuery = loadMore 
+&& lastDoc\r\n              
+      ? query(\r\n          
+              
+collection(db, 
+\"campaigns\"),\r\n         
+               
+where(\"brandId\", \"==\", 
+user!.uid),\r\n             
+           
+orderBy(\"createdAt\", 
+\"desc\"),\r\n              
+          
+startAfter(lastDoc),\r\n    
+                    
+limit(PAGE_SIZE)\r\n        
+            )\r\n           
+         : query(\r\n       
+                 
+collection(db, 
+\"campaigns\"),\r\n         
+               
+where(\"brandId\", \"==\", 
+user!.uid),\r\n             
+           
+orderBy(\"createdAt\", 
+\"desc\"),\r\n              
+          
+limit(PAGE_SIZE)\r\n        
+            );\r\n          
+  } else {\r\n              
+  // Creator sees all 
+active campaigns\r\n        
+        campaignsQuery = 
+loadMore && lastDoc\r\n     
+               ? query(\r\n 
+                       
+collection(db, 
+\"campaigns\"),\r\n         
+               
+where(\"status\", \"==\", 
+\"active\"),\r\n            
+            
+orderBy(\"createdAt\", 
+\"desc\"),\r\n              
+          
+startAfter(lastDoc),\r\n    
+                    
+limit(PAGE_SIZE)\r\n        
+            )\r\n           
+         : query(\r\n       
+                 
+collection(db, 
+\"campaigns\"),\r\n         
+               
+where(\"status\", \"==\", 
+\"active\"),\r\n            
+            
+orderBy(\"createdAt\", 
+\"desc\"),\r\n              
+          
+limit(PAGE_SIZE)\r\n        
+            );\r\n          
+  }\r\n\r\n            
+const snap = await getDocs(c
+ampaignsQuery);\r\n         
+   const newCampaigns = 
+snap.docs.map((doc) => 
+({\r\n                id: 
+doc.id,\r\n                
+...doc.data(),\r\n          
+      createdAt: doc.data().
+createdAt?.toDate() || new 
+Date(),\r\n            })) 
+as CampaignItem[];\r\n\r\n  
+          if (loadMore) 
+{\r\n                
+setCampaigns((prev) => 
+[...prev, 
+...newCampaigns]);\r\n      
+      } else {\r\n          
+      setCampaigns(newCampai
+gns);\r\n            
+}\r\n\r\n            setLast
+Doc(snap.docs[snap.docs.leng
+th - 1] || null);\r\n       
+     
+setHasMore(snap.docs.length 
+=== PAGE_SIZE);\r\n        
+} catch (error) {\r\n       
+     console.error(\"Error 
+fetching campaigns:\", 
+error);\r\n        } 
+finally {\r\n            
+setLoading(false);\r\n      
+      
+setLoadingMore(false);\r\n  
+      }\r\n    };\r\n\r\n   
+ if (authLoading || !user) 
+{\r\n        return (\r\n   
+         <div 
+className=\"min-h-screen 
+flex items-center 
+justify-center\">\r\n       
+         <div 
+className=\"w-8 h-8 
+rounded-full border-2 
+border-primary 
+border-t-transparent 
+animate-spin\" />\r\n       
+     </div>\r\n        
+);\r\n    }\r\n\r\n    
+return (\r\n        
+<DashboardShell role={role 
+|| \"creator\"}>\r\n        
+    <div className=\"space-y
+-8\">\r\n                
+<motion.div\r\n             
+       
+initial=\"hidden\"\r\n      
+              
+animate=\"visible\"\r\n     
+               
+variants={fadeInUp}\r\n     
+               
+transition={{ duration: 0.5 
+}}\r\n                >\r\n 
+                   <h1 
+className=\"text-3xl 
+font-bold 
+tracking-tight\">\r\n       
+                 {role === 
+\"brand\" ? \"Your 
+Campaigns\" : \"Browse 
+Campaigns\"}\r\n            
+        </h1>\r\n           
+         <p className=\"text
+-muted-foreground 
+mt-1\">\r\n                 
+       {role === 
+\"brand\"\r\n               
+             ? \"Manage all 
+your campaigns in one 
+place.\"\r\n                
+            : \"Find 
+campaigns that match your 
+niche and apply.\"}\r\n     
+               </p>\r\n     
+           
+</motion.div>\r\n\r\n       
+         {loading ? (\r\n   
+                 <div 
+className=\"grid 
+grid-cols-1 md:grid-cols-2 
+lg:grid-cols-3 gap-6\">\r\n 
+                       {[1, 
+2, 3, 4, 5, 6].map((i) => 
+(\r\n                       
+     <div key={i} 
+className=\"h-64 
+bg-muted/30 rounded-2xl 
+animate-pulse\" />\r\n      
+                  ))}\r\n   
+                 </div>\r\n 
+               ) : 
+campaigns.length === 0 ? 
+(\r\n                    
+<div 
+className=\"text-center 
+py-20 text-muted-foreground\
+">\r\n                      
+  <Megaphone 
+className=\"w-12 h-12 
+mx-auto mb-4 opacity-40\" 
+/>\r\n                      
+  <p 
+className=\"text-lg\">\r\n  
+                          
+{role === \"brand\"\r\n     
+                           
+? \"You haven't created any 
+campaigns yet.\"\r\n        
+                        : 
+\"No active campaigns 
+found.\"}\r\n               
+         </p>\r\n           
+             {role === 
+\"brand\" && (\r\n          
+                  
+<Button\r\n                 
+               
+className=\"mt-4\"\r\n      
+                          
+onClick={() => router.push(\
+"/campaigns/new\")}\r\n     
+                       
+>\r\n                       
+         Create Your First 
+Campaign\r\n                
+            </Button>\r\n   
+                     )}\r\n 
+                   
+</div>\r\n                ) 
+: (\r\n                    
+<>\r\n                      
+  <motion.div\r\n           
+                 
+initial=\"hidden\"\r\n      
+                      
+animate=\"visible\"\r\n     
+                       
+variants={{\r\n             
+                   hidden: 
+{ opacity: 0 },\r\n         
+                       
+visible: { opacity: 1, 
+transition: { 
+staggerChildren: 0.08 } 
+},\r\n                      
+      }}\r\n                
+            
+className=\"grid 
+grid-cols-1 md:grid-cols-2 
+lg:grid-cols-3 gap-6\"\r\n  
+                      >\r\n 
+                           
+{campaigns.map((campaign) 
+=> (\r\n                    
+            <motion.div 
+key={campaign.id} 
+variants={fadeInUp}>\r\n    
+                            
+    <Card className=\"border
+-border/50 
+hover:border-primary/30 
+transition-all duration-300 
+h-full flex flex-col group 
+cursor-pointer\">\r\n       
+                            
+     <CardContent 
+className=\"p-6 flex-1 flex 
+flex-col\">\r\n             
+                            
+   <div className=\"flex 
+items-start justify-between 
+mb-4\">\r\n                 
+                            
+   <Badge\r\n               
+                            
+         variant={\r\n      
+                            
+                      
+campaign.status === 
+\"active\"\r\n              
+                            
+                  ? 
+\"success\"\r\n             
+                            
+                   : 
+campaign.status === 
+\"paused\"\r\n              
+                            
+                      ? 
+\"warning\"\r\n             
+                            
+                       : 
+\"secondary\"\r\n           
+                            
+             }\r\n          
+                            
+          >\r\n             
+                            
+           
+{campaign.status}\r\n       
+                            
+             </Badge>\r\n   
+                            
+                 <div 
+className=\"flex 
+items-center gap-1 
+text-muted-foreground 
+text-xs\">\r\n              
+                            
+          {deliverableIcons[
+campaign.deliverableType]}\r
+\n                          
+                          {c
+ampaign.deliverableType}\r\n
+                            
+                    
+</div>\r\n                  
+                          
+</div>\r\n\r\n              
+                            
+  <h3 className=\"text-lg 
+font-semibold mb-2 
+group-hover:text-primary 
+transition-colors\">\r\n    
+                            
+                
+{campaign.title}\r\n        
+                            
+        </h3>\r\n           
+                            
+     <p className=\"text-sm 
+text-muted-foreground mb-4 
+line-clamp-2 flex-1\">\r\n  
+                            
+                  
+{campaign.description}\r\n  
+                            
+              </p>\r\n\r\n  
+                            
+              
+{campaign.niche && (\r\n    
+                            
+                <Badge 
+variant=\"outline\" 
+className=\"w-fit 
+mb-3\">\r\n                 
+                            
+       {campaign.niche}\r\n 
+                            
+                   
+</Badge>\r\n                
+                            
+)}\r\n\r\n                  
+                          
+<div className=\"flex 
+items-center 
+justify-between pt-4 
+border-t 
+border-border/50\">\r\n     
+                            
+               <div 
+className=\"flex 
+items-center gap-1 
+font-semibold 
+text-sm\">\r\n              
+                            
+          <IndianRupee 
+className=\"w-3.5 h-3.5\" 
+/>\r\n                      
+                            
+  {campaign.budget?.toLocale
+String(\"en-IN\")}\r\n      
+                            
+              </div>\r\n    
+                            
+                
+{campaign.timeline && (\r\n 
+                            
+                       <div 
+className=\"flex 
+items-center gap-1 text-xs t
+ext-muted-foreground\">\r\n 
+                            
+                           
+<Calendar className=\"w-3 
+h-3\" />\r\n                
+                            
+            
+{campaign.timeline}\r\n     
+                            
+                   
+</div>\r\n                  
+                            
+  )}\r\n                    
+                        
+</div>\r\n\r\n              
+                            
+  {campaign.matchScore && 
+(\r\n                       
+                         
+<div className=\"mt-3 
+text-xs font-medium 
+text-emerald-400\">\r\n     
+                            
+                   
+{campaign.matchScore}% 
+Match\r\n                   
+                            
+ </div>\r\n                 
+                           
+)}\r\n                      
+                  
+</CardContent>\r\n          
+                          
+</Card>\r\n                 
+               
+</motion.div>\r\n           
+                 ))}\r\n    
+                    
+</motion.div>\r\n\r\n       
+                 {hasMore 
+&& (\r\n                    
+        <div className=\"tex
+t-center\">\r\n             
+                   
+<Button\r\n                 
+                   
+variant=\"outline\"\r\n     
+                            
+   onClick={() => 
+fetchCampaigns(true)}\r\n   
+                            
+     
+disabled={loadingMore}\r\n  
+                            
+      
+className=\"gap-2\"\r\n     
+                           
+>\r\n                       
+             {loadingMore ? 
+(\r\n                       
+                 <Loader2 
+className=\"w-4 h-4 
+animate-spin\" />\r\n       
+                            
+ ) : (\r\n                  
+                      
+<ChevronRight 
+className=\"w-4 h-4\" 
+/>\r\n                      
+              )}\r\n        
+                            
+Load More\r\n               
+                 
+</Button>\r\n               
+             </div>\r\n     
+                   )}\r\n   
+                 </>\r\n    
+            )}\r\n          
+  </div>\r\n        
+</DashboardShell>\r\n    );\
+r\n}\r\n","usedDeprecatedRul
+es":[]},{"filePath":"D:\\STA
+RTUP\\creatordeal\\src\\app\
+\dashboard\\brand\\page.tsx"
+,"messages":[{"ruleId":"@typ
+escript-eslint/no-unused-var
+s","message":"Definition 
+for rule '@typescript-eslint
+/no-unused-vars' was not fou
+nd.","line":1,"column":1,"en
+dLine":1,"endColumn":2,"seve
+rity":2,"nodeType":null},{"r
+uleId":"@typescript-eslint/n
+o-explicit-any","message":"D
+efinition for rule '@typescr
+ipt-eslint/no-explicit-any' 
+was not found.","line":1,"co
+lumn":1,"endLine":1,"endColu
+mn":2,"severity":2,"nodeType
+":null}],"suppressedMessages
+":[],"errorCount":2,"fatalEr
+rorCount":0,"warningCount":0
+,"fixableErrorCount":0,"fixa
+bleWarningCount":0,"source":
+"\"use 
+client\";\r\n\r\nimport 
+React, { useEffect, 
+useState } from 
+\"react\";\r\nimport { 
+useRouter } from \"next/navi
+gation\";\r\nimport { 
+motion } from \"framer-motio
+n\";\r\nimport { 
+collection, query, where, 
+getDocs, orderBy, limit } 
+from \"firebase/firestore\";
+\r\nimport { db } from \"@/l
+ib/firebase\";\r\nimport { 
+useAuth } from \"@/context/A
+uthContext\";\r\nimport 
+DashboardShell from \"@/comp
+onents/DashboardShell\";\r\n
+import { Card, CardContent, 
+CardHeader, CardTitle } 
+from \"@/components/ui/card\
+";\r\nimport { Badge } from 
+\"@/components/ui/badge\";\r
+\nimport { Button } from \"@
+/components/ui/button\";\r\n
+import Link from 
+\"next/link\";\r\nimport 
+{\r\n    Megaphone,\r\n    
+Send,\r\n    
+CheckCircle2,\r\n    
+Clock,\r\n    Plus,\r\n    
+TrendingUp,\r\n    
+ArrowRight,\r\n} from \"luci
+de-react\";\r\n\r\ninterface
+ CampaignSummary {\r\n    
+id: string;\r\n    title: 
+string;\r\n    status: 
+string;\r\n    budget: 
+number;\r\n    createdAt: 
+Date;\r\n}\r\n\r\ninterface 
+RequestSummary {\r\n    id: 
+string;\r\n    campaignId: 
+string;\r\n    status: 
+string;\r\n    creatorId: 
+string;\r\n}\r\n\r\nconst 
+fadeInUp = {\r\n    hidden: 
+{ opacity: 0, y: 20 },\r\n  
+  visible: { opacity: 1, y: 
+0 },\r\n};\r\n\r\nexport 
+default function 
+BrandDashboardPage() {\r\n  
+  const { user, role, 
+loading: authLoading } = 
+useAuth();\r\n    const 
+router = useRouter();\r\n   
+ const [campaigns, 
+setCampaigns] = useState<Cam
+paignSummary[]>([]);\r\n    
+const [requests, 
+setRequests] = useState<Requ
+estSummary[]>([]);\r\n    
+const [loading, setLoading] 
+= useState(true);\r\n\r\n   
+ useEffect(() => {\r\n      
+  if (!authLoading && 
+(!user || role !== 
+\"brand\")) {\r\n           
+ 
+router.push(\"/auth\");\r\n 
+           return;\r\n      
+  }\r\n    }, [user, role, 
+authLoading, 
+router]);\r\n\r\n    
+useEffect(() => {\r\n       
+ if (!user) return;\r\n\r\n 
+       const fetchData = 
+async () => {\r\n           
+ try {\r\n                
+// Fetch brand's 
+campaigns\r\n               
+ const campaignsQuery = 
+query(\r\n                  
+  collection(db, 
+\"campaigns\"),\r\n         
+           
+where(\"brandId\", \"==\", 
+user.uid),\r\n              
+      
+orderBy(\"createdAt\", 
+\"desc\"),\r\n              
+      limit(10)\r\n         
+       );\r\n               
+ const campaignsSnap = 
+await getDocs(campaignsQuery
+);\r\n                const 
+campaignData = campaignsSnap
+.docs.map((doc) => ({\r\n   
+                 id: 
+doc.id,\r\n                 
+   ...doc.data(),\r\n       
+             createdAt: doc.
+data().createdAt?.toDate() 
+|| new Date(),\r\n          
+      })) as 
+CampaignSummary[];\r\n      
+          setCampaigns(campa
+ignData);\r\n\r\n           
+     // Fetch requests for 
+brand's campaigns\r\n       
+         const 
+requestsQuery = query(\r\n  
+                  
+collection(db, 
+\"requests\"),\r\n          
+          
+where(\"brandId\", \"==\", 
+user.uid),\r\n              
+      limit(50)\r\n         
+       );\r\n               
+ const requestsSnap = await 
+getDocs(requestsQuery);\r\n 
+               const 
+requestData = 
+requestsSnap.docs.map((doc) 
+=> ({\r\n                   
+ id: doc.id,\r\n            
+        ...doc.data(),\r\n  
+              })) as 
+RequestSummary[];\r\n       
+         setRequests(request
+Data);\r\n            } 
+catch (error) {\r\n         
+       
+console.error(\"Error 
+fetching dashboard data:\", 
+error);\r\n            } 
+finally {\r\n               
+ setLoading(false);\r\n     
+       }\r\n        
+};\r\n\r\n        
+fetchData();\r\n    }, 
+[user]);\r\n\r\n    if 
+(authLoading || !user) 
+{\r\n        return (\r\n   
+         <div 
+className=\"min-h-screen 
+flex items-center 
+justify-center\">\r\n       
+         <div 
+className=\"w-8 h-8 
+rounded-full border-2 
+border-primary 
+border-t-transparent 
+animate-spin\" />\r\n       
+     </div>\r\n        
+);\r\n    }\r\n\r\n    
+const activeCampaigns = 
+campaigns.filter((c) => 
+c.status === 
+\"active\").length;\r\n    
+const pendingRequests = 
+requests.filter((r) => 
+r.status === 
+\"pending\").length;\r\n    
+const acceptedRequests = 
+requests.filter((r) => 
+r.status === \"accepted\").l
+ength;\r\n\r\n    return 
+(\r\n        
+<DashboardShell 
+role=\"brand\">\r\n         
+   <div className=\"space-y-
+8\">\r\n                {/* 
+Welcome Header */}\r\n      
+          <motion.div\r\n   
+                 
+initial=\"hidden\"\r\n      
+              
+animate=\"visible\"\r\n     
+               
+variants={fadeInUp}\r\n     
+               
+transition={{ duration: 0.5 
+}}\r\n                >\r\n 
+                   <h1 
+className=\"text-3xl 
+font-bold 
+tracking-tight\">Brand 
+Dashboard</h1>\r\n          
+          <p className=\"tex
+t-muted-foreground 
+mt-1\">\r\n                 
+       Manage your 
+campaigns and creator 
+collaborations.\r\n         
+           </p>\r\n         
+       
+</motion.div>\r\n\r\n       
+         {/* Stats Cards 
+*/}\r\n                
+<motion.div\r\n             
+       
+initial=\"hidden\"\r\n      
+              
+animate=\"visible\"\r\n     
+               
+variants={{\r\n             
+           hidden: { 
+opacity: 0 },\r\n           
+             visible: { 
+opacity: 1, transition: { 
+staggerChildren: 0.1 } 
+},\r\n                    
+}}\r\n                    
+className=\"grid 
+grid-cols-1 sm:grid-cols-2 
+lg:grid-cols-4 gap-4\"\r\n  
+              >\r\n         
+           {[\r\n           
+             {\r\n          
+                  label: 
+\"Total Campaigns\",\r\n    
+                        
+value: 
+campaigns.length,\r\n       
+                     icon: 
+Megaphone,\r\n              
+              color: 
+\"text-violet-400\",\r\n    
+                    },\r\n  
+                      {\r\n 
+                           
+label: \"Active 
+Campaigns\",\r\n            
+                value: 
+activeCampaigns,\r\n        
+                    icon: 
+TrendingUp,\r\n             
+               color: 
+\"text-emerald-400\",\r\n   
+                     },\r\n 
+                       
+{\r\n                       
+     label: \"Pending 
+Requests\",\r\n             
+               value: 
+pendingRequests,\r\n        
+                    icon: 
+Clock,\r\n                  
+          color: 
+\"text-amber-400\",\r\n     
+                   },\r\n   
+                     {\r\n  
+                          
+label: \"Accepted 
+Deals\",\r\n                
+            value: 
+acceptedRequests,\r\n       
+                     icon: 
+CheckCircle2,\r\n           
+                 color: 
+\"text-blue-400\",\r\n      
+                  },\r\n    
+                
+].map((stat, i) => (\r\n    
+                    
+<motion.div 
+key={stat.label} 
+variants={fadeInUp}>\r\n    
+                        
+<Card className=\"border-bor
+der/50\">\r\n               
+                 
+<CardContent 
+className=\"p-6\">\r\n      
+                            
+  <div className=\"flex 
+items-center 
+justify-between\">\r\n      
+                            
+      <div>\r\n             
+                            
+   <p className=\"text-sm te
+xt-muted-foreground\">{stat.
+label}</p>\r\n              
+                            
+  <p className=\"text-3xl 
+font-bold 
+mt-1\">{stat.value}</p>\r\n 
+                            
+           </div>\r\n       
+                            
+     <stat.icon 
+className={`w-8 h-8 
+${stat.color} opacity-60`} 
+/>\r\n                      
+              </div>\r\n    
+                            
+</CardContent>\r\n          
+                  
+</Card>\r\n                 
+       </motion.div>\r\n    
+                ))}\r\n     
+           
+</motion.div>\r\n\r\n       
+         {/* Quick Actions 
+*/}\r\n                
+<motion.div\r\n             
+       
+initial=\"hidden\"\r\n      
+              
+animate=\"visible\"\r\n     
+               
+variants={fadeInUp}\r\n     
+               
+transition={{ delay: 0.3 
+}}\r\n                    
+className=\"flex flex-wrap 
+gap-3\"\r\n                
+>\r\n                    
+<Link href=\"/campaigns/new\
+">\r\n                      
+  <Button 
+className=\"gap-2\">\r\n    
+                        
+<Plus className=\"w-4 h-4\" 
+/> Post New Campaign\r\n    
+                    
+</Button>\r\n               
+     </Link>\r\n            
+        <Link 
+href=\"/requests\">\r\n     
+                   <Button 
+variant=\"outline\" 
+className=\"gap-2\">\r\n    
+                        
+<Send className=\"w-4 h-4\" 
+/> View Requests\r\n        
+                
+</Button>\r\n               
+     </Link>\r\n            
+    </motion.div>\r\n\r\n   
+             {/* Recent 
+Campaigns */}\r\n           
+     <motion.div\r\n        
+            
+initial=\"hidden\"\r\n      
+              
+animate=\"visible\"\r\n     
+               
+variants={fadeInUp}\r\n     
+               
+transition={{ delay: 0.4 
+}}\r\n                >\r\n 
+                   <Card cla
+ssName=\"border-border/50\">
+\r\n                        
+<CardHeader 
+className=\"flex flex-row 
+items-center 
+justify-between\">\r\n      
+                      
+<CardTitle className=\"text-
+lg\">Recent 
+Campaigns</CardTitle>\r\n   
+                         
+<Link 
+href=\"/campaigns\">\r\n    
+                            
+<Button variant=\"ghost\" 
+size=\"sm\" 
+className=\"gap-1\">\r\n    
+                            
+    View All <ArrowRight 
+className=\"w-3.5 h-3.5\" 
+/>\r\n                      
+          </Button>\r\n     
+                       
+</Link>\r\n                 
+       </CardHeader>\r\n    
+                    
+<CardContent>\r\n           
+                 {loading ? 
+(\r\n                       
+         <div className=\"sp
+ace-y-3\">\r\n              
+                      {[1, 
+2, 3].map((i) => (\r\n      
+                            
+      <div\r\n              
+                            
+  key={i}\r\n               
+                            
+ className=\"h-14 
+bg-muted/50 rounded-lg 
+animate-pulse\"\r\n         
+                            
+   />\r\n                   
+                 ))}\r\n    
+                            
+</div>\r\n                  
+          ) : 
+campaigns.length === 0 ? 
+(\r\n                       
+         <div 
+className=\"text-center 
+py-12 text-muted-foreground\
+">\r\n                      
+              <Megaphone 
+className=\"w-10 h-10 
+mx-auto mb-3 opacity-40\" 
+/>\r\n                      
+              <p>No 
+campaigns yet.</p>\r\n      
+                            
+  <Link href=\"/campaigns/ne
+w\">\r\n                    
+                    <Button 
+size=\"sm\" 
+className=\"mt-4 
+gap-2\">\r\n                
+                            
+<Plus className=\"w-3.5 
+h-3.5\" /> Post Your First 
+Campaign\r\n                
+                        
+</Button>\r\n               
+                     
+</Link>\r\n                 
+               </div>\r\n   
+                         ) 
+: (\r\n                     
+           <div className=\"
+space-y-3\">\r\n            
+                        
+{campaigns.slice(0, 
+5).map((campaign) => (\r\n  
+                            
+          <div\r\n          
+                            
+      key={campaign.id}\r\n 
+                            
+               
+className=\"flex 
+items-center 
+justify-between p-4 
+rounded-xl border 
+border-border/50 
+hover:bg-muted/30 
+transition-colors\"\r\n     
+                            
+       >\r\n                
+                            
+<div>\r\n                   
+                            
+ <p className=\"font-medium\
+">{campaign.title}</p>\r\n  
+                            
+                  <p 
+className=\"text-sm text-mut
+ed-foreground\">\r\n        
+                            
+                ???{campaign
+.budget?.toLocaleString(\"en
+-IN\")}\r\n                 
+                            
+   </p>\r\n                 
+                           
+</div>\r\n                  
+                          
+<Badge\r\n                  
+                            
+  variant={\r\n             
+                            
+           campaign.status 
+=== \"active\"\r\n          
+                            
+                  ? 
+\"success\"\r\n             
+                            
+               : 
+campaign.status === 
+\"paused\"\r\n              
+                            
+                  ? 
+\"warning\"\r\n             
+                            
+                   : 
+\"secondary\"\r\n           
+                            
+         }\r\n              
+                            
+  >\r\n                     
+                           
+{campaign.status}\r\n       
+                            
+         </Badge>\r\n       
+                            
+     </div>\r\n             
+                       
+))}\r\n                     
+           </div>\r\n       
+                     )}\r\n 
+                       
+</CardContent>\r\n          
+          </Card>\r\n       
+         </motion.div>\r\n  
+          </div>\r\n        
+</DashboardShell>\r\n    );\
+r\n}\r\n","usedDeprecatedRul
+es":[]},{"filePath":"D:\\STA
+RTUP\\creatordeal\\src\\app\
+\dashboard\\creator\\page.ts
+x","messages":[{"ruleId":"@t
+ypescript-eslint/no-unused-v
+ars","message":"Definition 
+for rule '@typescript-eslint
+/no-unused-vars' was not fou
+nd.","line":1,"column":1,"en
+dLine":1,"endColumn":2,"seve
+rity":2,"nodeType":null},{"r
+uleId":"@typescript-eslint/n
+o-explicit-any","message":"D
+efinition for rule '@typescr
+ipt-eslint/no-explicit-any' 
+was not found.","line":1,"co
+lumn":1,"endLine":1,"endColu
+mn":2,"severity":2,"nodeType
+":null}],"suppressedMessages
+":[],"errorCount":2,"fatalEr
+rorCount":0,"warningCount":0
+,"fixableErrorCount":0,"fixa
+bleWarningCount":0,"source":
+"\"use 
+client\";\r\n\r\nimport 
+React, { useEffect, 
+useState } from 
+\"react\";\r\nimport { 
+useRouter } from \"next/navi
+gation\";\r\nimport { 
+motion } from \"framer-motio
+n\";\r\nimport { 
+collection, query, where, 
+getDocs, doc, getDoc, limit 
+} from \"firebase/firestore\
+";\r\nimport { db } from \"@
+/lib/firebase\";\r\nimport 
+{ useAuth } from \"@/context
+/AuthContext\";\r\nimport 
+DashboardShell from \"@/comp
+onents/DashboardShell\";\r\n
+import { Card, CardContent, 
+CardHeader, CardTitle } 
+from \"@/components/ui/card\
+";\r\nimport { Badge } from 
+\"@/components/ui/badge\";\r
+\nimport { Button } from \"@
+/components/ui/button\";\r\n
+import Link from 
+\"next/link\";\r\nimport 
+{\r\n    Megaphone,\r\n    
+Send,\r\n    
+CheckCircle2,\r\n    
+Clock,\r\n    
+Instagram,\r\n    
+Users,\r\n    Eye,\r\n    
+TrendingUp,\r\n    
+ArrowRight,\r\n    
+XCircle,\r\n} from \"lucide-
+react\";\r\n\r\ninterface 
+CreatorData {\r\n    name: 
+string;\r\n    
+instagramHandle: 
+string;\r\n    niche: 
+string;\r\n    followers: 
+number;\r\n    avgViews: 
+number;\r\n    
+engagementRate: number;\r\n 
+   verified: boolean;\r\n}\r
+\n\r\ninterface RequestItem 
+{\r\n    id: string;\r\n    
+campaignId: string;\r\n    
+status: 
+string;\r\n}\r\n\r\nconst 
+fadeInUp = {\r\n    hidden: 
+{ opacity: 0, y: 20 },\r\n  
+  visible: { opacity: 1, y: 
+0 },\r\n};\r\n\r\nexport 
+default function 
+CreatorDashboardPage() 
+{\r\n    const { user, 
+role, loading: authLoading 
+} = useAuth();\r\n    const 
+router = useRouter();\r\n   
+ const [creatorData, 
+setCreatorData] = 
+useState<CreatorData | 
+null>(null);\r\n    const 
+[requests, setRequests] = us
+eState<RequestItem[]>([]);\r
+\n    const [loading, 
+setLoading] = 
+useState(true);\r\n\r\n    
+useEffect(() => {\r\n       
+ if (!authLoading && (!user 
+|| role !== \"creator\")) 
+{\r\n            
+router.push(\"/auth\");\r\n 
+           return;\r\n      
+  }\r\n    }, [user, role, 
+authLoading, 
+router]);\r\n\r\n    
+useEffect(() => {\r\n       
+ if (!user) return;\r\n\r\n 
+       const fetchData = 
+async () => {\r\n           
+ try {\r\n                
+// Fetch creator 
+profile\r\n                
+const creatorDoc = await 
+getDoc(doc(db, 
+\"creators\", 
+user.uid));\r\n             
+   if (creatorDoc.exists()) 
+{\r\n                    set
+CreatorData(creatorDoc.data(
+) as CreatorData);\r\n      
+          }\r\n\r\n         
+       // Fetch 
+requests\r\n                
+const requestsQuery = 
+query(\r\n                  
+  collection(db, 
+\"requests\"),\r\n          
+          
+where(\"creatorId\", 
+\"==\", user.uid),\r\n      
+              limit(50)\r\n 
+               );\r\n       
+         const requestsSnap 
+= await 
+getDocs(requestsQuery);\r\n 
+               
+setRequests(\r\n            
+        
+requestsSnap.docs.map((doc) 
+=> ({\r\n                   
+     id: doc.id,\r\n        
+                
+...doc.data(),\r\n          
+          })) as 
+RequestItem[]\r\n           
+     );\r\n            } 
+catch (error) {\r\n         
+       
+console.error(\"Error 
+fetching dashboard data:\", 
+error);\r\n            } 
+finally {\r\n               
+ setLoading(false);\r\n     
+       }\r\n        
+};\r\n\r\n        
+fetchData();\r\n    }, 
+[user]);\r\n\r\n    if 
+(authLoading || !user) 
+{\r\n        return (\r\n   
+         <div 
+className=\"min-h-screen 
+flex items-center 
+justify-center\">\r\n       
+         <div 
+className=\"w-8 h-8 
+rounded-full border-2 
+border-primary 
+border-t-transparent 
+animate-spin\" />\r\n       
+     </div>\r\n        
+);\r\n    }\r\n\r\n    
+const pendingRequests = 
+requests.filter((r) => 
+r.status === 
+\"pending\").length;\r\n    
+const acceptedRequests = 
+requests.filter((r) => 
+r.status === 
+\"accepted\").length;\r\n   
+ const rejectedRequests = 
+requests.filter((r) => 
+r.status === \"rejected\").l
+ength;\r\n\r\n    return 
+(\r\n        
+<DashboardShell 
+role=\"creator\">\r\n       
+     <div className=\"space-
+y-8\">\r\n                
+{/* Welcome Header */}\r\n  
+              
+<motion.div\r\n             
+       
+initial=\"hidden\"\r\n      
+              
+animate=\"visible\"\r\n     
+               
+variants={fadeInUp}\r\n     
+               
+transition={{ duration: 0.5 
+}}\r\n                >\r\n 
+                   <h1 
+className=\"text-3xl 
+font-bold 
+tracking-tight\">\r\n       
+                 
+Welcome{creatorData ? `, 
+${creatorData.name}` : 
+\"\"}! ????\r\n             
+       </h1>\r\n            
+        <p className=\"text-
+muted-foreground 
+mt-1\">\r\n                 
+       Here&apos;s an 
+overview of your creator 
+activity.\r\n               
+     </p>\r\n               
+ </motion.div>\r\n\r\n      
+          {/* Profile Card 
+*/}\r\n                
+{creatorData && (\r\n       
+             
+<motion.div\r\n             
+           
+initial=\"hidden\"\r\n      
+                  
+animate=\"visible\"\r\n     
+                   
+variants={fadeInUp}\r\n     
+                   
+transition={{ delay: 0.1 
+}}\r\n                    
+>\r\n                       
+ <Card className=\"border-bo
+rder/50 bg-gradient-to-br 
+from-violet-500/5 
+to-purple-600/5\">\r\n      
+                      
+<CardContent 
+className=\"p-6\">\r\n      
+                          
+<div className=\"flex 
+flex-col md:flex-row 
+md:items-center 
+gap-6\">\r\n                
+                    <div 
+className=\"w-16 h-16 
+rounded-2xl 
+bg-gradient-to-br 
+from-violet-500 
+to-purple-600 flex 
+items-center justify-center 
+text-white text-2xl 
+font-bold\">\r\n            
+                            
+{creatorData.name[0]?.toUppe
+rCase()}\r\n                
+                    
+</div>\r\n                  
+                  <div 
+className=\"flex-1\">\r\n   
+                            
+         <div 
+className=\"flex 
+items-center gap-2 
+mb-1\">\r\n                 
+                           
+<h2 className=\"text-xl font
+-semibold\">{creatorData.nam
+e}</h2>\r\n                 
+                           
+{creatorData.verified ? 
+(\r\n                       
+                         
+<Badge variant=\"success\">V
+erified</Badge>\r\n         
+                            
+       ) : (\r\n            
+                            
+        <Badge 
+variant=\"warning\">Pending 
+Verification</Badge>\r\n    
+                            
+            )}\r\n          
+                            
+  </div>\r\n                
+                        
+<div className=\"flex 
+items-center gap-1.5 
+text-sm 
+text-muted-foreground 
+mb-3\">\r\n                 
+                           
+<Instagram 
+className=\"w-3.5 h-3.5\" 
+/>\r\n                      
+                      @{crea
+torData.instagramHandle}\r\n
+                            
+            </div>\r\n      
+                            
+      <div className=\"flex 
+flex-wrap gap-4\">\r\n      
+                            
+          <div 
+className=\"flex 
+items-center gap-1.5 
+text-sm\">\r\n              
+                            
+      <Users 
+className=\"w-3.5 h-3.5 
+text-violet-400\" />\r\n    
+                            
+                <span classN
+ame=\"font-medium\">\r\n    
+                            
+                    {creator
+Data.followers?.toLocaleStri
+ng(\"en-IN\")}\r\n          
+                            
+          </span>{\" 
+\"}\r\n                     
+                           
+<span className=\"text-muted
+-foreground\">followers</spa
+n>\r\n                      
+                      
+</div>\r\n                  
+                          
+<div className=\"flex 
+items-center gap-1.5 
+text-sm\">\r\n              
+                            
+      <Eye 
+className=\"w-3.5 h-3.5 
+text-blue-400\" />\r\n      
+                            
+              <span classNam
+e=\"font-medium\">\r\n      
+                            
+                  {creatorDa
+ta.avgViews?.toLocaleString(
+\"en-IN\")}\r\n             
+                            
+       </span>{\" \"}\r\n   
+                            
+                 <span class
+Name=\"text-muted-foreground
+\">avg views</span>\r\n     
+                            
+           </div>\r\n       
+                            
+         <div 
+className=\"flex 
+items-center gap-1.5 
+text-sm\">\r\n              
+                            
+      <TrendingUp 
+className=\"w-3.5 h-3.5 
+text-emerald-400\" />\r\n   
+                            
+                 <span class
+Name=\"font-medium\">\r\n   
+                            
+                     {creato
+rData.engagementRate}%\r\n  
+                            
+                  
+</span>{\" \"}\r\n          
+                            
+          <span className=\"
+text-muted-foreground\">enga
+gement</span>\r\n           
+                            
+     </div>\r\n             
+                            
+   <Badge>{creatorData.niche
+}</Badge>\r\n               
+                         
+</div>\r\n                  
+                  
+</div>\r\n                  
+              </div>\r\n    
+                        
+</CardContent>\r\n          
+              </Card>\r\n   
+                 
+</motion.div>\r\n           
+     )}\r\n\r\n             
+   {/* Stats */}\r\n        
+        <motion.div\r\n     
+               
+initial=\"hidden\"\r\n      
+              
+animate=\"visible\"\r\n     
+               
+variants={{\r\n             
+           hidden: { 
+opacity: 0 },\r\n           
+             visible: { 
+opacity: 1, transition: { 
+staggerChildren: 0.1 } 
+},\r\n                    
+}}\r\n                    
+className=\"grid 
+grid-cols-1 sm:grid-cols-3 
+gap-4\"\r\n                
+>\r\n                    
+{[\r\n                      
+  {\r\n                     
+       label: \"Pending 
+Requests\",\r\n             
+               value: 
+pendingRequests,\r\n        
+                    icon: 
+Clock,\r\n                  
+          color: 
+\"text-amber-400\",\r\n     
+                   },\r\n   
+                     {\r\n  
+                          
+label: \"Accepted 
+Deals\",\r\n                
+            value: 
+acceptedRequests,\r\n       
+                     icon: 
+CheckCircle2,\r\n           
+                 color: 
+\"text-emerald-400\",\r\n   
+                     },\r\n 
+                       
+{\r\n                       
+     label: 
+\"Rejected\",\r\n           
+                 value: 
+rejectedRequests,\r\n       
+                     icon: 
+XCircle,\r\n                
+            color: 
+\"text-red-400\",\r\n       
+                 },\r\n     
+               ].map((stat) 
+=> (\r\n                    
+    <motion.div 
+key={stat.label} 
+variants={fadeInUp}>\r\n    
+                        
+<Card className=\"border-bor
+der/50\">\r\n               
+                 
+<CardContent 
+className=\"p-6\">\r\n      
+                            
+  <div className=\"flex 
+items-center 
+justify-between\">\r\n      
+                            
+      <div>\r\n             
+                            
+   <p className=\"text-sm te
+xt-muted-foreground\">{stat.
+label}</p>\r\n              
+                            
+  <p className=\"text-3xl 
+font-bold 
+mt-1\">{stat.value}</p>\r\n 
+                            
+           </div>\r\n       
+                            
+     <stat.icon 
+className={`w-8 h-8 
+${stat.color} opacity-60`} 
+/>\r\n                      
+              </div>\r\n    
+                            
+</CardContent>\r\n          
+                  
+</Card>\r\n                 
+       </motion.div>\r\n    
+                ))}\r\n     
+           
+</motion.div>\r\n\r\n       
+         {/* Quick Actions 
+*/}\r\n                
+<motion.div\r\n             
+       
+initial=\"hidden\"\r\n      
+              
+animate=\"visible\"\r\n     
+               
+variants={fadeInUp}\r\n     
+               
+transition={{ delay: 0.3 
+}}\r\n                    
+className=\"flex flex-wrap 
+gap-3\"\r\n                
+>\r\n                    
+<Link 
+href=\"/campaigns\">\r\n    
+                    <Button 
+className=\"gap-2\">\r\n    
+                        
+<Megaphone className=\"w-4 
+h-4\" /> Browse 
+Campaigns\r\n               
+         </Button>\r\n      
+              </Link>\r\n   
+                 <Link 
+href=\"/requests\">\r\n     
+                   <Button 
+variant=\"outline\" 
+className=\"gap-2\">\r\n    
+                        
+<Send className=\"w-4 h-4\" 
+/> My Requests\r\n          
+                  
+{pendingRequests > 0 && 
+(\r\n                       
+         <span 
+className=\"ml-1 w-5 h-5 
+rounded-full bg-primary 
+text-[10px] flex 
+items-center justify-center 
+text-primary-foreground\">\r
+\n                          
+          
+{pendingRequests}\r\n       
+                         
+</span>\r\n                 
+           )}\r\n           
+             </Button>\r\n  
+                  
+</Link>\r\n                
+</motion.div>\r\n           
+ </div>\r\n        
+</DashboardShell>\r\n    );\
+r\n}\r\n","usedDeprecatedRul
+es":[]},{"filePath":"D:\\STA
+RTUP\\creatordeal\\src\\app\
+\layout.tsx","messages":[{"r
+uleId":"@typescript-eslint/n
+o-unused-vars","message":"De
+finition for rule '@typescri
+pt-eslint/no-unused-vars' 
+was not found.","line":1,"co
+lumn":1,"endLine":1,"endColu
+mn":2,"severity":2,"nodeType
+":null},{"ruleId":"@typescri
+pt-eslint/no-explicit-any","
+message":"Definition for 
+rule '@typescript-eslint/no-
+explicit-any' was not found.
+","line":1,"column":1,"endLi
+ne":1,"endColumn":2,"severit
+y":2,"nodeType":null}],"supp
+ressedMessages":[],"errorCou
+nt":2,"fatalErrorCount":0,"w
+arningCount":0,"fixableError
+Count":0,"fixableWarningCoun
+t":0,"source":"import type 
+{ Metadata } from 
+\"next\";\nimport 
+\"./globals.css\";\nimport 
+{ AuthProvider } from \"@/co
+ntext/AuthContext\";\n\nexpo
+rt const metadata: Metadata 
+= {\n  title: \"CreatorDeal 
+??? Where Brands Meet 
+Creators\",\n  
+description:\n    \"India's 
+premium creator-brand 
+collaboration platform. 
+Connect with top creators, 
+launch campaigns, and grow 
+your brand with data-driven 
+matching.\",\n  keywords: 
+[\"creator platform\", 
+\"brand deals\", 
+\"influencer marketing\", 
+\"India\", \"Instagram\", 
+\"creator economy\"],\n  
+openGraph: {\n    title: 
+\"CreatorDeal ??? Where 
+Brands Meet Creators\",\n   
+ description: \"India's 
+premium creator-brand 
+collaboration 
+platform.\",\n    type: 
+\"website\",\n  
+},\n};\n\nexport default 
+function RootLayout({\n  
+children,\n}: Readonly<{\n  
+children: 
+React.ReactNode;\n}>) {\n  
+return (\n    <html 
+lang=\"en\" 
+className=\"dark\">\n      
+<body 
+className=\"min-h-screen 
+bg-background 
+antialiased\">\n        <Aut
+hProvider>{children}</AuthPr
+ovider>\n      </body>\n    
+</html>\n  );\n}\n","usedDep
+recatedRules":[]},{"filePath
+":"D:\\STARTUP\\creatordeal\
+\src\\app\\onboarding\\brand
+\\page.tsx","messages":[{"ru
+leId":"@typescript-eslint/no
+-unused-vars","message":"Def
+inition for rule '@typescrip
+t-eslint/no-unused-vars' 
+was not found.","line":1,"co
+lumn":1,"endLine":1,"endColu
+mn":2,"severity":2,"nodeType
+":null},{"ruleId":"@typescri
+pt-eslint/no-explicit-any","
+message":"Definition for 
+rule '@typescript-eslint/no-
+explicit-any' was not found.
+","line":1,"column":1,"endLi
+ne":1,"endColumn":2,"severit
+y":2,"nodeType":null}],"supp
+ressedMessages":[],"errorCou
+nt":2,"fatalErrorCount":0,"w
+arningCount":0,"fixableError
+Count":0,"fixableWarningCoun
+t":0,"source":"\"use 
+client\";\r\n\r\nimport 
+React, { useState } from 
+\"react\";\r\nimport { 
+useRouter } from \"next/navi
+gation\";\r\nimport { 
+motion } from \"framer-motio
+n\";\r\nimport { doc, 
+setDoc, serverTimestamp } 
+from \"firebase/firestore\";
+\r\nimport { db } from \"@/l
+ib/firebase\";\r\nimport { 
+useAuth } from \"@/context/A
+uthContext\";\r\nimport { 
+Button } from \"@/components
+/ui/button\";\r\nimport { 
+Input } from \"@/components/
+ui/input\";\r\nimport { 
+Label } from \"@/components/
+ui/label\";\r\nimport { 
+Card, CardContent, 
+CardDescription, 
+CardHeader, CardTitle } 
+from \"@/components/ui/card\
+";\r\nimport { Building2, 
+ArrowRight, Loader2, 
+IndianRupee } from \"lucide-
+react\";\r\n\r\nconst 
+CATEGORY_OPTIONS = [\r\n    
+\"D2C / E-commerce\",\r\n   
+ \"Fashion & Apparel\",\r\n 
+   \"Food & 
+Beverages\",\r\n    
+\"Health & Wellness\",\r\n  
+  \"Tech & SaaS\",\r\n    
+\"Education & EdTech\",\r\n 
+   \"Finance & 
+FinTech\",\r\n    \"Beauty 
+& Personal Care\",\r\n    
+\"Travel & 
+Hospitality\",\r\n    
+\"Real Estate\",\r\n    
+\"Automotive\",\r\n    
+\"Entertainment & 
+Media\",\r\n    
+\"Gaming\",\r\n    
+\"Non-Profit / NGO\",\r\n   
+ \"Other\",\r\n];\r\n\r\nexp
+ort default function 
+BrandOnboardingPage() {\r\n 
+   const [formData, 
+setFormData] = 
+useState({\r\n        
+brandName: \"\",\r\n        
+category: \"\",\r\n        
+budgetMin: \"\",\r\n        
+budgetMax: \"\",\r\n        
+website: \"\",\r\n        
+description: \"\",\r\n    
+});\r\n    const [loading, 
+setLoading] = 
+useState(false);\r\n    
+const [error, setError] = 
+useState(\"\");\r\n    
+const router = 
+useRouter();\r\n    const { 
+user, refreshProfile } = 
+useAuth();\r\n\r\n    const 
+handleChange = (e: React.Cha
+ngeEvent<HTMLInputElement | 
+HTMLSelectElement | 
+HTMLTextAreaElement>) => 
+{\r\n        
+setFormData((prev) => ({ 
+...prev, [e.target.name]: 
+e.target.value }));\r\n    
+};\r\n\r\n    const 
+handleSubmit = async (e: 
+React.FormEvent) => {\r\n   
+     
+e.preventDefault();\r\n     
+   if (!user) return;\r\n   
+     setError(\"\");\r\n    
+    
+setLoading(true);\r\n\r\n   
+     const budgetMin = parse
+Int(formData.budgetMin);\r\n
+        const budgetMax = pa
+rseInt(formData.budgetMax);\
+r\n\r\n        if 
+(budgetMax < budgetMin) 
+{\r\n            
+setError(\"Maximum budget 
+must be greater than 
+minimum budget.\");\r\n     
+       
+setLoading(false);\r\n      
+      return;\r\n        
+}\r\n\r\n        try {\r\n  
+          await 
+setDoc(doc(db, \"brands\", 
+user.uid), {\r\n            
+    uid: user.uid,\r\n      
+          brandName: formDat
+a.brandName.trim(),\r\n     
+           category: 
+formData.category,\r\n      
+          budgetMin,\r\n    
+            budgetMax,\r\n  
+              website: formD
+ata.website.trim(),\r\n     
+           description: form
+Data.description.trim(),\r\n
+                createdAt: 
+serverTimestamp(),\r\n      
+          updatedAt: 
+serverTimestamp(),\r\n      
+      });\r\n\r\n           
+ await setDoc(\r\n          
+      doc(db, \"users\", 
+user.uid),\r\n              
+  { onboardingComplete: 
+true, updatedAt: 
+serverTimestamp() },\r\n    
+            { merge: true 
+}\r\n            );\r\n\r\n 
+           await 
+refreshProfile();\r\n       
+     router.push(\"/dashboar
+d/brand\");\r\n        } 
+catch (err) {\r\n           
+ console.error(\"Error 
+saving brand profile:\", 
+err);\r\n            
+setError(\"Failed to save 
+profile. Please try 
+again.\");\r\n        } 
+finally {\r\n            
+setLoading(false);\r\n      
+  }\r\n    };\r\n\r\n    
+return (\r\n        <div 
+className=\"min-h-screen 
+flex items-center 
+justify-center p-6 
+relative\">\r\n            
+<div className=\"fixed 
+inset-0 gradient-mesh 
+pointer-events-none\" 
+/>\r\n\r\n            
+<motion.div\r\n             
+   initial={{ opacity: 0, 
+y: 20 }}\r\n                
+animate={{ opacity: 1, y: 0 
+}}\r\n                
+transition={{ duration: 0.5 
+}}\r\n                
+className=\"w-full 
+max-w-2xl relative 
+z-10\"\r\n            >\r\n 
+               <Card classNa
+me=\"border-border/50 
+bg-card/80 
+backdrop-blur-xl\">\r\n     
+               <CardHeader c
+lassName=\"text-center\">\r\
+n                        
+<div className=\"flex 
+justify-center mb-4\">\r\n  
+                          
+<div className=\"w-14 h-14 
+rounded-xl 
+bg-gradient-to-br 
+from-blue-500 to-cyan-500 
+flex items-center 
+justify-center\">\r\n       
+                         
+<Building2 className=\"w-7 
+h-7 text-white\" />\r\n     
+                       
+</div>\r\n                  
+      </div>\r\n            
+            <CardTitle 
+className=\"text-2xl\">Set 
+up your Brand 
+profile</CardTitle>\r\n     
+                   
+<CardDescription>\r\n       
+                     Tell 
+us about your brand to 
+start posting campaigns and 
+finding creators.\r\n       
+                 
+</CardDescription>\r\n      
+              
+</CardHeader>\r\n\r\n       
+             
+<CardContent>\r\n           
+             <form 
+onSubmit={handleSubmit} clas
+sName=\"space-y-6\">\r\n    
+                        
+<div className=\"space-y-2\"
+>\r\n                       
+         <Label 
+htmlFor=\"brandName\">Brand 
+Name</Label>\r\n            
+                    
+<Input\r\n                  
+                  
+id=\"brandName\"\r\n        
+                            
+name=\"brandName\"\r\n      
+                            
+  placeholder=\"Your brand 
+or company name\"\r\n       
+                            
+ value={formData.brandName}\
+r\n                         
+           
+onChange={handleChange}\r\n 
+                            
+       required\r\n         
+                       
+/>\r\n                      
+      </div>\r\n\r\n        
+                    <div cla
+ssName=\"space-y-2\">\r\n   
+                            
+ <Label htmlFor=\"category\"
+>Industry 
+Category</Label>\r\n        
+                        
+<select\r\n                 
+                   
+id=\"category\"\r\n         
+                           
+name=\"category\"\r\n       
+                            
+ value={formData.category}\r
+\n                          
+          
+onChange={handleChange}\r\n 
+                            
+       required\r\n         
+                           
+className=\"flex h-11 
+w-full rounded-lg border 
+border-input bg-background 
+px-4 py-2 text-sm 
+ring-offset-background 
+focus-visible:outline-none 
+focus-visible:ring-2 
+focus-visible:ring-ring 
+focus-visible:ring-offset-2 
+transition-all 
+duration-200\"\r\n          
+                      >\r\n 
+                            
+       <option 
+value=\"\">Select your 
+industry</option>\r\n       
+                            
+ 
+{CATEGORY_OPTIONS.map((cat) 
+=> (\r\n                    
+                    <option 
+key={cat} value={cat}>\r\n  
+                            
+              {cat}\r\n     
+                            
+       </option>\r\n        
+                            
+))}\r\n                     
+           </select>\r\n    
+                        
+</div>\r\n\r\n              
+              <div className
+=\"space-y-2\">\r\n         
+                       
+<Label 
+htmlFor=\"website\">Website 
+(optional)</Label>\r\n      
+                          
+<Input\r\n                  
+                  
+id=\"website\"\r\n          
+                          
+name=\"website\"\r\n        
+                            
+type=\"url\"\r\n            
+                        plac
+eholder=\"https://yourbrand.
+com\"\r\n                   
+                 value={form
+Data.website}\r\n           
+                         
+onChange={handleChange}\r\n 
+                            
+   />\r\n                   
+         </div>\r\n\r\n     
+                       <div 
+className=\"grid 
+grid-cols-2 gap-4\">\r\n    
+                            
+<div className=\"space-y-2\"
+>\r\n                       
+             <Label 
+htmlFor=\"budgetMin\" 
+className=\"flex 
+items-center gap-1.5\">\r\n 
+                            
+           <IndianRupee 
+className=\"w-3.5 h-3.5\" 
+/> Min Budget (???)\r\n     
+                            
+   </Label>\r\n             
+                       
+<Input\r\n                  
+                      
+id=\"budgetMin\"\r\n        
+                            
+    name=\"budgetMin\"\r\n  
+                            
+          
+type=\"number\"\r\n         
+                            
+   placeholder=\"5000\"\r\n 
+                            
+           value={formData.b
+udgetMin}\r\n               
+                         
+onChange={handleChange}\r\n 
+                            
+           required\r\n     
+                            
+       min={0}\r\n          
+                          
+/>\r\n                      
+          </div>\r\n\r\n    
+                            
+<div className=\"space-y-2\"
+>\r\n                       
+             <Label 
+htmlFor=\"budgetMax\" 
+className=\"flex 
+items-center gap-1.5\">\r\n 
+                            
+           <IndianRupee 
+className=\"w-3.5 h-3.5\" 
+/> Max Budget (???)\r\n     
+                            
+   </Label>\r\n             
+                       
+<Input\r\n                  
+                      
+id=\"budgetMax\"\r\n        
+                            
+    name=\"budgetMax\"\r\n  
+                            
+          
+type=\"number\"\r\n         
+                            
+   
+placeholder=\"50000\"\r\n   
+                            
+         value={formData.bud
+getMax}\r\n                 
+                       
+onChange={handleChange}\r\n 
+                            
+           required\r\n     
+                            
+       min={0}\r\n          
+                          
+/>\r\n                      
+          </div>\r\n        
+                    
+</div>\r\n\r\n              
+              <div className
+=\"space-y-2\">\r\n         
+                       
+<Label htmlFor=\"description
+\">Brand Description 
+(optional)</Label>\r\n      
+                          
+<textarea\r\n               
+                     
+id=\"description\"\r\n      
+                            
+  name=\"description\"\r\n  
+                            
+      placeholder=\"Brief 
+description of your brand 
+and what you do...\"\r\n    
+                            
+    value={formData.descript
+ion}\r\n                    
+                
+onChange={handleChange}\r\n 
+                            
+       rows={3}\r\n         
+                           
+className=\"flex w-full 
+rounded-lg border 
+border-input bg-background 
+px-4 py-3 text-sm 
+ring-offset-background place
+holder:text-muted-foreground
+ focus-visible:outline-none 
+focus-visible:ring-2 
+focus-visible:ring-ring 
+focus-visible:ring-offset-2 
+transition-all duration-200 
+resize-none\"\r\n           
+                     />\r\n 
+                           
+</div>\r\n\r\n              
+              {error && 
+(\r\n                       
+         <p 
+className=\"text-sm 
+text-destructive 
+bg-destructive/10 px-3 py-2 
+rounded-lg\">\r\n           
+                         
+{error}\r\n                 
+               </p>\r\n     
+                       
+)}\r\n\r\n                  
+          <Button 
+type=\"submit\" 
+className=\"w-full\" 
+size=\"lg\" 
+disabled={loading}>\r\n     
+                           
+{loading ? <Loader2 
+className=\"w-4 h-4 
+animate-spin mr-2\" /> : 
+null}\r\n                   
+             Complete 
+Profile\r\n                 
+               <ArrowRight 
+className=\"ml-2 w-4 h-4\" 
+/>\r\n                      
+      </Button>\r\n         
+               </form>\r\n  
+                  
+</CardContent>\r\n          
+      </Card>\r\n           
+ </motion.div>\r\n        
+</div>\r\n    );\r\n}\r\n","
+usedDeprecatedRules":[]},{"f
+ilePath":"D:\\STARTUP\\creat
+ordeal\\src\\app\\onboarding
+\\creator\\page.tsx","messag
+es":[{"ruleId":"@typescript-
+eslint/no-unused-vars","mess
+age":"Definition for rule '@
+typescript-eslint/no-unused-
+vars' was not found.","line"
+:1,"column":1,"endLine":1,"e
+ndColumn":2,"severity":2,"no
+deType":null},{"ruleId":"@ty
+pescript-eslint/no-explicit-
+any","message":"Definition 
+for rule '@typescript-eslint
+/no-explicit-any' was not fo
+und.","line":1,"column":1,"e
+ndLine":1,"endColumn":2,"sev
+erity":2,"nodeType":null}],"
+suppressedMessages":[],"erro
+rCount":2,"fatalErrorCount":
+0,"warningCount":0,"fixableE
+rrorCount":0,"fixableWarning
+Count":0,"source":"\"use 
+client\";\r\n\r\nimport 
+React, { useState } from 
+\"react\";\r\nimport { 
+useRouter } from \"next/navi
+gation\";\r\nimport { 
+motion } from \"framer-motio
+n\";\r\nimport { doc, 
+setDoc, serverTimestamp } 
+from \"firebase/firestore\";
+\r\nimport { db } from \"@/l
+ib/firebase\";\r\nimport { 
+useAuth } from \"@/context/A
+uthContext\";\r\nimport { 
+Button } from \"@/components
+/ui/button\";\r\nimport { 
+Input } from \"@/components/
+ui/input\";\r\nimport { 
+Label } from \"@/components/
+ui/label\";\r\nimport { 
+Card, CardContent, 
+CardDescription, 
+CardHeader, CardTitle } 
+from \"@/components/ui/card\
+";\r\nimport { Camera, 
+ArrowRight, Loader2, 
+Instagram, Users, Eye, 
+TrendingUp, IndianRupee } 
+from \"lucide-react\";\r\n\r
+\nconst NICHE_OPTIONS = 
+[\r\n    \"Fashion & 
+Lifestyle\",\r\n    \"Tech 
+& Gadgets\",\r\n    \"Food 
+& Cooking\",\r\n    
+\"Travel\",\r\n    
+\"Fitness & Health\",\r\n   
+ \"Beauty & Skincare\",\r\n 
+   \"Education\",\r\n    
+\"Finance & Business\",\r\n 
+   \"Entertainment & 
+Comedy\",\r\n    
+\"Gaming\",\r\n    
+\"Parenting\",\r\n    
+\"Automotive\",\r\n    
+\"Art & Design\",\r\n    
+\"Music\",\r\n    \"Other\",
+\r\n];\r\n\r\nexport 
+default function 
+CreatorOnboardingPage() 
+{\r\n    const [formData, 
+setFormData] = 
+useState({\r\n        name: 
+\"\",\r\n        
+instagramHandle: \"\",\r\n  
+      niche: \"\",\r\n      
+  followers: \"\",\r\n      
+  avgViews: \"\",\r\n       
+ engagementRate: \"\",\r\n  
+      minRatePrivate: 
+\"\",\r\n    });\r\n    
+const [loading, setLoading] 
+= useState(false);\r\n    
+const [error, setError] = 
+useState(\"\");\r\n    
+const router = 
+useRouter();\r\n    const { 
+user, refreshProfile } = 
+useAuth();\r\n\r\n    const 
+handleChange = (e: React.Cha
+ngeEvent<HTMLInputElement | 
+HTMLSelectElement>) => 
+{\r\n        
+setFormData((prev) => ({ 
+...prev, [e.target.name]: 
+e.target.value }));\r\n    
+};\r\n\r\n    const 
+handleSubmit = async (e: 
+React.FormEvent) => {\r\n   
+     
+e.preventDefault();\r\n     
+   if (!user) return;\r\n   
+     setError(\"\");\r\n    
+    
+setLoading(true);\r\n\r\n   
+     try {\r\n            
+// Save creator profile\r\n 
+           await 
+setDoc(doc(db, 
+\"creators\", user.uid), 
+{\r\n                uid: 
+user.uid,\r\n               
+ name: 
+formData.name.trim(),\r\n   
+             
+instagramHandle: formData.in
+stagramHandle.trim().replace
+(\"@\", \"\"),\r\n          
+      niche: 
+formData.niche,\r\n         
+       followers: parseInt(f
+ormData.followers),\r\n     
+           avgViews: parseIn
+t(formData.avgViews),\r\n   
+             
+engagementRate: parseFloat(f
+ormData.engagementRate),\r\n
+                
+minRatePrivate: parseInt(for
+mData.minRatePrivate),\r\n  
+              verified: 
+false,\r\n                
+createdAt: 
+serverTimestamp(),\r\n      
+          updatedAt: 
+serverTimestamp(),\r\n      
+      });\r\n\r\n           
+ // Mark onboarding 
+complete\r\n            
+await setDoc(\r\n           
+     doc(db, \"users\", 
+user.uid),\r\n              
+  { onboardingComplete: 
+true, updatedAt: 
+serverTimestamp() },\r\n    
+            { merge: true 
+}\r\n            );\r\n\r\n 
+           await 
+refreshProfile();\r\n       
+     router.push(\"/dashboar
+d/creator\");\r\n        } 
+catch (err) {\r\n           
+ console.error(\"Error 
+saving creator profile:\", 
+err);\r\n            
+setError(\"Failed to save 
+profile. Please try 
+again.\");\r\n        } 
+finally {\r\n            
+setLoading(false);\r\n      
+  }\r\n    };\r\n\r\n    
+return (\r\n        <div 
+className=\"min-h-screen 
+flex items-center 
+justify-center p-6 
+relative\">\r\n            
+<div className=\"fixed 
+inset-0 gradient-mesh 
+pointer-events-none\" 
+/>\r\n\r\n            
+<motion.div\r\n             
+   initial={{ opacity: 0, 
+y: 20 }}\r\n                
+animate={{ opacity: 1, y: 0 
+}}\r\n                
+transition={{ duration: 0.5 
+}}\r\n                
+className=\"w-full 
+max-w-2xl relative 
+z-10\"\r\n            >\r\n 
+               <Card classNa
+me=\"border-border/50 
+bg-card/80 
+backdrop-blur-xl\">\r\n     
+               <CardHeader c
+lassName=\"text-center\">\r\
+n                        
+<div className=\"flex 
+justify-center mb-4\">\r\n  
+                          
+<div className=\"w-14 h-14 
+rounded-xl 
+bg-gradient-to-br 
+from-violet-500 
+to-purple-600 flex 
+items-center 
+justify-center\">\r\n       
+                         
+<Camera className=\"w-7 h-7 
+text-white\" />\r\n         
+                   
+</div>\r\n                  
+      </div>\r\n            
+            <CardTitle 
+className=\"text-2xl\">Set 
+up your Creator 
+profile</CardTitle>\r\n     
+                   
+<CardDescription>\r\n       
+                     Tell 
+us about yourself so we can 
+match you with the best 
+campaigns.\r\n              
+          
+</CardDescription>\r\n      
+              
+</CardHeader>\r\n\r\n       
+             
+<CardContent>\r\n           
+             <form 
+onSubmit={handleSubmit} clas
+sName=\"space-y-6\">\r\n    
+                        {/* 
+Name */}\r\n                
+            <div className=\
+"space-y-2\">\r\n           
+                     <Label 
+htmlFor=\"name\">Full 
+Name</Label>\r\n            
+                    
+<Input\r\n                  
+                  
+id=\"name\"\r\n             
+                       
+name=\"name\"\r\n           
+                         
+placeholder=\"Your name as 
+displayed to brands\"\r\n   
+                            
+     
+value={formData.name}\r\n   
+                            
+     
+onChange={handleChange}\r\n 
+                            
+       required\r\n         
+                       
+/>\r\n                      
+      </div>\r\n\r\n        
+                    {/* 
+Instagram Handle */}\r\n    
+                        
+<div className=\"space-y-2\"
+>\r\n                       
+         <Label htmlFor=\"in
+stagramHandle\">Instagram 
+Handle</Label>\r\n          
+                      <div 
+className=\"relative\">\r\n 
+                            
+       <Instagram 
+className=\"absolute left-3 
+top-1/2 -translate-y-1/2 
+w-4 h-4 
+text-muted-foreground\" 
+/>\r\n                      
+              <Input\r\n    
+                            
+        
+id=\"instagramHandle\"\r\n  
+                            
+          name=\"instagramHa
+ndle\"\r\n                  
+                      placeh
+older=\"@yourusername\"\r\n 
+                            
+           value={formData.i
+nstagramHandle}\r\n         
+                            
+   
+onChange={handleChange}\r\n 
+                            
+           
+className=\"pl-10\"\r\n     
+                            
+       required\r\n         
+                           
+/>\r\n                      
+          </div>\r\n        
+                    
+</div>\r\n\r\n              
+              {/* Niche 
+*/}\r\n                     
+       <div className=\"spac
+e-y-2\">\r\n                
+                <Label 
+htmlFor=\"niche\">Content 
+Niche</Label>\r\n           
+                     
+<select\r\n                 
+                   
+id=\"niche\"\r\n            
+                        
+name=\"niche\"\r\n          
+                          
+value={formData.niche}\r\n  
+                            
+      
+onChange={handleChange}\r\n 
+                            
+       required\r\n         
+                           
+className=\"flex h-11 
+w-full rounded-lg border 
+border-input bg-background 
+px-4 py-2 text-sm 
+ring-offset-background 
+focus-visible:outline-none 
+focus-visible:ring-2 
+focus-visible:ring-ring 
+focus-visible:ring-offset-2 
+transition-all 
+duration-200\"\r\n          
+                      >\r\n 
+                            
+       <option 
+value=\"\">Select your 
+niche</option>\r\n          
+                          
+{NICHE_OPTIONS.map((niche) 
+=> (\r\n                    
+                    <option 
+key={niche} 
+value={niche}>\r\n          
+                            
+      {niche}\r\n           
+                            
+ </option>\r\n              
+                      
+))}\r\n                     
+           </select>\r\n    
+                        
+</div>\r\n\r\n              
+              {/* Stats Row 
+*/}\r\n                     
+       <div 
+className=\"grid 
+grid-cols-1 md:grid-cols-3 
+gap-4\">\r\n                
+                <div classNa
+me=\"space-y-2\">\r\n       
+                            
+ <Label 
+htmlFor=\"followers\" 
+className=\"flex 
+items-center gap-1.5\">\r\n 
+                            
+           <Users 
+className=\"w-3.5 h-3.5\" 
+/> Followers\r\n            
+                        
+</Label>\r\n                
+                    
+<Input\r\n                  
+                      
+id=\"followers\"\r\n        
+                            
+    name=\"followers\"\r\n  
+                            
+          
+type=\"number\"\r\n         
+                            
+   
+placeholder=\"50000\"\r\n   
+                            
+         value={formData.fol
+lowers}\r\n                 
+                       
+onChange={handleChange}\r\n 
+                            
+           required\r\n     
+                            
+       min={0}\r\n          
+                          
+/>\r\n                      
+          </div>\r\n\r\n    
+                            
+<div className=\"space-y-2\"
+>\r\n                       
+             <Label 
+htmlFor=\"avgViews\" 
+className=\"flex 
+items-center gap-1.5\">\r\n 
+                            
+           <Eye 
+className=\"w-3.5 h-3.5\" 
+/> Avg Views\r\n            
+                        
+</Label>\r\n                
+                    
+<Input\r\n                  
+                      
+id=\"avgViews\"\r\n         
+                            
+   name=\"avgViews\"\r\n    
+                            
+        type=\"number\"\r\n 
+                            
+           
+placeholder=\"10000\"\r\n   
+                            
+         value={formData.avg
+Views}\r\n                  
+                      
+onChange={handleChange}\r\n 
+                            
+           required\r\n     
+                            
+       min={0}\r\n          
+                          
+/>\r\n                      
+          </div>\r\n\r\n    
+                            
+<div className=\"space-y-2\"
+>\r\n                       
+             <Label 
+htmlFor=\"engagementRate\" 
+className=\"flex 
+items-center gap-1.5\">\r\n 
+                            
+           <TrendingUp 
+className=\"w-3.5 h-3.5\" 
+/> Engagement %\r\n         
+                           
+</Label>\r\n                
+                    
+<Input\r\n                  
+                      
+id=\"engagementRate\"\r\n   
+                            
+         
+name=\"engagementRate\"\r\n 
+                            
+           
+type=\"number\"\r\n         
+                            
+   step=\"0.1\"\r\n         
+                            
+   placeholder=\"4.5\"\r\n  
+                            
+          value={formData.en
+gagementRate}\r\n           
+                            
+ 
+onChange={handleChange}\r\n 
+                            
+           required\r\n     
+                            
+       min={0}\r\n          
+                            
+  max={100}\r\n             
+                       
+/>\r\n                      
+          </div>\r\n        
+                    
+</div>\r\n\r\n              
+              {/* Min Rate 
+(Private) */}\r\n           
+                 <div classN
+ame=\"space-y-2\">\r\n      
+                          
+<Label 
+htmlFor=\"minRatePrivate\" 
+className=\"flex 
+items-center gap-1.5\">\r\n 
+                            
+       <IndianRupee 
+className=\"w-3.5 h-3.5\" 
+/> Minimum Rate (???)\r\n   
+                            
+     <span 
+className=\"text-xs 
+text-muted-foreground 
+ml-1\">\r\n                 
+                       ??? 
+Private, never shown to 
+brands\r\n                  
+                  
+</span>\r\n                 
+               </Label>\r\n 
+                            
+   <Input\r\n               
+                     
+id=\"minRatePrivate\"\r\n   
+                            
+     
+name=\"minRatePrivate\"\r\n 
+                            
+       type=\"number\"\r\n  
+                            
+      
+placeholder=\"5000\"\r\n    
+                            
+    value={formData.minRateP
+rivate}\r\n                 
+                   
+onChange={handleChange}\r\n 
+                            
+       required\r\n         
+                           
+min={0}\r\n                 
+               />\r\n       
+                         <p 
+className=\"text-xs text-mut
+ed-foreground\">\r\n        
+                            
+???? This is used only for 
+internal matching. Brands 
+cannot see this.\r\n        
+                        
+</p>\r\n                    
+        </div>\r\n\r\n      
+                      
+{error && (\r\n             
+                   <p 
+className=\"text-sm 
+text-destructive 
+bg-destructive/10 px-3 py-2 
+rounded-lg\">\r\n           
+                         
+{error}\r\n                 
+               </p>\r\n     
+                       
+)}\r\n\r\n                  
+          <Button 
+type=\"submit\" 
+className=\"w-full\" 
+size=\"lg\" 
+disabled={loading}>\r\n     
+                           
+{loading ? <Loader2 
+className=\"w-4 h-4 
+animate-spin mr-2\" /> : 
+null}\r\n                   
+             Complete 
+Profile\r\n                 
+               <ArrowRight 
+className=\"ml-2 w-4 h-4\" 
+/>\r\n                      
+      </Button>\r\n         
+               </form>\r\n  
+                  
+</CardContent>\r\n          
+      </Card>\r\n           
+ </motion.div>\r\n        
+</div>\r\n    );\r\n}\r\n","
+usedDeprecatedRules":[]},{"f
+ilePath":"D:\\STARTUP\\creat
+ordeal\\src\\app\\onboarding
+\\role\\page.tsx","messages"
+:[{"ruleId":"@typescript-esl
+int/no-unused-vars","message
+":"Definition for rule '@typ
+escript-eslint/no-unused-var
+s' was not found.","line":1,
+"column":1,"endLine":1,"endC
+olumn":2,"severity":2,"nodeT
+ype":null},{"ruleId":"@types
+cript-eslint/no-explicit-any
+","message":"Definition for 
+rule '@typescript-eslint/no-
+explicit-any' was not found.
+","line":1,"column":1,"endLi
+ne":1,"endColumn":2,"severit
+y":2,"nodeType":null}],"supp
+ressedMessages":[],"errorCou
+nt":2,"fatalErrorCount":0,"w
+arningCount":0,"fixableError
+Count":0,"fixableWarningCoun
+t":0,"source":"\"use 
+client\";\r\n\r\nimport 
+React, { useState } from 
+\"react\";\r\nimport { 
+useRouter } from \"next/navi
+gation\";\r\nimport { 
+motion } from \"framer-motio
+n\";\r\nimport { Button } 
+from \"@/components/ui/butto
+n\";\r\nimport { Card, 
+CardContent } from \"@/compo
+nents/ui/card\";\r\nimport 
+{ useAuth } from \"@/context
+/AuthContext\";\r\nimport { 
+setUserRole, UserRole } 
+from 
+\"@/lib/auth\";\r\nimport { 
+Camera, Building2, 
+ArrowRight, Loader2, 
+Sparkles } from \"lucide-rea
+ct\";\r\n\r\nconst fadeInUp 
+= {\r\n    hidden: { 
+opacity: 0, y: 20 },\r\n    
+visible: { opacity: 1, y: 0 
+},\r\n};\r\n\r\nexport 
+default function 
+RoleSelectionPage() {\r\n   
+ const [selectedRole, 
+setSelectedRole] = 
+useState<UserRole | 
+null>(null);\r\n    const 
+[loading, setLoading] = 
+useState(false);\r\n    
+const router = 
+useRouter();\r\n    const { 
+user, refreshProfile } = 
+useAuth();\r\n\r\n    const 
+handleContinue = async () 
+=> {\r\n        if 
+(!selectedRole || !user) 
+return;\r\n        
+setLoading(true);\r\n\r\n   
+     try {\r\n            
+await setUserRole(user.uid, 
+selectedRole);\r\n          
+  await 
+refreshProfile();\r\n       
+     router.push(`/onboardin
+g/${selectedRole}`);\r\n    
+    } catch (error) {\r\n   
+         
+console.error(\"Error 
+setting role:\", 
+error);\r\n        } 
+finally {\r\n            
+setLoading(false);\r\n      
+  }\r\n    };\r\n\r\n    
+const roles = [\r\n        
+{\r\n            id: 
+\"creator\" as 
+UserRole,\r\n            
+icon: Camera,\r\n           
+ title: \"I'm a 
+Creator\",\r\n            
+description:\r\n            
+    \"I create content and 
+want to collaborate with 
+brands for 
+campaigns.\",\r\n           
+ features: [\r\n            
+    \"Get matched with 
+relevant campaigns\",\r\n   
+             \"Set your own 
+rates privately\",\r\n      
+          \"Showcase your 
+portfolio\",\r\n            
+],\r\n            gradient: 
+\"from-violet-500 
+to-purple-600\",\r\n        
+    borderColor: \"border-vi
+olet-500/50\",\r\n          
+  bgColor: 
+\"bg-violet-500/5\",\r\n    
+    },\r\n        {\r\n     
+       id: \"brand\" as 
+UserRole,\r\n            
+icon: Building2,\r\n        
+    title: \"I'm a 
+Brand\",\r\n            
+description:\r\n            
+    \"I want to find 
+creators for my marketing 
+campaigns and 
+promotions.\",\r\n          
+  features: [\r\n           
+     \"Post campaigns & 
+find creators\",\r\n        
+        \"AI-powered 
+creator matching\",\r\n     
+           \"Track campaign 
+performance\",\r\n          
+  ],\r\n            
+gradient: \"from-blue-500 
+to-cyan-500\",\r\n          
+  borderColor: 
+\"border-blue-500/50\",\r\n 
+           bgColor: 
+\"bg-blue-500/5\",\r\n      
+  },\r\n    ];\r\n\r\n    
+return (\r\n        <div 
+className=\"min-h-screen 
+flex items-center 
+justify-center p-6 
+relative\">\r\n            
+<div className=\"fixed 
+inset-0 gradient-mesh 
+pointer-events-none\" 
+/>\r\n\r\n            
+<motion.div\r\n             
+   initial={{ opacity: 0 
+}}\r\n                
+animate={{ opacity: 1 
+}}\r\n                
+transition={{ duration: 0.5 
+}}\r\n                
+className=\"w-full 
+max-w-3xl relative 
+z-10\"\r\n            >\r\n 
+               <div 
+className=\"text-center 
+mb-10\">\r\n                
+    <div className=\"flex 
+justify-center mb-4\">\r\n  
+                      <div 
+className=\"w-12 h-12 
+rounded-xl gradient-primary 
+flex items-center 
+justify-center\">\r\n       
+                     
+<Sparkles className=\"w-6 
+h-6 text-white\" />\r\n     
+                   
+</div>\r\n                  
+  </div>\r\n                
+    <h1 
+className=\"text-3xl 
+md:text-4xl font-bold 
+tracking-tight mb-3\">\r\n  
+                      How 
+will you use 
+CreatorDeal?\r\n            
+        </h1>\r\n           
+         <p className=\"text
+-muted-foreground 
+text-lg\">\r\n              
+          Choose your role 
+to get started. You can 
+always change this 
+later.\r\n                  
+  </p>\r\n                
+</div>\r\n\r\n              
+  <div className=\"grid 
+md:grid-cols-2 gap-6 
+mb-8\">\r\n                 
+   {roles.map((role, i) => 
+(\r\n                       
+ <motion.div\r\n            
+                
+key={role.id}\r\n           
+                 
+variants={fadeInUp}\r\n     
+                       
+initial=\"hidden\"\r\n      
+                      
+animate=\"visible\"\r\n     
+                       
+transition={{ duration: 
+0.5, delay: i * 0.15 }}\r\n 
+                       
+>\r\n                       
+     <Card\r\n              
+                  
+className={`cursor-pointer 
+transition-all duration-300 
+h-full ${selectedRole === 
+role.id\r\n                 
+                       ? 
+`${role.borderColor} 
+${role.bgColor} 
+shadow-lg`\r\n              
+                          : 
+\"border-border/50 
+hover:border-border\"\r\n   
+                            
+     }`}\r\n                
+                onClick={() 
+=> setSelectedRole(role.id)}
+\r\n                        
+    >\r\n                   
+             <CardContent 
+className=\"p-8\">\r\n      
+                            
+  <div\r\n                  
+                      
+className={`w-14 h-14 
+rounded-xl 
+bg-gradient-to-br 
+${role.gradient} flex 
+items-center justify-center 
+mb-6`}\r\n                  
+                  >\r\n     
+                            
+       <role.icon 
+className=\"w-7 h-7 
+text-white\" />\r\n         
+                           
+</div>\r\n                  
+                  <h2 
+className=\"text-xl 
+font-semibold mb-2\">{role.t
+itle}</h2>\r\n              
+                      <p cla
+ssName=\"text-muted-foregrou
+nd text-sm mb-6\">\r\n      
+                            
+      
+{role.description}\r\n      
+                            
+  </p>\r\n                  
+                  <ul classN
+ame=\"space-y-3\">\r\n      
+                            
+      {role.features.map((fe
+ature) => (\r\n             
+                            
+   <li\r\n                  
+                            
+  key={feature}\r\n         
+                            
+           className=\"flex 
+items-center gap-2 text-sm 
+text-muted-foreground\"\r\n 
+                            
+               >\r\n        
+                            
+            <div\r\n        
+                            
+                
+className={`w-1.5 h-1.5 
+rounded-full 
+bg-gradient-to-br 
+${role.gradient}`}\r\n      
+                            
+              />\r\n        
+                            
+            {feature}\r\n   
+                            
+             </li>\r\n      
+                            
+      ))}\r\n               
+                     
+</ul>\r\n                   
+             
+</CardContent>\r\n          
+                  
+</Card>\r\n                 
+       </motion.div>\r\n    
+                ))}\r\n     
+           </div>\r\n\r\n   
+             
+<motion.div\r\n             
+       initial={{ opacity: 
+0 }}\r\n                    
+animate={{ opacity: 1 
+}}\r\n                    
+transition={{ delay: 0.4 
+}}\r\n                    cl
+assName=\"text-center\"\r\n 
+               >\r\n        
+            <Button\r\n     
+                   
+size=\"xl\"\r\n             
+           
+disabled={!selectedRole || 
+loading}\r\n                
+        onClick={handleConti
+nue}\r\n                    
+    className=\"min-w-[200px
+]\"\r\n                    
+>\r\n                       
+ {loading ? (\r\n           
+                 <Loader2 
+className=\"w-4 h-4 
+animate-spin mr-2\" />\r\n  
+                      ) : 
+null}\r\n                   
+     Continue\r\n           
+             <ArrowRight 
+className=\"ml-2 w-5 h-5\" 
+/>\r\n                    
+</Button>\r\n               
+ </motion.div>\r\n          
+  </motion.div>\r\n        
+</div>\r\n    );\r\n}\r\n","
+usedDeprecatedRules":[]},{"f
+ilePath":"D:\\STARTUP\\creat
+ordeal\\src\\app\\page.tsx",
+"messages":[{"ruleId":"@type
+script-eslint/no-unused-vars
+","message":"Definition for 
+rule '@typescript-eslint/no-
+unused-vars' was not found."
+,"line":1,"column":1,"endLin
+e":1,"endColumn":2,"severity
+":2,"nodeType":null},{"ruleI
+d":"@typescript-eslint/no-ex
+plicit-any","message":"Defin
+ition for rule '@typescript-
+eslint/no-explicit-any' was 
+not found.","line":1,"column
+":1,"endLine":1,"endColumn":
+2,"severity":2,"nodeType":nu
+ll}],"suppressedMessages":[]
+,"errorCount":2,"fatalErrorC
+ount":0,"warningCount":0,"fi
+xableErrorCount":0,"fixableW
+arningCount":0,"source":"\"u
+se client\";\n\nimport 
+React from 
+\"react\";\nimport Link 
+from \"next/link\";\nimport 
+{ motion } from 
+\"framer-motion\";\nimport 
+{ Button } from \"@/componen
+ts/ui/button\";\nimport {\n 
+ ArrowRight,\n  Zap,\n  
+Target,\n  Shield,\n  
+TrendingUp,\n  Users,\n  
+BarChart3,\n  Sparkles,\n} 
+from 
+\"lucide-react\";\n\nconst 
+fadeInUp = {\n  hidden: { 
+opacity: 0, y: 30 },\n  
+visible: { opacity: 1, y: 0 
+},\n};\n\nconst 
+staggerContainer = {\n  
+hidden: { opacity: 0 },\n  
+visible: {\n    opacity: 
+1,\n    transition: { 
+staggerChildren: 0.15 },\n  
+},\n};\n\nexport default 
+function LandingPage() {\n  
+return (\n    <div 
+className=\"relative 
+min-h-screen bg-background 
+overflow-hidden\">\n      
+{/* Gradient mesh 
+background */}\n      <div 
+className=\"fixed inset-0 
+gradient-mesh 
+pointer-events-none\" 
+/>\n\n      {/* Animated 
+grid overlay */}\n      
+<div\n        
+className=\"fixed inset-0 
+pointer-events-none 
+opacity-[0.02]\"\n        
+style={{\n          
+backgroundImage:\n          
+  \"linear-gradient(rgba(255
+,255,255,.1) 1px, 
+transparent 1px), 
+linear-gradient(90deg, 
+rgba(255,255,255,.1) 1px, 
+transparent 1px)\",\n       
+   backgroundSize: \"64px 
+64px\",\n        }}\n      
+/>\n\n      {/* Navigation 
+*/}\n      <motion.nav\n    
+    initial={{ opacity: 0, 
+y: -20 }}\n        
+animate={{ opacity: 1, y: 0 
+}}\n        transition={{ 
+duration: 0.6 }}\n        
+className=\"relative z-50 
+flex items-center 
+justify-between px-6 
+lg:px-12 py-5\"\n      >\n  
+      <div className=\"flex 
+items-center gap-2\">\n     
+     <div className=\"w-9 
+h-9 rounded-xl 
+gradient-primary flex 
+items-center 
+justify-center\">\n         
+   <Sparkles 
+className=\"w-5 h-5 
+text-white\" />\n          
+</div>\n          <span 
+className=\"text-xl 
+font-bold tracking-tight\">C
+reatorDeal</span>\n        
+</div>\n        <div 
+className=\"hidden md:flex 
+items-center gap-8 text-sm 
+text-muted-foreground\">\n  
+        <a 
+href=\"#features\" className
+=\"hover:text-foreground tra
+nsition-colors\">Features</a
+>\n          <a 
+href=\"#how-it-works\" class
+Name=\"hover:text-foreground
+ transition-colors\">How It 
+Works</a>\n          <a 
+href=\"#creators\" className
+=\"hover:text-foreground 
+transition-colors\">For 
+Creators</a>\n          <a 
+href=\"#brands\" className=\
+"hover:text-foreground 
+transition-colors\">For 
+Brands</a>\n        
+</div>\n        <div 
+className=\"flex 
+items-center gap-3\">\n     
+     <Link 
+href=\"/auth\">\n           
+ <Button variant=\"ghost\" 
+size=\"sm\">\n              
+Sign In\n            
+</Button>\n          
+</Link>\n          <Link 
+href=\"/auth\">\n           
+ <Button size=\"sm\">\n     
+         Get Started 
+<ArrowRight 
+className=\"ml-1 w-4 h-4\" 
+/>\n            </Button>\n 
+         </Link>\n        
+</div>\n      
+</motion.nav>\n\n      {/* 
+Hero Section */}\n      
+<section 
+className=\"relative z-10 
+px-6 lg:px-12 pt-20 
+lg:pt-32 pb-24 max-w-7xl 
+mx-auto\">\n        
+<motion.div\n          
+initial=\"hidden\"\n        
+  animate=\"visible\"\n     
+     variants={staggerContai
+ner}\n          
+className=\"text-center 
+max-w-4xl mx-auto\"\n       
+ >\n          <motion.div\n 
+           
+variants={fadeInUp}\n       
+     transition={{ 
+duration: 0.6 }}\n          
+  className=\"inline-flex 
+items-center gap-2 px-4 
+py-1.5 rounded-full border 
+border-primary/20 
+bg-primary/5 text-primary 
+text-sm font-medium 
+mb-8\"\n          >\n       
+     <Zap className=\"w-3.5 
+h-3.5\" />\n            
+India&apos;s #1 
+Creator-Brand Platform\n    
+      </motion.div>\n\n     
+     <motion.h1\n           
+ variants={fadeInUp}\n      
+      transition={{ 
+duration: 0.6, delay: 0.1 
+}}\n            
+className=\"text-5xl 
+md:text-7xl lg:text-8xl 
+font-bold tracking-tight 
+leading-[0.9] 
+text-balance\"\n          
+>\n            Where{\" 
+\"}\n            <span class
+Name=\"gradient-text\">Brand
+s</span>\n            <br 
+/>\n            Meet{\" 
+\"}\n            <span class
+Name=\"gradient-text\">Creat
+ors</span>\n          
+</motion.h1>\n\n          
+<motion.p\n            
+variants={fadeInUp}\n       
+     transition={{ 
+duration: 0.6, delay: 0.2 
+}}\n            
+className=\"mt-8 text-lg 
+md:text-xl 
+text-muted-foreground 
+max-w-2xl mx-auto 
+leading-relaxed 
+text-balance\"\n          
+>\n            The smartest 
+way to launch influencer 
+campaigns in India. 
+AI-powered\n            
+matching, transparent 
+deals, and real results ??? 
+all in one\n            
+platform.\n          
+</motion.p>\n\n          
+<motion.div\n            
+variants={fadeInUp}\n       
+     transition={{ 
+duration: 0.6, delay: 0.3 
+}}\n            
+className=\"mt-10 flex 
+flex-col sm:flex-row 
+items-center justify-center 
+gap-4\"\n          >\n      
+      <Link 
+href=\"/auth\">\n           
+   <Button size=\"xl\" 
+className=\"w-full 
+sm:w-auto\">\n              
+  Start Free Today\n        
+        <ArrowRight 
+className=\"ml-2 w-5 h-5\" 
+/>\n              
+</Button>\n            
+</Link>\n            <Link 
+href=\"#how-it-works\">\n   
+           <Button 
+variant=\"outline\" 
+size=\"xl\" 
+className=\"w-full 
+sm:w-auto\">\n              
+  See How It Works\n        
+      </Button>\n           
+ </Link>\n          
+</motion.div>\n\n          
+<motion.div\n            
+variants={fadeInUp}\n       
+     transition={{ 
+duration: 0.6, delay: 0.4 
+}}\n            
+className=\"mt-16 flex 
+items-center justify-center 
+gap-8 md:gap-16 
+text-muted-foreground\"\n   
+       >\n            {[\n  
+            { value: 
+\"10K+\", label: 
+\"Creators\" },\n           
+   { value: \"500+\", 
+label: \"Brands\" },\n      
+        { value: 
+\"???2Cr+\", label: \"Deals 
+Closed\" },\n            
+].map((stat) => (\n         
+     <div key={stat.label} c
+lassName=\"text-center\">\n 
+               <div 
+className=\"text-2xl 
+md:text-3xl font-bold 
+text-foreground\">\n        
+          {stat.value}\n    
+            </div>\n        
+        <div 
+className=\"text-xs 
+md:text-sm 
+mt-1\">{stat.label}</div>\n 
+             </div>\n       
+     ))}\n          
+</motion.div>\n        
+</motion.div>\n      
+</section>\n\n      {/* 
+Features Section */}\n      
+<section id=\"features\" 
+className=\"relative z-10 
+px-6 lg:px-12 py-24 
+max-w-7xl mx-auto\">\n      
+  <motion.div\n          
+initial=\"hidden\"\n        
+  whileInView=\"visible\"\n 
+         viewport={{ once: 
+true, margin: \"-100px\" 
+}}\n          variants={stag
+gerContainer}\n          
+className=\"text-center 
+mb-16\"\n        >\n        
+  <motion.h2\n            
+variants={fadeInUp}\n       
+     className=\"text-3xl 
+md:text-5xl font-bold 
+tracking-tight\"\n          
+>\n            Built for 
+the{\" \"}\n            
+<span className=\"gradient-t
+ext\">Creator 
+Economy</span>\n          
+</motion.h2>\n          
+<motion.p\n            
+variants={fadeInUp}\n       
+     className=\"mt-4 
+text-muted-foreground 
+text-lg max-w-2xl 
+mx-auto\"\n          >\n    
+        Everything you need 
+to discover, connect, and 
+collaborate ??? without\n   
+         the middlemen.\n   
+       </motion.p>\n        
+</motion.div>\n\n        
+<motion.div\n          
+initial=\"hidden\"\n        
+  whileInView=\"visible\"\n 
+         viewport={{ once: 
+true, margin: \"-100px\" 
+}}\n          variants={stag
+gerContainer}\n          
+className=\"grid 
+md:grid-cols-2 
+lg:grid-cols-3 gap-6\"\n    
+    >\n          {[\n       
+     {\n              icon: 
+Target,\n              
+title: \"Smart 
+Matching\",\n              
+description:\n              
+  \"AI-powered algorithm 
+matches creators with 
+campaigns based on niche, 
+engagement, and 
+compatibility.\",\n         
+     gradient: 
+\"from-violet-500 
+to-purple-600\",\n          
+  },\n            {\n       
+       icon: Shield,\n      
+        title: \"Secure 
+Deals\",\n              
+description:\n              
+  \"Your rates stay 
+private. Negotiate on your 
+terms with full 
+transparency and 
+protection.\",\n            
+  gradient: \"from-blue-500 
+to-cyan-500\",\n            
+},\n            {\n         
+     icon: TrendingUp,\n    
+          title: 
+\"Data-Driven\",\n          
+    description:\n          
+      \"Real engagement 
+metrics, verified profiles, 
+and performance-based 
+ranking ensure quality 
+connections.\",\n           
+   gradient: 
+\"from-emerald-500 
+to-green-500\",\n           
+ },\n            {\n        
+      icon: Users,\n        
+      title: \"Verified 
+Creators\",\n              
+description:\n              
+  \"Every creator goes 
+through a verification 
+process. Brands only see 
+authentic, quality 
+profiles.\",\n              
+gradient: \"from-orange-500 
+to-amber-500\",\n           
+ },\n            {\n        
+      icon: BarChart3,\n    
+          title: \"Campaign 
+Analytics\",\n              
+description:\n              
+  \"Track campaign 
+performance, manage 
+deliverables, and measure 
+ROI ??? all in 
+real-time.\",\n             
+ gradient: \"from-pink-500 
+to-rose-500\",\n            
+},\n            {\n         
+     icon: Zap,\n           
+   title: \"Instant 
+Connect\",\n              
+description:\n              
+  \"Skip the email chains. 
+Accept a deal and connect 
+directly via WhatsApp or 
+email instantly.\",\n       
+       gradient: 
+\"from-indigo-500 
+to-violet-500\",\n          
+  },\n          
+].map((feature, i) => (\n   
+         <motion.div\n      
+        
+key={feature.title}\n       
+       
+variants={fadeInUp}\n       
+       transition={{ 
+duration: 0.5, delay: i * 
+0.1 }}\n              
+className=\"group relative 
+p-8 rounded-2xl border 
+border-border/50 bg-card/50 
+backdrop-blur-sm 
+hover:border-primary/30 
+transition-all duration-500 
+hover:shadow-lg 
+hover:shadow-primary/5\"\n  
+          >\n              
+<div\n                
+className={`w-12 h-12 
+rounded-xl 
+bg-gradient-to-br 
+${feature.gradient} flex 
+items-center justify-center 
+mb-5 group-hover:scale-110 
+transition-transform 
+duration-300`}\n            
+  >\n                
+<feature.icon 
+className=\"w-6 h-6 
+text-white\" />\n           
+   </div>\n              
+<h3 className=\"text-lg 
+font-semibold mb-2\">{featur
+e.title}</h3>\n             
+ <p className=\"text-muted-f
+oreground text-sm 
+leading-relaxed\">\n        
+        
+{feature.description}\n     
+         </p>\n            
+</motion.div>\n          
+))}\n        
+</motion.div>\n      
+</section>\n\n      {/* How 
+It Works */}\n      
+<section\n        
+id=\"how-it-works\"\n       
+ className=\"relative z-10 
+px-6 lg:px-12 py-24 
+max-w-5xl mx-auto\"\n      
+>\n        <motion.div\n    
+      initial=\"hidden\"\n  
+        
+whileInView=\"visible\"\n   
+       viewport={{ once: 
+true, margin: \"-100px\" 
+}}\n          variants={stag
+gerContainer}\n          
+className=\"text-center 
+mb-16\"\n        >\n        
+  <motion.h2\n            
+variants={fadeInUp}\n       
+     className=\"text-3xl 
+md:text-5xl font-bold 
+tracking-tight\"\n          
+>\n            Three steps 
+to your{\" \"}\n            
+<span className=\"gradient-t
+ext\">first deal</span>\n   
+       </motion.h2>\n       
+ </motion.div>\n\n        
+<motion.div\n          
+initial=\"hidden\"\n        
+  whileInView=\"visible\"\n 
+         viewport={{ once: 
+true, margin: \"-100px\" 
+}}\n          variants={stag
+gerContainer}\n          
+className=\"space-y-12\"\n  
+      >\n          {[\n     
+       {\n              
+step: \"01\",\n             
+ title: \"Create Your 
+Profile\",\n              
+description:\n              
+  \"Sign up as a Creator or 
+Brand. Fill in your details 
+??? it takes less than 2 
+minutes.\",\n            
+},\n            {\n         
+     step: \"02\",\n        
+      title: \"Discover & 
+Match\",\n              
+description:\n              
+  \"Brands post campaigns. 
+Our algorithm ranks the 
+best creator-campaign 
+matches automatically.\",\n 
+           },\n            
+{\n              step: 
+\"03\",\n              
+title: \"Connect & 
+Deliver\",\n              
+description:\n              
+  \"Accept the deal, 
+connect on WhatsApp, and 
+deliver amazing content. 
+It's that simple.\",\n      
+      },\n          
+].map((item, i) => (\n      
+      <motion.div\n         
+     key={item.step}\n      
+        
+variants={fadeInUp}\n       
+       transition={{ 
+duration: 0.5, delay: i * 
+0.15 }}\n              
+className=\"flex 
+items-start gap-6 
+md:gap-8\"\n            >\n 
+             <div 
+className=\"shrink-0 
+text-5xl md:text-7xl 
+font-black gradient-text 
+opacity-50\">\n             
+   {item.step}\n            
+  </div>\n              
+<div className=\"pt-2 
+md:pt-4\">\n                
+<h3 className=\"text-xl 
+md:text-2xl font-semibold 
+mb-2\">\n                  
+{item.title}\n              
+  </h3>\n                <p 
+className=\"text-muted-foreg
+round text-base 
+leading-relaxed 
+max-w-lg\">\n               
+   {item.description}\n     
+           </p>\n           
+   </div>\n            
+</motion.div>\n          
+))}\n        
+</motion.div>\n      
+</section>\n\n      {/* CTA 
+Section */}\n      <section 
+className=\"relative z-10 
+px-6 lg:px-12 py-24 
+max-w-4xl mx-auto 
+text-center\">\n        
+<motion.div\n          
+initial=\"hidden\"\n        
+  whileInView=\"visible\"\n 
+         viewport={{ once: 
+true }}\n          variants=
+{staggerContainer}\n        
+>\n          <motion.h2\n   
+         
+variants={fadeInUp}\n       
+     className=\"text-3xl 
+md:text-5xl font-bold 
+tracking-tight mb-6\"\n     
+     >\n            Ready 
+to grow{\" \"}\n            
+<span className=\"gradient-t
+ext\">your brand?</span>\n  
+        </motion.h2>\n      
+    <motion.p\n            
+variants={fadeInUp}\n       
+     className=\"text-muted-
+foreground text-lg mb-10 
+max-w-xl mx-auto\"\n        
+  >\n            Join 
+thousands of creators and 
+brands already using 
+CreatorDeal to\n            
+build meaningful 
+collaborations.\n          
+</motion.p>\n          
+<motion.div 
+variants={fadeInUp}>\n      
+      <Link 
+href=\"/auth\">\n           
+   <Button size=\"xl\">\n   
+             Get Started 
+??? It&apos;s Free\n        
+        <ArrowRight 
+className=\"ml-2 w-5 h-5\" 
+/>\n              
+</Button>\n            
+</Link>\n          
+</motion.div>\n        
+</motion.div>\n      
+</section>\n\n      {/* 
+Footer */}\n      <footer 
+className=\"relative z-10 
+border-t border-border/50 
+px-6 lg:px-12 py-8\">\n     
+   <div 
+className=\"max-w-7xl 
+mx-auto flex flex-col 
+md:flex-row items-center 
+justify-between gap-4\">\n  
+        <div 
+className=\"flex 
+items-center gap-2\">\n     
+       <div className=\"w-7 
+h-7 rounded-lg 
+gradient-primary flex 
+items-center 
+justify-center\">\n         
+     <Sparkles 
+className=\"w-4 h-4 
+text-white\" />\n           
+ </div>\n            <span 
+className=\"text-sm font-sem
+ibold\">CreatorDeal</span>\n
+          </div>\n          
+<p className=\"text-xs 
+text-muted-foreground\">\n  
+          ?? {new 
+Date().getFullYear()} 
+CreatorDeal. All rights 
+reserved. Made\n            
+in India ????????\n         
+ </p>\n        </div>\n     
+ </footer>\n    </div>\n  );
+\n}\n","usedDeprecatedRules"
+:[]},{"filePath":"D:\\STARTU
+P\\creatordeal\\src\\app\\re
+quests\\page.tsx","messages"
+:[{"ruleId":"@typescript-esl
+int/no-unused-vars","message
+":"Definition for rule '@typ
+escript-eslint/no-unused-var
+s' was not found.","line":1,
+"column":1,"endLine":1,"endC
+olumn":2,"severity":2,"nodeT
+ype":null},{"ruleId":"@types
+cript-eslint/no-explicit-any
+","message":"Definition for 
+rule '@typescript-eslint/no-
+explicit-any' was not found.
+","line":1,"column":1,"endLi
+ne":1,"endColumn":2,"severit
+y":2,"nodeType":null},{"rule
+Id":"react-hooks/exhaustive-
+deps","severity":1,"message"
+:"React Hook useEffect has 
+a missing dependency: 
+'fetchRequests'. Either 
+include it or remove the 
+dependency array.","line":72
+,"column":8,"nodeType":"Arra
+yExpression","endLine":72,"e
+ndColumn":20,"suggestions":[
+{"desc":"Update the 
+dependencies array to be: 
+[user, role, fetchRequests]"
+,"fix":{"range":[1945,1957],
+"text":"[user, role, fetchRe
+quests]"}}]}],"suppressedMes
+sages":[],"errorCount":2,"fa
+talErrorCount":0,"warningCou
+nt":1,"fixableErrorCount":0,
+"fixableWarningCount":0,"sou
+rce":"\"use 
+client\";\r\n\r\nimport 
+React, { useEffect, 
+useState } from 
+\"react\";\r\nimport { 
+useRouter } from \"next/navi
+gation\";\r\nimport { 
+motion } from \"framer-motio
+n\";\r\nimport {\r\n    
+collection,\r\n    
+query,\r\n    where,\r\n    
+getDocs,\r\n    doc,\r\n    
+getDoc,\r\n    
+updateDoc,\r\n    
+addDoc,\r\n    
+serverTimestamp,\r\n    
+limit,\r\n} from \"firebase/
+firestore\";\r\nimport { db 
+} from \"@/lib/firebase\";\r
+\nimport { useAuth } from \"
+@/context/AuthContext\";\r\n
+import DashboardShell from \
+"@/components/DashboardShell
+\";\r\nimport { Card, 
+CardContent, CardHeader, 
+CardTitle } from \"@/compone
+nts/ui/card\";\r\nimport { 
+Badge } from \"@/components/
+ui/badge\";\r\nimport { 
+Button } from \"@/components
+/ui/button\";\r\nimport 
+{\r\n    Send,\r\n    
+CheckCircle2,\r\n    
+XCircle,\r\n    Clock,\r\n  
+  Loader2,\r\n    
+MessageCircle,\r\n    
+Mail,\r\n    
+ExternalLink,\r\n} from \"lu
+cide-react\";\r\n\r\ninterfa
+ce RequestItem {\r\n    id: 
+string;\r\n    campaignId: 
+string;\r\n    creatorId: 
+string;\r\n    brandId: 
+string;\r\n    status: 
+\"pending\" | \"accepted\" 
+| \"rejected\";\r\n    
+createdAt: Date;\r\n    // 
+Enriched data\r\n    
+campaignTitle?: string;\r\n 
+   campaignBudget?: 
+number;\r\n    
+creatorName?: string;\r\n   
+ creatorHandle?: 
+string;\r\n    brandName?: 
+string;\r\n}\r\n\r\nconst 
+fadeInUp = {\r\n    hidden: 
+{ opacity: 0, y: 20 },\r\n  
+  visible: { opacity: 1, y: 
+0 },\r\n};\r\n\r\nexport 
+default function 
+RequestsPage() {\r\n    
+const { user, role, 
+loading: authLoading } = 
+useAuth();\r\n    const 
+router = useRouter();\r\n   
+ const [requests, 
+setRequests] = useState<Requ
+estItem[]>([]);\r\n    
+const [loading, setLoading] 
+= useState(true);\r\n    
+const [actionLoading, 
+setActionLoading] = 
+useState<string | 
+null>(null);\r\n    const 
+[activeTab, setActiveTab] = 
+useState<\"all\" | 
+\"pending\" | \"accepted\" 
+| \"rejected\">(\"all\");\r\
+n\r\n    useEffect(() => 
+{\r\n        if 
+(!authLoading && !user) 
+{\r\n            
+router.push(\"/auth\");\r\n 
+       }\r\n    }, [user, 
+authLoading, 
+router]);\r\n\r\n    
+useEffect(() => {\r\n       
+ if (!user || !role) 
+return;\r\n        
+fetchRequests();\r\n    }, 
+[user, role]);\r\n\r\n    
+const fetchRequests = async 
+() => {\r\n        if 
+(!user || !role) 
+return;\r\n        
+setLoading(true);\r\n\r\n   
+     try {\r\n            
+const field = role === 
+\"brand\" ? \"brandId\" : 
+\"creatorId\";\r\n          
+  const requestsQuery = 
+query(\r\n                
+collection(db, 
+\"requests\"),\r\n          
+      where(field, \"==\", 
+user.uid),\r\n              
+  limit(100)\r\n            
+);\r\n            const 
+snap = await getDocs(request
+sQuery);\r\n\r\n            
+const enrichedRequests: 
+RequestItem[] = await 
+Promise.all(\r\n            
+    snap.docs.map(async 
+(reqDoc) => {\r\n           
+         const data = 
+reqDoc.data();\r\n          
+          const request: 
+RequestItem = {\r\n         
+               id: 
+reqDoc.id,\r\n              
+          campaignId: 
+data.campaignId,\r\n        
+                creatorId: 
+data.creatorId,\r\n         
+               brandId: 
+data.brandId,\r\n           
+             status: 
+data.status,\r\n            
+            createdAt: 
+data.createdAt?.toDate() || 
+new Date(),\r\n             
+       };\r\n\r\n           
+         // Fetch campaign 
+title\r\n                   
+ try {\r\n                  
+      const campaignDoc = 
+await getDoc(doc(db, 
+\"campaigns\", 
+data.campaignId));\r\n      
+                  if 
+(campaignDoc.exists()) 
+{\r\n                       
+     request.campaignTitle 
+= campaignDoc.data().title;\
+r\n                         
+   request.campaignBudget = 
+campaignDoc.data().budget;\r
+\n                        
+}\r\n                    } 
+catch (e) { }\r\n\r\n       
+             // Fetch 
+creator name (for brand 
+view)\r\n                   
+ if (role === \"brand\") 
+{\r\n                       
+ try {\r\n                  
+          const creatorDoc 
+= await getDoc(doc(db, 
+\"creators\", 
+data.creatorId));\r\n       
+                     if 
+(creatorDoc.exists()) {\r\n 
+                            
+   request.creatorName = 
+creatorDoc.data().name;\r\n 
+                            
+   request.creatorHandle = c
+reatorDoc.data().instagramHa
+ndle;\r\n                   
+         }\r\n              
+          } catch (e) { 
+}\r\n                    
+}\r\n\r\n                   
+ // Fetch brand name (for 
+creator view)\r\n           
+         if (role === 
+\"creator\") {\r\n          
+              try {\r\n     
+                       
+const brandDoc = await 
+getDoc(doc(db, \"brands\", 
+data.brandId));\r\n         
+                   if 
+(brandDoc.exists()) {\r\n   
+                            
+ request.brandName = brandDo
+c.data().brandName;\r\n     
+                       
+}\r\n                       
+ } catch (e) { }\r\n        
+            }\r\n\r\n       
+             return 
+request;\r\n                
+})\r\n            
+);\r\n\r\n            // 
+Sort by date, newest 
+first\r\n            
+enrichedRequests.sort((a, 
+b) => b.createdAt.getTime() 
+- 
+a.createdAt.getTime());\r\n 
+           setRequests(enric
+hedRequests);\r\n        } 
+catch (error) {\r\n         
+   console.error(\"Error 
+fetching requests:\", 
+error);\r\n        } 
+finally {\r\n            
+setLoading(false);\r\n      
+  }\r\n    };\r\n\r\n    
+const handleRequestAction = 
+async (requestId: string, 
+action: \"accepted\" | 
+\"rejected\") => {\r\n      
+  setActionLoading(requestId
+);\r\n        try {\r\n     
+       await 
+updateDoc(doc(db, 
+\"requests\", requestId), 
+{\r\n                
+status: action,\r\n         
+       updatedAt: 
+serverTimestamp(),\r\n      
+      });\r\n\r\n           
+ // Update local state\r\n  
+          
+setRequests((prev) =>\r\n   
+             prev.map((r) 
+=> (r.id === requestId ? { 
+...r, status: action } : 
+r))\r\n            );\r\n   
+     } catch (error) {\r\n  
+          
+console.error(\"Error 
+updating request:\", 
+error);\r\n        } 
+finally {\r\n            
+setActionLoading(null);\r\n 
+       }\r\n    };\r\n\r\n  
+  const filteredRequests 
+=\r\n        activeTab === 
+\"all\" ? requests : 
+requests.filter((r) => 
+r.status === 
+activeTab);\r\n\r\n    
+const getStatusBadge = 
+(status: string) => {\r\n   
+     switch (status) {\r\n  
+          case 
+\"pending\":\r\n            
+    return (\r\n            
+        <Badge 
+variant=\"warning\" 
+className=\"gap-1\">\r\n    
+                    <Clock 
+className=\"w-3 h-3\" /> 
+Pending\r\n                 
+   </Badge>\r\n             
+   );\r\n            case 
+\"accepted\":\r\n           
+     return (\r\n           
+         <Badge 
+variant=\"success\" 
+className=\"gap-1\">\r\n    
+                    
+<CheckCircle2 
+className=\"w-3 h-3\" /> 
+Accepted\r\n                
+    </Badge>\r\n            
+    );\r\n            case 
+\"rejected\":\r\n           
+     return (\r\n           
+         <Badge 
+variant=\"destructive\" 
+className=\"gap-1\">\r\n    
+                    
+<XCircle className=\"w-3 
+h-3\" /> Rejected\r\n       
+             </Badge>\r\n   
+             );\r\n         
+   default:\r\n             
+   return <Badge>{status}</B
+adge>;\r\n        }\r\n    
+};\r\n\r\n    if 
+(authLoading || !user) 
+{\r\n        return (\r\n   
+         <div 
+className=\"min-h-screen 
+flex items-center 
+justify-center\">\r\n       
+         <div 
+className=\"w-8 h-8 
+rounded-full border-2 
+border-primary 
+border-t-transparent 
+animate-spin\" />\r\n       
+     </div>\r\n        
+);\r\n    }\r\n\r\n    
+return (\r\n        
+<DashboardShell role={role 
+|| \"creator\"}>\r\n        
+    <div className=\"space-y
+-8\">\r\n                
+<motion.div\r\n             
+       
+initial=\"hidden\"\r\n      
+              
+animate=\"visible\"\r\n     
+               
+variants={fadeInUp}\r\n     
+               
+transition={{ duration: 0.5 
+}}\r\n                >\r\n 
+                   <h1 
+className=\"text-3xl 
+font-bold 
+tracking-tight\">\r\n       
+                 {role === 
+\"brand\" ? \"Deal 
+Requests\" : \"My 
+Requests\"}\r\n             
+       </h1>\r\n            
+        <p className=\"text-
+muted-foreground 
+mt-1\">\r\n                 
+       {role === 
+\"brand\"\r\n               
+             ? \"Manage 
+requests sent to creators 
+for your campaigns.\"\r\n   
+                         : 
+\"View and manage campaign 
+requests from 
+brands.\"}\r\n              
+      </p>\r\n              
+  </motion.div>\r\n\r\n     
+           {/* Tabs */}\r\n 
+               <div 
+className=\"flex 
+items-center gap-2 border-b 
+border-border/50 
+pb-4\">\r\n                 
+   {([\"all\", \"pending\", 
+\"accepted\", \"rejected\"] 
+as const).map((tab) => 
+(\r\n                       
+ <Button\r\n                
+            key={tab}\r\n   
+                         
+variant={activeTab === tab 
+? \"default\" : 
+\"ghost\"}\r\n              
+              
+size=\"sm\"\r\n             
+               onClick={() 
+=> setActiveTab(tab)}\r\n   
+                         cla
+ssName=\"capitalize\"\r\n   
+                     >\r\n  
+                          
+{tab}\r\n                   
+         {tab !== \"all\" 
+&& (\r\n                    
+            <span 
+className=\"ml-1.5 text-xs 
+opacity-70\">\r\n           
+                         
+({requests.filter((r) => 
+r.status === 
+tab).length})\r\n           
+                     
+</span>\r\n                 
+           )}\r\n           
+             </Button>\r\n  
+                  ))}\r\n   
+             </div>\r\n\r\n 
+               {loading ? 
+(\r\n                    
+<div className=\"space-y-4\"
+>\r\n                       
+ {[1, 2, 3].map((i) => 
+(\r\n                       
+     <div key={i} 
+className=\"h-24 
+bg-muted/30 rounded-2xl 
+animate-pulse\" />\r\n      
+                  ))}\r\n   
+                 </div>\r\n 
+               ) : 
+filteredRequests.length === 
+0 ? (\r\n                   
+ <div 
+className=\"text-center 
+py-20 text-muted-foreground\
+">\r\n                      
+  <Send className=\"w-12 
+h-12 mx-auto mb-4 
+opacity-40\" />\r\n         
+               <p 
+className=\"text-lg\">No 
+{activeTab !== \"all\" ? 
+activeTab : \"\"} requests 
+yet.</p>\r\n                
+    </div>\r\n              
+  ) : (\r\n                 
+   <motion.div\r\n          
+              
+initial=\"hidden\"\r\n      
+                  
+animate=\"visible\"\r\n     
+                   
+variants={{\r\n             
+               hidden: { 
+opacity: 0 },\r\n           
+                 visible: { 
+opacity: 1, transition: { 
+staggerChildren: 0.05 } 
+},\r\n                      
+  }}\r\n                    
+    
+className=\"space-y-4\"\r\n 
+                   >\r\n    
+                    {filtere
+dRequests.map((request) => 
+(\r\n                       
+     <motion.div 
+key={request.id} 
+variants={fadeInUp}>\r\n    
+                            
+<Card className=\"border-bor
+der/50 hover:border-border 
+transition-colors\">\r\n    
+                            
+    <CardContent 
+className=\"p-6\">\r\n      
+                            
+      <div className=\"flex 
+flex-col md:flex-row 
+md:items-center 
+justify-between 
+gap-4\">\r\n                
+                            
+<div 
+className=\"flex-1\">\r\n   
+                            
+                 <div 
+className=\"flex 
+items-center gap-3 
+mb-2\">\r\n                 
+                            
+       {getStatusBadge(reque
+st.status)}\r\n             
+                            
+           <span 
+className=\"text-sm text-mut
+ed-foreground\">\r\n        
+                            
+                    {request
+.createdAt.toLocaleDateStrin
+g(\"en-IN\", {\r\n          
+                            
+                      day: 
+\"numeric\",\r\n            
+                            
+                    month: 
+\"short\",\r\n              
+                            
+                  year: 
+\"numeric\",\r\n            
+                            
+                })}\r\n     
+                            
+                   
+</span>\r\n                 
+                            
+   </div>\r\n               
+                            
+     <h3 
+className=\"font-semibold 
+text-lg\">\r\n              
+                            
+          
+{request.campaignTitle || 
+\"Campaign\"}\r\n           
+                            
+         </h3>\r\n          
+                            
+          <div 
+className=\"flex 
+items-center gap-4 mt-1 
+text-sm text-muted-foregroun
+d\">\r\n                    
+                            
+    {role === \"brand\" && 
+request.creatorName && 
+(\r\n                       
+                            
+     <span>Creator: {request
+.creatorName}</span>\r\n    
+                            
+                    )}\r\n  
+                            
+                      {role 
+=== \"brand\" && 
+request.creatorHandle && 
+(\r\n                       
+                            
+     <span>@{request.creator
+Handle}</span>\r\n          
+                            
+              )}\r\n        
+                            
+                {role === 
+\"creator\" && 
+request.brandName && (\r\n  
+                            
+                          
+<span>Brand: {request.brandN
+ame}</span>\r\n             
+                            
+           )}\r\n           
+                            
+             
+{request.campaignBudget && 
+(\r\n                       
+                            
+     <span>???{request.campa
+ignBudget.toLocaleString(\"e
+n-IN\")}</span>\r\n         
+                            
+               )}\r\n       
+                            
+             </div>\r\n     
+                            
+           </div>\r\n\r\n   
+                            
+             <div 
+className=\"flex 
+items-center gap-2\">\r\n   
+                            
+                 {/* 
+Creator can accept/reject 
+pending requests */}\r\n    
+                            
+                {role === 
+\"creator\" && 
+request.status === 
+\"pending\" && (\r\n        
+                            
+                <>\r\n      
+                            
+                      
+<Button\r\n                 
+                            
+               
+size=\"sm\"\r\n             
+                            
+                   
+onClick={() => handleRequest
+Action(request.id, 
+\"accepted\")}\r\n          
+                            
+                      
+disabled={actionLoading === 
+request.id}\r\n             
+                            
+                   
+className=\"gap-1\"\r\n     
+                            
+                       
+>\r\n                       
+                            
+         {actionLoading === 
+request.id ? (\r\n          
+                            
+                          
+<Loader2 className=\"w-3.5 
+h-3.5 animate-spin\" />\r\n 
+                            
+                            
+   ) : (\r\n                
+                            
+                    
+<CheckCircle2 
+className=\"w-3.5 h-3.5\" 
+/>\r\n                      
+                            
+          )}\r\n            
+                            
+                    
+Accept\r\n                  
+                            
+          </Button>\r\n     
+                            
+                       
+<Button\r\n                 
+                            
+               
+size=\"sm\"\r\n             
+                            
+                   
+variant=\"outline\"\r\n     
+                            
+                           
+onClick={() => handleRequest
+Action(request.id, 
+\"rejected\")}\r\n          
+                            
+                      
+disabled={actionLoading === 
+request.id}\r\n             
+                            
+                   
+className=\"gap-1\"\r\n     
+                            
+                       
+>\r\n                       
+                            
+         <XCircle 
+className=\"w-3.5 h-3.5\" 
+/>\r\n                      
+                            
+          Reject\r\n        
+                            
+                    
+</Button>\r\n               
+                            
+         </>\r\n            
+                            
+        )}\r\n\r\n          
+                            
+          {/* Show contact 
+options after acceptance 
+*/}\r\n                     
+                           
+{request.status === 
+\"accepted\" && (\r\n       
+                            
+                 <div 
+className=\"flex 
+items-center gap-2\">\r\n   
+                            
+                         
+<a\r\n                      
+                            
+          href={`https://wa.
+me/?text=${encodeURIComponen
+t(\r\n                      
+                            
+              `Hi! I'd like 
+to discuss the campaign \"${
+request.campaignTitle}\" on 
+CreatorDeal.`\r\n           
+                            
+                     
+)}`}\r\n                    
+                            
+            
+target=\"_blank\"\r\n       
+                            
+                         
+rel=\"noopener 
+noreferrer\"\r\n            
+                            
+                >\r\n       
+                            
+                         
+<Button size=\"sm\" 
+variant=\"outline\" 
+className=\"gap-1.5\">\r\n  
+                            
+                            
+      <MessageCircle 
+className=\"w-3.5 h-3.5\" 
+/>\r\n                      
+                            
+              WhatsApp\r\n  
+                            
+                            
+      <ExternalLink 
+className=\"w-3 h-3\" 
+/>\r\n                      
+                            
+          </Button>\r\n     
+                            
+                       
+</a>\r\n                    
+                            
+        <a\r\n              
+                            
+                  href={`mai
+lto:?subject=${encodeURIComp
+onent(\r\n                  
+                            
+                  `Re: 
+Campaign - ${request.campaig
+nTitle}`\r\n                
+                            
+                )}&body=${en
+codeURIComponent(\r\n       
+                            
+                            
+ `Hi,\\n\\nI'd like to 
+discuss the campaign \"${req
+uest.campaignTitle}\" on 
+CreatorDeal.\\n\\nBest 
+regards`\r\n                
+                            
+                )}`}\r\n    
+                            
+                        
+>\r\n                       
+                            
+         <Button 
+size=\"sm\" 
+variant=\"outline\" 
+className=\"gap-1.5\">\r\n  
+                            
+                            
+      <Mail 
+className=\"w-3.5 h-3.5\" 
+/>\r\n                      
+                            
+              Email\r\n     
+                            
+                            
+   <ExternalLink 
+className=\"w-3 h-3\" 
+/>\r\n                      
+                            
+          </Button>\r\n     
+                            
+                       
+</a>\r\n                    
+                            
+    </div>\r\n              
+                            
+      )}\r\n                
+                            
+</div>\r\n                  
+                      
+</div>\r\n                  
+                  
+</CardContent>\r\n          
+                      
+</Card>\r\n                 
+           
+</motion.div>\r\n           
+             ))}\r\n        
+            
+</motion.div>\r\n           
+     )}\r\n            
+</div>\r\n        
+</DashboardShell>\r\n    );\
+r\n}\r\n","usedDeprecatedRul
+es":[]},{"filePath":"D:\\STA
+RTUP\\creatordeal\\src\\comp
+onents\\DashboardShell.tsx",
+"messages":[{"ruleId":"@type
+script-eslint/no-unused-vars
+","message":"Definition for 
+rule '@typescript-eslint/no-
+unused-vars' was not found."
+,"line":1,"column":1,"endLin
+e":1,"endColumn":2,"severity
+":2,"nodeType":null},{"ruleI
+d":"@typescript-eslint/no-ex
+plicit-any","message":"Defin
+ition for rule '@typescript-
+eslint/no-explicit-any' was 
+not found.","line":1,"column
+":1,"endLine":1,"endColumn":
+2,"severity":2,"nodeType":nu
+ll}],"suppressedMessages":[]
+,"errorCount":2,"fatalErrorC
+ount":0,"warningCount":0,"fi
+xableErrorCount":0,"fixableW
+arningCount":0,"source":"\"u
+se client\";\r\n\r\nimport 
+React from 
+\"react\";\r\nimport Link 
+from 
+\"next/link\";\r\nimport { 
+useRouter } from \"next/navi
+gation\";\r\nimport { 
+useAuth } from \"@/context/A
+uthContext\";\r\nimport { 
+signOut } from 
+\"@/lib/auth\";\r\nimport { 
+Button } from \"@/components
+/ui/button\";\r\nimport 
+{\r\n    Sparkles,\r\n    
+LayoutDashboard,\r\n    
+Megaphone,\r\n    Send,\r\n 
+   LogOut,\r\n    Plus,\r\n 
+   User,\r\n} from \"lucide-
+react\";\r\n\r\ninterface 
+DashboardShellProps {\r\n   
+ children: 
+React.ReactNode;\r\n    
+role: \"creator\" | \"brand\
+";\r\n}\r\n\r\nexport 
+default function 
+DashboardShell({ children, 
+role }: 
+DashboardShellProps) {\r\n  
+  const router = 
+useRouter();\r\n    const 
+_auth = useAuth(); // 
+Available for future 
+use\r\n\r\n    const 
+handleSignOut = async () => 
+{\r\n        await 
+signOut();\r\n        
+router.push(\"/\");\r\n    
+};\r\n\r\n    const 
+navItems =\r\n        role 
+=== \"brand\"\r\n           
+ ? [\r\n                { 
+href: \"/dashboard/brand\", 
+label: \"Dashboard\", icon: 
+LayoutDashboard },\r\n      
+          { href: 
+\"/campaigns\", label: 
+\"Campaigns\", icon: 
+Megaphone },\r\n            
+    { href: 
+\"/campaigns/new\", label: 
+\"New Campaign\", icon: 
+Plus },\r\n                
+{ href: \"/requests\", 
+label: \"Requests\", icon: 
+Send },\r\n            
+]\r\n            : [\r\n    
+            { href: 
+\"/dashboard/creator\", 
+label: \"Dashboard\", icon: 
+LayoutDashboard },\r\n      
+          { href: 
+\"/campaigns\", label: 
+\"Find Campaigns\", icon: 
+Megaphone },\r\n            
+    { href: \"/requests\", 
+label: \"My Requests\", 
+icon: Send },\r\n           
+ ];\r\n\r\n    return (\r\n 
+       <div 
+className=\"min-h-screen 
+bg-background\">\r\n        
+    {/* Top Navigation 
+*/}\r\n            <header 
+className=\"sticky top-0 
+z-50 border-b 
+border-border/50 
+bg-background/80 
+backdrop-blur-xl\">\r\n     
+           <div 
+className=\"max-w-7xl 
+mx-auto flex items-center 
+justify-between px-6 
+py-3\">\r\n                 
+   <div className=\"flex 
+items-center gap-6\">\r\n   
+                     <Link 
+href=\"/\" className=\"flex 
+items-center gap-2\">\r\n   
+                         
+<div className=\"w-8 h-8 
+rounded-lg gradient-primary 
+flex items-center 
+justify-center\">\r\n       
+                         
+<Sparkles className=\"w-4 
+h-4 text-white\" />\r\n     
+                       
+</div>\r\n                  
+          <span 
+className=\"text-lg 
+font-bold tracking-tight 
+hidden sm:block\">\r\n      
+                          
+CreatorDeal\r\n             
+               </span>\r\n  
+                      
+</Link>\r\n\r\n             
+           <nav 
+className=\"hidden md:flex 
+items-center gap-1\">\r\n   
+                         
+{navItems.map((item) => 
+(\r\n                       
+         <Link 
+key={item.href} 
+href={item.href}>\r\n       
+                            
+ <Button variant=\"ghost\" 
+size=\"sm\" 
+className=\"gap-2\">\r\n    
+                            
+        <item.icon 
+className=\"w-4 h-4\" 
+/>\r\n                      
+                  
+{item.label}\r\n            
+                        
+</Button>\r\n               
+                 
+</Link>\r\n                 
+           ))}\r\n          
+              </nav>\r\n    
+                
+</div>\r\n\r\n              
+      <div className=\"flex 
+items-center gap-3\">\r\n   
+                     <div 
+className=\"hidden sm:flex 
+items-center gap-2 px-3 
+py-1.5 rounded-lg 
+bg-secondary text-sm\">\r\n 
+                           
+<User className=\"w-3.5 
+h-3.5\" />\r\n              
+              <span classNam
+e=\"text-muted-foreground ca
+pitalize\">{role}</span>\r\n
+                        
+</div>\r\n                  
+      <Button 
+variant=\"ghost\" 
+size=\"sm\" 
+onClick={handleSignOut} 
+className=\"gap-2\">\r\n    
+                        
+<LogOut className=\"w-4 
+h-4\" />\r\n                
+            <span 
+className=\"hidden 
+sm:inline\">Sign 
+Out</span>\r\n              
+          </Button>\r\n     
+               </div>\r\n   
+             </div>\r\n\r\n 
+               {/* Mobile 
+nav */}\r\n                
+<div className=\"md:hidden 
+border-t border-border/50 
+px-4 py-2 flex items-center 
+gap-1 
+overflow-x-auto\">\r\n      
+              
+{navItems.map((item) => 
+(\r\n                       
+ <Link key={item.href} 
+href={item.href}>\r\n       
+                     
+<Button variant=\"ghost\" 
+size=\"sm\" 
+className=\"gap-1.5 text-xs 
+whitespace-nowrap\">\r\n    
+                            
+<item.icon 
+className=\"w-3.5 h-3.5\" 
+/>\r\n                      
+          {item.label}\r\n  
+                          
+</Button>\r\n               
+         </Link>\r\n        
+            ))}\r\n         
+       </div>\r\n           
+ </header>\r\n\r\n          
+  {/* Main Content */}\r\n  
+          <main 
+className=\"max-w-7xl 
+mx-auto px-6 py-8\">{childre
+n}</main>\r\n        
+</div>\r\n    );\r\n}\r\n","
+usedDeprecatedRules":[]},{"f
+ilePath":"D:\\STARTUP\\creat
+ordeal\\src\\components\\ui\
+\badge.tsx","messages":[{"ru
+leId":"@typescript-eslint/no
+-unused-vars","message":"Def
+inition for rule '@typescrip
+t-eslint/no-unused-vars' 
+was not found.","line":1,"co
+lumn":1,"endLine":1,"endColu
+mn":2,"severity":2,"nodeType
+":null},{"ruleId":"@typescri
+pt-eslint/no-explicit-any","
+message":"Definition for 
+rule '@typescript-eslint/no-
+explicit-any' was not found.
+","line":1,"column":1,"endLi
+ne":1,"endColumn":2,"severit
+y":2,"nodeType":null}],"supp
+ressedMessages":[],"errorCou
+nt":2,"fatalErrorCount":0,"w
+arningCount":0,"fixableError
+Count":0,"fixableWarningCoun
+t":0,"source":"import * as 
+React from 
+\"react\";\r\nimport { cn } 
+from \"@/lib/utils\";\r\n\r\
+nexport interface 
+BadgeProps extends React.HTM
+LAttributes<HTMLDivElement> 
+{\r\n    variant?: 
+\"default\" | \"secondary\" 
+| \"destructive\" | 
+\"outline\" | \"success\" | 
+\"warning\";\r\n}\r\n\r\nfun
+ction Badge({ className, 
+variant = \"default\", 
+...props }: BadgeProps) 
+{\r\n    const variants: 
+Record<string, string> = 
+{\r\n        default: 
+\"bg-primary/10 
+text-primary 
+border-primary/20\",\r\n    
+    secondary: 
+\"bg-secondary 
+text-secondary-foreground 
+border-secondary\",\r\n     
+   destructive: 
+\"bg-destructive/10 
+text-destructive border-dest
+ructive/20\",\r\n        
+outline: \"border 
+border-border 
+text-foreground\",\r\n      
+  success: 
+\"bg-emerald-500/10 
+text-emerald-400 border-emer
+ald-500/20\",\r\n        
+warning: \"bg-amber-500/10 
+text-amber-400 
+border-amber-500/20\",\r\n  
+  };\r\n\r\n    return 
+(\r\n        <div\r\n       
+     className={cn(\r\n     
+           \"inline-flex 
+items-center rounded-full 
+border px-2.5 py-0.5 
+text-xs font-semibold 
+transition-colors\",\r\n    
+            
+variants[variant],\r\n      
+          className\r\n     
+       )}\r\n            
+{...props}\r\n        
+/>\r\n    
+);\r\n}\r\n\r\nexport { 
+Badge };\r\n","usedDeprecate
+dRules":[]},{"filePath":"D:\
+\STARTUP\\creatordeal\\src\\
+components\\ui\\button.tsx",
+"messages":[{"ruleId":"@type
+script-eslint/no-unused-vars
+","message":"Definition for 
+rule '@typescript-eslint/no-
+unused-vars' was not found."
+,"line":1,"column":1,"endLin
+e":1,"endColumn":2,"severity
+":2,"nodeType":null},{"ruleI
+d":"@typescript-eslint/no-ex
+plicit-any","message":"Defin
+ition for rule '@typescript-
+eslint/no-explicit-any' was 
+not found.","line":1,"column
+":1,"endLine":1,"endColumn":
+2,"severity":2,"nodeType":nu
+ll}],"suppressedMessages":[]
+,"errorCount":2,"fatalErrorC
+ount":0,"warningCount":0,"fi
+xableErrorCount":0,"fixableW
+arningCount":0,"source":"imp
+ort * as React from 
+\"react\";\r\nimport { Slot 
+} from \"@radix-ui/react-slo
+t\";\r\nimport { cva, type 
+VariantProps } from \"class-
+variance-authority\";\r\nimp
+ort { cn } from \"@/lib/util
+s\";\r\n\r\nconst 
+buttonVariants = cva(\r\n   
+ \"inline-flex items-center 
+justify-center 
+whitespace-nowrap 
+rounded-lg text-sm 
+font-medium 
+ring-offset-background 
+transition-all duration-200 
+focus-visible:outline-none 
+focus-visible:ring-2 
+focus-visible:ring-ring 
+focus-visible:ring-offset-2 
+disabled:pointer-events-none
+ disabled:opacity-50\",\r\n 
+   {\r\n        variants: 
+{\r\n            variant: 
+{\r\n                
+default:\r\n                
+    \"gradient-primary 
+text-white shadow-lg 
+shadow-primary/25 
+hover:shadow-xl 
+hover:shadow-primary/30 
+hover:scale-[1.02] 
+active:scale-[0.98]\",\r\n  
+              
+destructive:\r\n            
+        \"bg-destructive 
+text-destructive-foreground 
+hover:bg-destructive/90\",\r
+\n                
+outline:\r\n                
+    \"border border-input 
+bg-background 
+hover:bg-accent hover:text-a
+ccent-foreground\",\r\n     
+           secondary:\r\n   
+                 
+\"bg-secondary 
+text-secondary-foreground ho
+ver:bg-secondary/80\",\r\n  
+              ghost: 
+\"hover:bg-accent hover:text
+-accent-foreground\",\r\n   
+             link: 
+\"text-primary 
+underline-offset-4 
+hover:underline\",\r\n      
+      },\r\n            
+size: {\r\n                
+default: \"h-10 px-5 
+py-2\",\r\n                
+sm: \"h-9 rounded-md 
+px-3\",\r\n                
+lg: \"h-12 rounded-xl px-8 
+text-base\",\r\n            
+    xl: \"h-14 rounded-xl 
+px-10 text-lg\",\r\n        
+        icon: \"h-10 
+w-10\",\r\n            
+},\r\n        },\r\n        
+defaultVariants: {\r\n      
+      variant: 
+\"default\",\r\n            
+size: \"default\",\r\n      
+  },\r\n    
+}\r\n);\r\n\r\nexport 
+interface ButtonProps\r\n   
+ extends React.ButtonHTMLAtt
+ributes<HTMLButtonElement>,\
+r\n    VariantProps<typeof 
+buttonVariants> {\r\n    
+asChild?: 
+boolean;\r\n}\r\n\r\nconst 
+Button = React.forwardRef<HT
+MLButtonElement, 
+ButtonProps>(\r\n    ({ 
+className, variant, size, 
+asChild = false, ...props 
+}, ref) => {\r\n        
+const Comp = asChild ? Slot 
+: \"button\";\r\n        
+return (\r\n            
+<Comp\r\n                cla
+ssName={cn(buttonVariants({ 
+variant, size, className 
+}))}\r\n                
+ref={ref}\r\n               
+ {...props}\r\n            
+/>\r\n        );\r\n    }\r\
+n);\r\nButton.displayName = 
+\"Button\";\r\n\r\nexport { 
+Button, buttonVariants };\r\
+n","usedDeprecatedRules":[]}
+,{"filePath":"D:\\STARTUP\\c
+reatordeal\\src\\components\
+\ui\\card.tsx","messages":[{
+"ruleId":"@typescript-eslint
+/no-unused-vars","message":"
+Definition for rule '@typesc
+ript-eslint/no-unused-vars' 
+was not found.","line":1,"co
+lumn":1,"endLine":1,"endColu
+mn":2,"severity":2,"nodeType
+":null},{"ruleId":"@typescri
+pt-eslint/no-explicit-any","
+message":"Definition for 
+rule '@typescript-eslint/no-
+explicit-any' was not found.
+","line":1,"column":1,"endLi
+ne":1,"endColumn":2,"severit
+y":2,"nodeType":null}],"supp
+ressedMessages":[],"errorCou
+nt":2,"fatalErrorCount":0,"w
+arningCount":0,"fixableError
+Count":0,"fixableWarningCoun
+t":0,"source":"import * as 
+React from 
+\"react\";\r\nimport { cn } 
+from \"@/lib/utils\";\r\n\r\
+nconst Card = React.forwardR
+ef<HTMLDivElement, React.HTM
+LAttributes<HTMLDivElement>>
+(\r\n    ({ className, 
+...props }, ref) => (\r\n   
+     <div\r\n            
+ref={ref}\r\n            
+className={cn(\r\n          
+      \"rounded-2xl border 
+bg-card 
+text-card-foreground 
+shadow-sm transition-all 
+duration-300 
+hover:shadow-md\",\r\n      
+          className\r\n     
+       )}\r\n            
+{...props}\r\n        
+/>\r\n    
+)\r\n);\r\nCard.displayName 
+= \"Card\";\r\n\r\nconst 
+CardHeader = React.forwardRe
+f<HTMLDivElement, React.HTML
+Attributes<HTMLDivElement>>(
+\r\n    ({ className, 
+...props }, ref) => (\r\n   
+     <div ref={ref} 
+className={cn(\"flex 
+flex-col space-y-1.5 p-6\", 
+className)} {...props} 
+/>\r\n    )\r\n);\r\nCardHea
+der.displayName = \"CardHead
+er\";\r\n\r\nconst 
+CardTitle = React.forwardRef
+<HTMLParagraphElement, React
+.HTMLAttributes<HTMLHeadingE
+lement>>(\r\n    ({ 
+className, ...props }, ref) 
+=> (\r\n        <h3\r\n     
+       ref={ref}\r\n        
+    
+className={cn(\"text-2xl 
+font-semibold leading-none 
+tracking-tight\", 
+className)}\r\n            
+{...props}\r\n        
+/>\r\n    )\r\n);\r\nCardTit
+le.displayName = 
+\"CardTitle\";\r\n\r\nconst 
+CardDescription = React.forw
+ardRef<HTMLParagraphElement,
+ React.HTMLAttributes<HTMLPa
+ragraphElement>>(\r\n    ({ 
+className, ...props }, ref) 
+=> (\r\n        <p 
+ref={ref} 
+className={cn(\"text-sm 
+text-muted-foreground\", 
+className)} {...props} 
+/>\r\n    )\r\n);\r\nCardDes
+cription.displayName = \"Car
+dDescription\";\r\n\r\nconst
+ CardContent = React.forward
+Ref<HTMLDivElement, React.HT
+MLAttributes<HTMLDivElement>
+>(\r\n    ({ className, 
+...props }, ref) => (\r\n   
+     <div ref={ref} 
+className={cn(\"p-6 pt-0\", 
+className)} {...props} 
+/>\r\n    )\r\n);\r\nCardCon
+tent.displayName = \"CardCon
+tent\";\r\n\r\nconst 
+CardFooter = React.forwardRe
+f<HTMLDivElement, React.HTML
+Attributes<HTMLDivElement>>(
+\r\n    ({ className, 
+...props }, ref) => (\r\n   
+     <div ref={ref} 
+className={cn(\"flex 
+items-center p-6 pt-0\", 
+className)} {...props} 
+/>\r\n    )\r\n);\r\nCardFoo
+ter.displayName = \"CardFoot
+er\";\r\n\r\nexport { Card, 
+CardHeader, CardFooter, 
+CardTitle, CardDescription, 
+CardContent };\r\n","usedDep
+recatedRules":[]},{"filePath
+":"D:\\STARTUP\\creatordeal\
+\src\\components\\ui\\input.
+tsx","messages":[{"ruleId":"
+@typescript-eslint/no-unused
+-vars","message":"Definition
+ for rule '@typescript-eslin
+t/no-unused-vars' was not fo
+und.","line":1,"column":1,"e
+ndLine":1,"endColumn":2,"sev
+erity":2,"nodeType":null},{"
+ruleId":"@typescript-eslint/
+no-explicit-any","message":"
+Definition for rule '@typesc
+ript-eslint/no-explicit-any'
+ was not found.","line":1,"c
+olumn":1,"endLine":1,"endCol
+umn":2,"severity":2,"nodeTyp
+e":null}],"suppressedMessage
+s":[],"errorCount":2,"fatalE
+rrorCount":0,"warningCount":
+0,"fixableErrorCount":0,"fix
+ableWarningCount":0,"source"
+:"import * as React from 
+\"react\";\r\nimport { cn } 
+from \"@/lib/utils\";\r\n\r\
+nexport interface 
+InputProps\r\n    extends Re
+act.InputHTMLAttributes<HTML
+InputElement> { 
+}\r\n\r\nconst Input = React
+.forwardRef<HTMLInputElement
+, InputProps>(\r\n    ({ 
+className, type, ...props 
+}, ref) => {\r\n        
+return (\r\n            
+<input\r\n                
+type={type}\r\n             
+   className={cn(\r\n       
+             \"flex h-11 
+w-full rounded-lg border 
+border-input bg-background 
+px-4 py-2 text-sm 
+ring-offset-background 
+file:border-0 
+file:bg-transparent 
+file:text-sm 
+file:font-medium placeholder
+:text-muted-foreground 
+focus-visible:outline-none 
+focus-visible:ring-2 
+focus-visible:ring-ring 
+focus-visible:ring-offset-2 
+disabled:cursor-not-allowed 
+disabled:opacity-50 
+transition-all 
+duration-200\",\r\n         
+           className\r\n    
+            )}\r\n          
+      ref={ref}\r\n         
+       {...props}\r\n       
+     />\r\n        );\r\n   
+ }\r\n);\r\nInput.displayNam
+e = 
+\"Input\";\r\n\r\nexport { 
+Input };\r\n","usedDeprecate
+dRules":[]},{"filePath":"D:\
+\STARTUP\\creatordeal\\src\\
+components\\ui\\label.tsx","
+messages":[{"ruleId":"@types
+cript-eslint/no-unused-vars"
+,"message":"Definition for 
+rule '@typescript-eslint/no-
+unused-vars' was not found."
+,"line":1,"column":1,"endLin
+e":1,"endColumn":2,"severity
+":2,"nodeType":null},{"ruleI
+d":"@typescript-eslint/no-ex
+plicit-any","message":"Defin
+ition for rule '@typescript-
+eslint/no-explicit-any' was 
+not found.","line":1,"column
+":1,"endLine":1,"endColumn":
+2,"severity":2,"nodeType":nu
+ll}],"suppressedMessages":[]
+,"errorCount":2,"fatalErrorC
+ount":0,"warningCount":0,"fi
+xableErrorCount":0,"fixableW
+arningCount":0,"source":"\"u
+se client\";\r\n\r\nimport 
+* as React from 
+\"react\";\r\nimport * as 
+LabelPrimitive from \"@radix
+-ui/react-label\";\r\nimport
+ { cva, type VariantProps } 
+from \"class-variance-author
+ity\";\r\nimport { cn } 
+from \"@/lib/utils\";\r\n\r\
+nconst labelVariants = 
+cva(\r\n    \"text-sm 
+font-medium leading-none pee
+r-disabled:cursor-not-allowe
+d peer-disabled:opacity-70\"
+\r\n);\r\n\r\nconst Label = 
+React.forwardRef<\r\n    
+React.ElementRef<typeof 
+LabelPrimitive.Root>,\r\n   
+ React.ComponentPropsWithout
+Ref<typeof 
+LabelPrimitive.Root> &\r\n  
+  VariantProps<typeof 
+labelVariants>\r\n>(({ 
+className, ...props }, ref) 
+=> (\r\n    
+<LabelPrimitive.Root\r\n    
+    ref={ref}\r\n        cla
+ssName={cn(labelVariants(), 
+className)}\r\n        
+{...props}\r\n    />\r\n));\
+r\nLabel.displayName = Label
+Primitive.Root.displayName;\
+r\n\r\nexport { Label };\r\n
+","usedDeprecatedRules":[]},
+{"filePath":"D:\\STARTUP\\cr
+eatordeal\\src\\components\\
+ui\\textarea.tsx","messages"
+:[{"ruleId":"@typescript-esl
+int/no-unused-vars","message
+":"Definition for rule '@typ
+escript-eslint/no-unused-var
+s' was not found.","line":1,
+"column":1,"endLine":1,"endC
+olumn":2,"severity":2,"nodeT
+ype":null},{"ruleId":"@types
+cript-eslint/no-explicit-any
+","message":"Definition for 
+rule '@typescript-eslint/no-
+explicit-any' was not found.
+","line":1,"column":1,"endLi
+ne":1,"endColumn":2,"severit
+y":2,"nodeType":null}],"supp
+ressedMessages":[],"errorCou
+nt":2,"fatalErrorCount":0,"w
+arningCount":0,"fixableError
+Count":0,"fixableWarningCoun
+t":0,"source":"import * as 
+React from 
+\"react\";\r\nimport { cn } 
+from \"@/lib/utils\";\r\n\r\
+nexport interface 
+TextareaProps\r\n    
+extends React.TextareaHTMLAt
+tributes<HTMLTextAreaElement
+> { }\r\n\r\nconst Textarea 
+= React.forwardRef<HTMLTextA
+reaElement, 
+TextareaProps>(\r\n    ({ 
+className, ...props }, ref) 
+=> {\r\n        return 
+(\r\n            
+<textarea\r\n               
+ className={cn(\r\n         
+           \"flex 
+min-h-[100px] w-full 
+rounded-lg border 
+border-input bg-background 
+px-4 py-3 text-sm 
+ring-offset-background place
+holder:text-muted-foreground
+ focus-visible:outline-none 
+focus-visible:ring-2 
+focus-visible:ring-ring 
+focus-visible:ring-offset-2 
+disabled:cursor-not-allowed 
+disabled:opacity-50 
+transition-all duration-200 
+resize-none\",\r\n          
+          className\r\n     
+           )}\r\n           
+     ref={ref}\r\n          
+      {...props}\r\n        
+    />\r\n        );\r\n    
+}\r\n);\r\nTextarea.displayN
+ame = 
+\"Textarea\";\r\n\r\nexport 
+{ Textarea };\r\n","usedDepr
+ecatedRules":[]},{"filePath"
+:"D:\\STARTUP\\creatordeal\\
+src\\context\\AuthContext.ts
+x","messages":[{"ruleId":"@t
+ypescript-eslint/no-unused-v
+ars","message":"Definition 
+for rule '@typescript-eslint
+/no-unused-vars' was not fou
+nd.","line":1,"column":1,"en
+dLine":1,"endColumn":2,"seve
+rity":2,"nodeType":null},{"r
+uleId":"@typescript-eslint/n
+o-explicit-any","message":"D
+efinition for rule '@typescr
+ipt-eslint/no-explicit-any' 
+was not found.","line":1,"co
+lumn":1,"endLine":1,"endColu
+mn":2,"severity":2,"nodeType
+":null}],"suppressedMessages
+":[],"errorCount":2,"fatalEr
+rorCount":0,"warningCount":0
+,"fixableErrorCount":0,"fixa
+bleWarningCount":0,"source":
+"\"use 
+client\";\r\n\r\nimport 
+React, { createContext, 
+useContext, useEffect, 
+useState } from 
+\"react\";\r\nimport { User 
+} from \"firebase/auth\";\r\
+nimport { doc, getDoc } 
+from \"firebase/firestore\";
+\r\nimport { auth, db } 
+from \"@/lib/firebase\";\r\n
+import { onAuthChange, 
+UserRole } from \"@/lib/auth
+\";\r\n\r\ninterface 
+AuthContextType {\r\n    
+user: User | null;\r\n    
+role: UserRole | null;\r\n  
+  onboardingComplete: 
+boolean;\r\n    loading: 
+boolean;\r\n    
+refreshProfile: () => Promis
+e<void>;\r\n}\r\n\r\nconst 
+AuthContext = createContext<
+AuthContextType>({\r\n    
+user: null,\r\n    role: 
+null,\r\n    
+onboardingComplete: 
+false,\r\n    loading: 
+true,\r\n    
+refreshProfile: async () => 
+{ },\r\n});\r\n\r\nexport 
+function AuthProvider({ 
+children }: { children: 
+React.ReactNode }) {\r\n    
+const [user, setUser] = 
+useState<User | 
+null>(null);\r\n    const 
+[role, setRole] = 
+useState<UserRole | 
+null>(null);\r\n    const 
+[onboardingComplete, 
+setOnboardingComplete] = 
+useState(false);\r\n    
+const [loading, setLoading] 
+= useState(true);\r\n\r\n   
+ const fetchProfile = async 
+(uid: string) => {\r\n      
+  try {\r\n            
+const userDoc = await 
+getDoc(doc(db, \"users\", 
+uid));\r\n            if 
+(userDoc.exists()) {\r\n    
+            const data = 
+userDoc.data();\r\n         
+       setRole(data.role || 
+null);\r\n                se
+tOnboardingComplete(data.onb
+oardingComplete || 
+false);\r\n            
+}\r\n        } catch 
+(error) {\r\n            
+console.error(\"Error 
+fetching user profile:\", 
+error);\r\n        }\r\n    
+};\r\n\r\n    const 
+refreshProfile = async () 
+=> {\r\n        if (user) 
+{\r\n            await 
+fetchProfile(user.uid);\r\n 
+       }\r\n    };\r\n\r\n  
+  useEffect(() => {\r\n     
+   const unsubscribe = 
+onAuthChange(async 
+(firebaseUser) => {\r\n     
+       
+setUser(firebaseUser);\r\n  
+          if (firebaseUser) 
+{\r\n                await f
+etchProfile(firebaseUser.uid
+);\r\n            } else 
+{\r\n                
+setRole(null);\r\n          
+      setOnboardingComplete(
+false);\r\n            
+}\r\n            
+setLoading(false);\r\n      
+  });\r\n\r\n        return 
+() => unsubscribe();\r\n    
+}, []);\r\n\r\n    return 
+(\r\n        
+<AuthContext.Provider 
+value={{ user, role, 
+onboardingComplete, 
+loading, refreshProfile 
+}}>\r\n            
+{children}\r\n        
+</AuthContext.Provider>\r\n 
+   );\r\n}\r\n\r\nexport 
+function useAuth() {\r\n    
+const context = useContext(A
+uthContext);\r\n    if 
+(!context) {\r\n        
+throw new Error(\"useAuth 
+must be used within an 
+AuthProvider\");\r\n    
+}\r\n    return context;\r\n
+}\r\n","usedDeprecatedRules"
+:[]},{"filePath":"D:\\STARTU
+P\\creatordeal\\src\\lib\\au
+th.ts","messages":[{"ruleId"
+:"@typescript-eslint/no-unus
+ed-vars","message":"Definiti
+on for rule '@typescript-esl
+int/no-unused-vars' was not 
+found.","line":1,"column":1,
+"endLine":1,"endColumn":2,"s
+everity":2,"nodeType":null},
+{"ruleId":"@typescript-eslin
+t/no-explicit-any","message"
+:"Definition for rule '@type
+script-eslint/no-explicit-an
+y' was not found.","line":1,
+"column":1,"endLine":1,"endC
+olumn":2,"severity":2,"nodeT
+ype":null}],"suppressedMessa
+ges":[],"errorCount":2,"fata
+lErrorCount":0,"warningCount
+":0,"fixableErrorCount":0,"f
+ixableWarningCount":0,"sourc
+e":"import {\r\n    createUs
+erWithEmailAndPassword,\r\n 
+   signInWithEmailAndPasswor
+d,\r\n    signOut as 
+firebaseSignOut,\r\n    
+onAuthStateChanged,\r\n    
+User,\r\n} from \"firebase/a
+uth\";\r\nimport { doc, 
+getDoc, setDoc, 
+serverTimestamp } from \"fir
+ebase/firestore\";\r\nimport
+ { auth, db } from \"./fireb
+ase\";\r\n\r\nexport type 
+UserRole = \"creator\" | 
+\"brand\";\r\n\r\nexport 
+interface UserProfile {\r\n 
+   uid: string;\r\n    
+email: string;\r\n    
+role?: UserRole;\r\n    
+onboardingComplete: 
+boolean;\r\n    createdAt: 
+Date;\r\n}\r\n\r\nexport 
+async function 
+signUp(email: string, 
+password: string): 
+Promise<User> {\r\n    
+const credential = await cre
+ateUserWithEmailAndPassword(
+auth, email, password);\r\n 
+   // Create user document 
+in Firestore\r\n    await 
+setDoc(doc(db, \"users\", 
+credential.user.uid), {\r\n 
+       uid: 
+credential.user.uid,\r\n    
+    email: 
+credential.user.email,\r\n  
+      onboardingComplete: 
+false,\r\n        
+createdAt: 
+serverTimestamp(),\r\n    
+});\r\n    return credential
+.user;\r\n}\r\n\r\nexport 
+async function 
+signIn(email: string, 
+password: string): 
+Promise<User> {\r\n    
+const credential = await sig
+nInWithEmailAndPassword(auth
+, email, password);\r\n    
+return credential.user;\r\n}
+\r\n\r\nexport async 
+function signOut(): 
+Promise<void> {\r\n    
+await firebaseSignOut(auth);
+\r\n}\r\n\r\nexport async 
+function 
+getUserProfile(uid: 
+string): 
+Promise<UserProfile | null> 
+{\r\n    const docRef = 
+doc(db, \"users\", 
+uid);\r\n    const docSnap 
+= await getDoc(docRef);\r\n 
+   if (docSnap.exists()) 
+{\r\n        return 
+docSnap.data() as 
+UserProfile;\r\n    }\r\n   
+ return 
+null;\r\n}\r\n\r\nexport 
+async function 
+setUserRole(uid: string, 
+role: UserRole): 
+Promise<void> {\r\n    
+await setDoc(\r\n        
+doc(db, \"users\", 
+uid),\r\n        { role, 
+updatedAt: 
+serverTimestamp() },\r\n    
+    { merge: true }\r\n    
+);\r\n}\r\n\r\nexport 
+function 
+onAuthChange(callback: 
+(user: User | null) => 
+void) {\r\n    return 
+onAuthStateChanged(auth, cal
+lback);\r\n}\r\n","usedDepre
+catedRules":[]},{"filePath":
+"D:\\STARTUP\\creatordeal\\s
+rc\\lib\\firebase.ts","messa
+ges":[{"ruleId":"@typescript
+-eslint/no-unused-vars","mes
+sage":"Definition for rule '
+@typescript-eslint/no-unused
+-vars' was not found.","line
+":1,"column":1,"endLine":1,"
+endColumn":2,"severity":2,"n
+odeType":null},{"ruleId":"@t
+ypescript-eslint/no-explicit
+-any","message":"Definition 
+for rule '@typescript-eslint
+/no-explicit-any' was not fo
+und.","line":1,"column":1,"e
+ndLine":1,"endColumn":2,"sev
+erity":2,"nodeType":null}],"
+suppressedMessages":[],"erro
+rCount":2,"fatalErrorCount":
+0,"warningCount":0,"fixableE
+rrorCount":0,"fixableWarning
+Count":0,"source":"import { 
+initializeApp, getApps } 
+from 
+\"firebase/app\";\r\nimport 
+{ getAuth } from \"firebase/
+auth\";\r\nimport { 
+getFirestore } from \"fireba
+se/firestore\";\r\n\r\nconst
+ firebaseConfig = {\r\n    
+apiKey: process.env.NEXT_PUB
+LIC_FIREBASE_API_KEY || 
+\"\",\r\n    authDomain: pro
+cess.env.NEXT_PUBLIC_FIREBAS
+E_AUTH_DOMAIN || \"\",\r\n  
+  projectId: process.env.NEX
+T_PUBLIC_FIREBASE_PROJECT_ID
+ || \"\",\r\n    
+storageBucket: process.env.N
+EXT_PUBLIC_FIREBASE_STORAGE_
+BUCKET || \"\",\r\n    
+messagingSenderId: process.e
+nv.NEXT_PUBLIC_FIREBASE_MESS
+AGING_SENDER_ID || 
+\"\",\r\n    appId: process.
+env.NEXT_PUBLIC_FIREBASE_APP
+_ID || 
+\"\",\r\n};\r\n\r\n// 
+Initialize Firebase 
+(prevent duplicate 
+initialization)\r\nconst 
+app = getApps().length === 
+0 ? initializeApp(firebaseCo
+nfig) : 
+getApps()[0];\r\n\r\nexport 
+const auth = 
+getAuth(app);\r\nexport 
+const db = getFirestore(app)
+;\r\nexport default app;\r\n
+","usedDeprecatedRules":[]},
+{"filePath":"D:\\STARTUP\\cr
+eatordeal\\src\\lib\\matchin
+g.ts","messages":[{"ruleId":
+"@typescript-eslint/no-unuse
+d-vars","message":"Definitio
+n for rule '@typescript-esli
+nt/no-unused-vars' was not f
+ound.","line":1,"column":1,"
+endLine":1,"endColumn":2,"se
+verity":2,"nodeType":null},{
+"ruleId":"@typescript-eslint
+/no-explicit-any","message":
+"Definition for rule '@types
+cript-eslint/no-explicit-any
+' was not found.","line":1,"
+column":1,"endLine":1,"endCo
+lumn":2,"severity":2,"nodeTy
+pe":null}],"suppressedMessag
+es":[],"errorCount":2,"fatal
+ErrorCount":0,"warningCount"
+:0,"fixableErrorCount":0,"fi
+xableWarningCount":0,"source
+":"// Client-side matching 
+utilities (display only ??? 
+actual scoring is done in 
+Cloud 
+Functions)\r\n\r\nexport 
+interface Campaign {\r\n    
+id: string;\r\n    brandId: 
+string;\r\n    title: 
+string;\r\n    description: 
+string;\r\n    
+deliverableType: \"Reel\" | 
+\"Post\" | \"Story\";\r\n   
+ budget: number;\r\n    
+timeline: string;\r\n    
+niche?: string;\r\n    
+status: \"active\" | 
+\"paused\" | 
+\"completed\";\r\n    
+createdAt: 
+Date;\r\n}\r\n\r\nexport 
+interface CreatorProfile 
+{\r\n    uid: string;\r\n   
+ name: string;\r\n    
+instagramHandle: 
+string;\r\n    niche: 
+string;\r\n    followers: 
+number;\r\n    avgViews: 
+number;\r\n    
+engagementRate: number;\r\n 
+   verified: 
+boolean;\r\n}\r\n\r\nexport 
+interface MatchedCampaign 
+extends Campaign {\r\n    
+matchScore: number;\r\n    
+matchReasons: 
+string[];\r\n}\r\n\r\n// 
+Client-side display helper: 
+pre-sort campaigns by match 
+score\r\nexport function 
+sortByMatchScore(campaigns: 
+MatchedCampaign[]): 
+MatchedCampaign[] {\r\n    
+return 
+[...campaigns].sort((a, b) 
+=> b.matchScore - a.matchSco
+re);\r\n}\r\n\r\n// Format 
+match score for 
+display\r\nexport function 
+formatMatchScore(score: 
+number): string {\r\n    if 
+(score >= 90) return 
+\"Excellent Match\";\r\n    
+if (score >= 75) return 
+\"Great Match\";\r\n    if 
+(score >= 60) return \"Good 
+Match\";\r\n    if (score 
+>= 40) return \"Fair 
+Match\";\r\n    return 
+\"Low 
+Match\";\r\n}\r\n\r\nexport 
+function 
+getMatchColor(score: 
+number): string {\r\n    if 
+(score >= 90) return 
+\"text-emerald-400\";\r\n   
+ if (score >= 75) return 
+\"text-green-400\";\r\n    
+if (score >= 60) return 
+\"text-blue-400\";\r\n    
+if (score >= 40) return 
+\"text-yellow-400\";\r\n    
+return \"text-gray-400\";\r\
+n}\r\n","usedDeprecatedRules
+":[]},{"filePath":"D:\\START
+UP\\creatordeal\\src\\lib\\u
+tils.ts","messages":[{"ruleI
+d":"@typescript-eslint/no-un
+used-vars","message":"Defini
+tion for rule '@typescript-e
+slint/no-unused-vars' was 
+not found.","line":1,"column
+":1,"endLine":1,"endColumn":
+2,"severity":2,"nodeType":nu
+ll},{"ruleId":"@typescript-e
+slint/no-explicit-any","mess
+age":"Definition for rule '@
+typescript-eslint/no-explici
+t-any' was not found.","line
+":1,"column":1,"endLine":1,"
+endColumn":2,"severity":2,"n
+odeType":null}],"suppressedM
+essages":[],"errorCount":2,"
+fatalErrorCount":0,"warningC
+ount":0,"fixableErrorCount":
+0,"fixableWarningCount":0,"s
+ource":"import { type 
+ClassValue, clsx } from 
+\"clsx\";\r\nimport { 
+twMerge } from \"tailwind-me
+rge\";\r\n\r\nexport 
+function cn(...inputs: 
+ClassValue[]) {\r\n    
+return twMerge(clsx(inputs))
+;\r\n}\r\n","usedDeprecatedR
+ules":[]}]
+At C:\Program 
+Files\nodejs\npx.ps1:29 
+char:3
++   & $NODE_EXE $NPX_CLI_JS 
+$args
++   ~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~
+    + CategoryInfo          
+    : NotSpecified: ([{"fi  
+  lePath":"D...atedRules"   
+ :[]}]:String) [], Remot    
+eException
+    + FullyQualifiedErrorId 
+    : NativeCommandError
+ 
+
+info  - Need to disable 
+some ESLint rules? Learn 
+more here: https://nextjs.or
+g/docs/basic-features/eslint
+#disabling-rules

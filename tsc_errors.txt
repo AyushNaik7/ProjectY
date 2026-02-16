@@ -1,0 +1,18 @@
+functions/src/index.ts(1,28): error TS2307: Cannot find module 'firebase-functions' or its corresponding type declarations.
+functions/src/index.ts(2,24): error TS2307: Cannot find module 'firebase-admin' or its corresponding type declarations.
+functions/src/index.ts(19,66): error TS7006: Parameter 'data' implicitly has an 'any' type.
+functions/src/index.ts(19,72): error TS7006: Parameter 'context' implicitly has an 'any' type.
+functions/src/index.ts(59,54): error TS7006: Parameter 'doc' implicitly has an 'any' type.
+functions/src/index.ts(89,28): error TS7006: Parameter 'a' implicitly has an 'any' type.
+functions/src/index.ts(89,31): error TS7006: Parameter 'b' implicitly has an 'any' type.
+functions/src/index.ts(101,60): error TS7006: Parameter 'data' implicitly has an 'any' type.
+functions/src/index.ts(101,66): error TS7006: Parameter 'context' implicitly has an 'any' type.
+functions/src/index.ts(166,66): error TS7006: Parameter 'data' implicitly has an 'any' type.
+functions/src/index.ts(166,72): error TS7006: Parameter 'context' implicitly has an 'any' type.
+functions/src/index.ts(206,22): error TS7006: Parameter 'snap' implicitly has an 'any' type.
+functions/src/index.ts(206,28): error TS7006: Parameter 'context' implicitly has an 'any' type.
+functions/src/index.ts(250,69): error TS7006: Parameter 'data' implicitly has an 'any' type.
+functions/src/index.ts(250,75): error TS7006: Parameter 'context' implicitly has an 'any' type.
+functions/src/index.ts(282,37): error TS7006: Parameter 'matchDoc' implicitly has an 'any' type.
+functions/src/matching.ts(1,24): error TS2307: Cannot find module 'firebase-admin' or its corresponding type declarations.
+functions/src/requests.ts(1,24): error TS2307: Cannot find module 'firebase-admin' or its corresponding type declarations.

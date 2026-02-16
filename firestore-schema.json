@@ -1,0 +1,84 @@
+{
+  "users": {
+    "_collection": "users",
+    "_docId": "{uid}",
+    "schema": {
+      "uid": "string (Firebase Auth UID)",
+      "email": "string",
+      "role": "string ('creator' | 'brand')",
+      "onboardingComplete": "boolean",
+      "createdAt": "timestamp",
+      "updatedAt": "timestamp"
+    }
+  },
+  "creators": {
+    "_collection": "creators",
+    "_docId": "{uid}",
+    "schema": {
+      "uid": "string (Firebase Auth UID)",
+      "name": "string",
+      "instagramHandle": "string",
+      "niche": "string",
+      "followers": "number",
+      "avgViews": "number",
+      "engagementRate": "number",
+      "minRatePrivate": "number (PRIVATE - never exposed to brands)",
+      "verified": "boolean",
+      "createdAt": "timestamp",
+      "updatedAt": "timestamp"
+    }
+  },
+  "brands": {
+    "_collection": "brands",
+    "_docId": "{uid}",
+    "schema": {
+      "uid": "string (Firebase Auth UID)",
+      "brandName": "string",
+      "category": "string",
+      "budgetMin": "number",
+      "budgetMax": "number",
+      "website": "string (optional)",
+      "description": "string (optional)",
+      "createdAt": "timestamp",
+      "updatedAt": "timestamp"
+    }
+  },
+  "campaigns": {
+    "_collection": "campaigns",
+    "_docId": "{auto-generated}",
+    "schema": {
+      "brandId": "string (references users/{uid})",
+      "title": "string",
+      "description": "string",
+      "deliverableType": "string ('Reel' | 'Post' | 'Story')",
+      "budget": "number",
+      "timeline": "string",
+      "niche": "string",
+      "status": "string ('active' | 'paused' | 'completed')",
+      "createdAt": "timestamp",
+      "updatedAt": "timestamp"
+    },
+    "indexes": [
+      { "fields": ["brandId", "createdAt"], "order": "desc" },
+      { "fields": ["status", "createdAt"], "order": "desc" }
+    ]
+  },
+  "requests": {
+    "_collection": "requests",
+    "_docId": "{auto-generated}",
+    "schema": {
+      "campaignId": "string (references campaigns/{id})",
+      "creatorId": "string (references users/{uid})",
+      "brandId": "string (references users/{uid})",
+      "status": "string ('pending' | 'accepted' | 'rejected')",
+      "matchScore": "number (computed by Cloud Function)",
+      "createdAt": "timestamp",
+      "updatedAt": "timestamp"
+    },
+    "indexes": [
+      { "fields": ["brandId", "createdAt"], "order": "desc" },
+      { "fields": ["creatorId", "createdAt"], "order": "desc" },
+      { "fields": ["campaignId", "status"] }
+    ]
+  }
+}

@@ -1,0 +1,329 @@
+  ??? Next.js 14.2.35
+
+   Creating an optimized production build ...
+ ??? Compiled successfully
+   Linting and checking validity of types ...
+node.exe : 
+At C:\Program 
+Files\nodejs\npx.ps1:29 
+char:3
++   & $NODE_EXE $NPX_CLI_JS 
+$args
++   ~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~
+    + CategoryInfo          
+    : NotSpecified: (:Stri  
+  ng) [], RemoteException
+    + FullyQualifiedErrorId 
+    : NativeCommandError
+ 
+Failed to compile.
+
+./src/app/auth/page.tsx
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+unused-vars' was not found. 
+ @typescript-eslint/no-unuse
+d-vars
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+explicit-any' was not 
+found.  @typescript-eslint/n
+o-explicit-any
+
+./src/app/campaigns/new/page
+.tsx
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+unused-vars' was not found. 
+ @typescript-eslint/no-unuse
+d-vars
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+explicit-any' was not 
+found.  @typescript-eslint/n
+o-explicit-any
+
+./src/app/campaigns/page.tsx
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+unused-vars' was not found. 
+ @typescript-eslint/no-unuse
+d-vars
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+explicit-any' was not 
+found.  @typescript-eslint/n
+o-explicit-any
+79:8  Warning: React Hook 
+useEffect has a missing 
+dependency: 
+'fetchCampaigns'. Either 
+include it or remove the 
+dependency array.  
+react-hooks/exhaustive-deps
+
+./src/app/dashboard/brand/pa
+ge.tsx
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+unused-vars' was not found. 
+ @typescript-eslint/no-unuse
+d-vars
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+explicit-any' was not 
+found.  @typescript-eslint/n
+o-explicit-any
+
+./src/app/dashboard/creator/
+page.tsx
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+unused-vars' was not found. 
+ @typescript-eslint/no-unuse
+d-vars
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+explicit-any' was not 
+found.  @typescript-eslint/n
+o-explicit-any
+
+./src/app/layout.tsx
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+unused-vars' was not found. 
+ @typescript-eslint/no-unuse
+d-vars
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+explicit-any' was not 
+found.  @typescript-eslint/n
+o-explicit-any
+
+./src/app/onboarding/brand/p
+age.tsx
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+unused-vars' was not found. 
+ @typescript-eslint/no-unuse
+d-vars
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+explicit-any' was not 
+found.  @typescript-eslint/n
+o-explicit-any
+
+./src/app/onboarding/creator
+/page.tsx
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+unused-vars' was not found. 
+ @typescript-eslint/no-unuse
+d-vars
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+explicit-any' was not 
+found.  @typescript-eslint/n
+o-explicit-any
+
+./src/app/onboarding/role/pa
+ge.tsx
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+unused-vars' was not found. 
+ @typescript-eslint/no-unuse
+d-vars
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+explicit-any' was not 
+found.  @typescript-eslint/n
+o-explicit-any
+
+./src/app/page.tsx
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+unused-vars' was not found. 
+ @typescript-eslint/no-unuse
+d-vars
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+explicit-any' was not 
+found.  @typescript-eslint/n
+o-explicit-any
+
+./src/app/requests/page.tsx
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+unused-vars' was not found. 
+ @typescript-eslint/no-unuse
+d-vars
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+explicit-any' was not 
+found.  @typescript-eslint/n
+o-explicit-any
+72:8  Warning: React Hook 
+useEffect has a missing 
+dependency: 
+'fetchRequests'. Either 
+include it or remove the 
+dependency array.  
+react-hooks/exhaustive-deps
+
+./src/components/DashboardSh
+ell.tsx
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+unused-vars' was not found. 
+ @typescript-eslint/no-unuse
+d-vars
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+explicit-any' was not 
+found.  @typescript-eslint/n
+o-explicit-any
+
+./src/components/ui/badge.ts
+x
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+unused-vars' was not found. 
+ @typescript-eslint/no-unuse
+d-vars
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+explicit-any' was not 
+found.  @typescript-eslint/n
+o-explicit-any
+
+./src/components/ui/button.t
+sx
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+unused-vars' was not found. 
+ @typescript-eslint/no-unuse
+d-vars
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+explicit-any' was not 
+found.  @typescript-eslint/n
+o-explicit-any
+
+./src/components/ui/card.tsx
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+unused-vars' was not found. 
+ @typescript-eslint/no-unuse
+d-vars
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+explicit-any' was not 
+found.  @typescript-eslint/n
+o-explicit-any
+
+./src/components/ui/input.ts
+x
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+unused-vars' was not found. 
+ @typescript-eslint/no-unuse
+d-vars
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+explicit-any' was not 
+found.  @typescript-eslint/n
+o-explicit-any
+
+./src/components/ui/label.ts
+x
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+unused-vars' was not found. 
+ @typescript-eslint/no-unuse
+d-vars
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+explicit-any' was not 
+found.  @typescript-eslint/n
+o-explicit-any
+
+./src/components/ui/textarea
+.tsx
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+unused-vars' was not found. 
+ @typescript-eslint/no-unuse
+d-vars
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+explicit-any' was not 
+found.  @typescript-eslint/n
+o-explicit-any
+
+./src/context/AuthContext.ts
+x
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+unused-vars' was not found. 
+ @typescript-eslint/no-unuse
+d-vars
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+explicit-any' was not 
+found.  @typescript-eslint/n
+o-explicit-any
+
+./src/lib/auth.ts
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+unused-vars' was not found. 
+ @typescript-eslint/no-unuse
+d-vars
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+explicit-any' was not 
+found.  @typescript-eslint/n
+o-explicit-any
+
+./src/lib/firebase.ts
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+unused-vars' was not found. 
+ @typescript-eslint/no-unuse
+d-vars
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+explicit-any' was not 
+found.  @typescript-eslint/n
+o-explicit-any
+
+./src/lib/matching.ts
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+unused-vars' was not found. 
+ @typescript-eslint/no-unuse
+d-vars
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+explicit-any' was not 
+found.  @typescript-eslint/n
+o-explicit-any
+
+./src/lib/utils.ts
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+unused-vars' was not found. 
+ @typescript-eslint/no-unuse
+d-vars
+1:1  Error: Definition for 
+rule '@typescript-eslint/no-
+explicit-any' was not 
+found.  @typescript-eslint/n
+o-explicit-any
+
+info  - Need to disable 
+some ESLint rules? Learn 
+more here: https://nextjs.or
+g/docs/basic-features/eslint
+#disabling-rules
