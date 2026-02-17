@@ -2,65 +2,57 @@
  * API Route: Initialize User
  *
  * POST /api/initialize-user
- * Body: { idToken: string, role: "creator" | "brand" }
+ * Headers: Authorization: Bearer <access_token>
+ * Body: { role: "creator" | "brand" }
  *
- * Creates the user document in Firestore with the selected role.
- * Called from frontend immediately after signup.
+ * Stores/updates the user's role in Supabase user_metadata.
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { adminDb, adminAuth } from "@/lib/firebase-admin";
-import { FieldValue } from "firebase-admin/firestore";
+import { supabaseAdmin, verifyAccessToken } from "@/lib/supabase-server";
+
+function getToken(req: NextRequest): string | null {
+  const auth = req.headers.get("authorization");
+  if (auth?.startsWith("Bearer ")) return auth.slice(7);
+  return null;
+}
 
 export async function POST(req: NextRequest) {
-    try {
-        const { idToken, role } = await req.json();
-
-        if (!idToken || !["creator", "brand"].includes(role)) {
-            return NextResponse.json(
-                { error: "idToken and role (creator/brand) are required" },
-                { status: 400 }
-            );
-        }
-
-        // Verify the Firebase ID token — this IS the auth check
-        const decoded = await adminAuth.verifyIdToken(idToken);
-        const uid = decoded.uid;
-        const email = decoded.email || "";
-
-        // Check if user doc already exists
-        const userDoc = await adminDb.doc(`users/${uid}`).get();
-        if (userDoc.exists) {
-            if (userDoc.data()?.onboardingComplete) {
-                return NextResponse.json(
-                    { error: "Cannot change role after onboarding" },
-                    { status: 400 }
-                );
-            }
-            await adminDb.doc(`users/${uid}`).update({
-                role,
-                updatedAt: FieldValue.serverTimestamp(),
-            });
-            return NextResponse.json({ success: true, existing: true });
-        }
-
-        // Create new user document
-        await adminDb.doc(`users/${uid}`).set({
-            uid,
-            email,
-            role,
-            onboardingComplete: false,
-            createdAt: FieldValue.serverTimestamp(),
-            updatedAt: FieldValue.serverTimestamp(),
-        });
-
-        return NextResponse.json({ success: true, existing: false });
-    } catch (error: unknown) {
-        const err = error as { message?: string };
-        console.error("Error in initialize-user:", err);
-        return NextResponse.json(
-            { error: err.message || "Internal server error" },
-            { status: 500 }
-        );
+  try {
+    const token = getToken(req);
+    if (!token) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
     }
+
+    const user = await verifyAccessToken(token);
+    const { role } = await req.json();
+
+    if (!["creator", "brand"].includes(role)) {
+      return NextResponse.json(
+        { error: "role (creator/brand) is required" },
+        { status: 400 }
+      );
+    }
+
+    // Update user metadata with the selected role
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(user.id, {
+      user_metadata: { role, onboarding_complete: false },
+    });
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error: unknown) {
+    const err = error as { message?: string };
+    console.error("Error in initialize-user:", err);
+    return NextResponse.json(
+      { error: err.message || "Internal server error" },
+      { status: 500 }
+    );
+  }
 }
