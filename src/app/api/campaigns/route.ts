@@ -8,6 +8,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin, verifyAccessToken } from "@/lib/supabase-server";
+import { generateCampaignEmbedding } from "@/lib/embeddings";
 
 function getToken(req: NextRequest): string | null {
   const auth = req.headers.get("authorization");
@@ -97,6 +98,11 @@ export async function POST(req: NextRequest) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    // Generate AI embedding asynchronously (don't block the response)
+    generateCampaignEmbedding(data.id).catch((err) =>
+      console.error("Background campaign embedding generation failed:", err)
+    );
 
     return NextResponse.json({ campaignId: data.id });
   } catch (error: unknown) {

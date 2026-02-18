@@ -1,14 +1,19 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useSupabaseAuth } from '@/context/SupabaseAuthContext';
-import { CreatorCard } from '@/components/CreatorCard';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { useState, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -16,124 +21,90 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Plus, TrendingUp, Users, Zap } from 'lucide-react';
+} from "@/components/ui/table";
+import { Plus, TrendingUp, Users, Zap, Brain, ChevronDown } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import {
+  callGetCreatorsForCampaign,
+  type MatchedCreator,
+} from "@/lib/functions";
+import { formatMatchScore, getMatchColor } from "@/lib/matching";
 
-// Mock data
-const mockCampaigns = [
-  {
-    id: '1',
-    title: 'Summer Collection Launch',
-    budget: 500000,
-    deliverable: 'Instagram Reel',
-    status: 'active' as const,
-    applications: 12,
-    createdAt: '2024-02-10',
-  },
-  {
-    id: '2',
-    title: 'Product Review Campaign',
-    budget: 300000,
-    deliverable: 'YouTube Video',
-    status: 'active' as const,
-    applications: 8,
-    createdAt: '2024-02-08',
-  },
-  {
-    id: '3',
-    title: 'Brand Awareness Drive',
-    budget: 750000,
-    deliverable: 'TikTok Series',
-    status: 'closed' as const,
-    applications: 25,
-    createdAt: '2024-02-01',
-  },
-  {
-    id: '4',
-    title: 'Influencer Collaboration',
-    budget: 400000,
-    deliverable: 'Instagram Post',
-    status: 'active' as const,
-    applications: 5,
-    createdAt: '2024-02-05',
-  },
-];
-
-const mockCreators = [
-  {
-    id: '1',
-    name: 'Sarah Anderson',
-    niche: 'Fashion & Lifestyle',
-    followers: 850000,
-    engagement: 8.2,
-    avgViews: 125000,
-  },
-  {
-    id: '2',
-    name: 'Alex Kumar',
-    niche: 'Tech Reviews',
-    followers: 620000,
-    engagement: 9.5,
-    avgViews: 95000,
-  },
-  {
-    id: '3',
-    name: 'Emma Wilson',
-    niche: 'Beauty & Makeup',
-    followers: 1200000,
-    engagement: 7.8,
-    avgViews: 180000,
-  },
-  {
-    id: '4',
-    name: 'Raj Patel',
-    niche: 'Fitness',
-    followers: 450000,
-    engagement: 10.2,
-    avgViews: 65000,
-  },
-  {
-    id: '5',
-    name: 'Lisa Chen',
-    niche: 'Food & Travel',
-    followers: 780000,
-    engagement: 8.9,
-    avgViews: 110000,
-  },
-];
-
-const stats = [
-  {
-    label: 'Active Campaigns',
-    value: '3',
-    icon: Zap,
-    color: 'text-primary',
-  },
-  {
-    label: 'Total Applications',
-    value: '50',
-    icon: Users,
-    color: 'text-blue-600',
-  },
-  {
-    label: 'Budget Spent',
-    value: '₹19.5L',
-    icon: TrendingUp,
-    color: 'text-green-600',
-  },
-];
+interface CampaignRow {
+  id: string;
+  title: string;
+  budget: number;
+  deliverable_type: string;
+  niche: string;
+  status: string;
+  created_at: string;
+}
 
 export default function BrandDashboard() {
   const router = useRouter();
   const { user, role, loading, signOut } = useSupabaseAuth();
-  const [campaigns] = useState(mockCampaigns);
-  const [creators] = useState(mockCreators);
+  const [campaigns, setCampaigns] = useState<CampaignRow[]>([]);
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(
+    null
+  );
+  const [matchedCreators, setMatchedCreators] = useState<MatchedCreator[]>([]);
+  const [creatorsLoading, setCreatorsLoading] = useState(false);
+  const [campaignsLoading, setCampaignsLoading] = useState(true);
+  const [brandName, setBrandName] = useState("");
 
   useEffect(() => {
-    if (!loading && (!user || role !== 'brand')) {
-      router.push('/login');
+    if (!loading && (!user || role !== "brand")) {
+      router.push("/login");
     }
   }, [user, role, loading, router]);
+
+  // Fetch brand profile & campaigns
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      try {
+        const [{ data: brand }, { data: camps }] = await Promise.all([
+          supabase.from("brands").select("name").eq("id", user.id).single(),
+          supabase
+            .from("campaigns")
+            .select("*")
+            .eq("brand_id", user.id)
+            .order("created_at", { ascending: false }),
+        ]);
+        setBrandName(
+          (brand?.name as string) || user.email?.split("@")[0] || "Brand"
+        );
+        setCampaigns((camps as CampaignRow[]) || []);
+        // Auto-select first active campaign for matching
+        const firstActive = (camps || []).find(
+          (c: CampaignRow) => c.status === "active"
+        );
+        if (firstActive) setSelectedCampaignId(firstActive.id);
+      } catch (err) {
+        console.error("Failed to load brand data:", err);
+      } finally {
+        setCampaignsLoading(false);
+      }
+    })();
+  }, [user]);
+
+  // Fetch AI-matched creators for selected campaign
+  const fetchMatches = useCallback(async (campaignId: string) => {
+    setCreatorsLoading(true);
+    try {
+      const result = await callGetCreatorsForCampaign(campaignId);
+      setMatchedCreators(result.creators || []);
+    } catch (err) {
+      console.error("Failed to load creator matches:", err);
+      setMatchedCreators([]);
+    } finally {
+      setCreatorsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (selectedCampaignId) fetchMatches(selectedCampaignId);
+  }, [selectedCampaignId, fetchMatches]);
 
   if (loading) {
     return (
@@ -146,18 +117,37 @@ export default function BrandDashboard() {
     );
   }
 
-  if (!user || role !== 'brand') {
-    return null;
-  }
-
-  const handleSignOut = async () => {
-    await signOut();
-    router.push('/login');
-  };
+  if (!user || role !== "brand") return null;
 
   const handleSendRequest = (creatorId: string) => {
-    console.log('Send request to creator:', creatorId);
+    console.log("Send request to creator:", creatorId);
   };
+  const activeCampaigns = campaigns.filter((c) => c.status === "active");
+  const totalBudget = activeCampaigns.reduce((sum, c) => sum + c.budget, 0);
+
+  const stats = [
+    {
+      label: "Active Campaigns",
+      value: String(activeCampaigns.length),
+      icon: Zap,
+      color: "text-primary",
+    },
+    {
+      label: "AI Matches Found",
+      value: String(matchedCreators.length),
+      icon: Brain,
+      color: "text-blue-600",
+    },
+    {
+      label: "Total Budget",
+      value:
+        totalBudget >= 100000
+          ? `₹${(totalBudget / 100000).toFixed(1)}L`
+          : `₹${totalBudget.toLocaleString()}`,
+      icon: TrendingUp,
+      color: "text-green-600",
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -168,9 +158,11 @@ export default function BrandDashboard() {
         transition={{ duration: 0.5 }}
         className="mb-8"
       >
-        <h1 className="text-3xl font-bold text-foreground mb-2">Welcome back, Nike</h1>
+        <h1 className="text-3xl font-bold text-foreground mb-2">
+          Welcome back, {brandName}
+        </h1>
         <p className="text-muted-foreground">
-          Manage your active campaigns and discover creators
+          Manage your campaigns and discover AI-matched creators
         </p>
       </motion.div>
 
@@ -188,8 +180,12 @@ export default function BrandDashboard() {
               <CardContent className="p-6">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">{stat.label}</p>
-                    <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      {stat.label}
+                    </p>
+                    <p className="text-2xl font-bold text-foreground">
+                      {stat.value}
+                    </p>
                   </div>
                   <div className="p-3 rounded-lg bg-primary/10">
                     <Icon className={`w-5 h-5 ${stat.color}`} />
@@ -217,12 +213,15 @@ export default function BrandDashboard() {
                     Ready to find creators?
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    Post a new campaign and get matched with relevant creators instantly.
+                    Post a new campaign and get AI-matched with relevant
+                    creators instantly.
                   </p>
                 </div>
-                <Button size="lg" className="gap-2 bg-primary hover:bg-primary/90">
-                  <Plus className="w-5 h-5" />
-                  Post Campaign
+                <Button
+                  size="lg"
+                  className="gap-2 bg-primary hover:bg-primary/90"
+                >
+                  <Plus className="w-5 h-5" /> Post Campaign
                 </Button>
               </div>
             </CardContent>
@@ -230,7 +229,7 @@ export default function BrandDashboard() {
         </Link>
       </motion.div>
 
-      {/* Active Campaigns */}
+      {/* Active Campaigns Table */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -239,91 +238,281 @@ export default function BrandDashboard() {
       >
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-4">
-            <CardTitle>Active Campaigns</CardTitle>
-            <CardDescription>Manage and track all your campaigns</CardDescription>
+            <CardTitle>Your Campaigns</CardTitle>
+            <CardDescription>
+              Select a campaign to see AI-matched creators
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-border/50 hover:bg-transparent">
-                    <TableHead className="text-xs font-semibold text-muted-foreground">
-                      Campaign
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold text-muted-foreground">
-                      Budget
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold text-muted-foreground">
-                      Deliverable
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold text-muted-foreground">
-                      Applications
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold text-muted-foreground">
-                      Status
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold text-muted-foreground">
-                      Action
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {campaigns.map((campaign) => (
-                    <TableRow
-                      key={campaign.id}
-                      className="border-border/50 hover:bg-accent/50 transition-colors"
-                    >
-                      <TableCell className="font-medium text-sm">{campaign.title}</TableCell>
-                      <TableCell className="text-sm">₹{(campaign.budget / 100000).toFixed(1)}L</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {campaign.deliverable}
-                      </TableCell>
-                      <TableCell className="text-sm font-medium">{campaign.applications}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={campaign.status === 'active' ? 'default' : 'secondary'}
-                          className="text-xs"
-                        >
-                          {campaign.status === 'active' ? '🟢 Active' : '⚫ Closed'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="sm" className="text-xs">
-                          View
-                        </Button>
-                      </TableCell>
+            {campaignsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+              </div>
+            ) : campaigns.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4">
+                No campaigns yet. Create one to get started!
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-border/50 hover:bg-transparent">
+                      <TableHead className="text-xs font-semibold text-muted-foreground">
+                        Campaign
+                      </TableHead>
+                      <TableHead className="text-xs font-semibold text-muted-foreground">
+                        Budget
+                      </TableHead>
+                      <TableHead className="text-xs font-semibold text-muted-foreground">
+                        Niche
+                      </TableHead>
+                      <TableHead className="text-xs font-semibold text-muted-foreground">
+                        Status
+                      </TableHead>
+                      <TableHead className="text-xs font-semibold text-muted-foreground">
+                        Action
+                      </TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {campaigns.map((campaign) => (
+                      <TableRow
+                        key={campaign.id}
+                        className={`border-border/50 hover:bg-accent/50 transition-colors cursor-pointer ${
+                          selectedCampaignId === campaign.id
+                            ? "bg-primary/5"
+                            : ""
+                        }`}
+                        onClick={() =>
+                          campaign.status === "active" &&
+                          setSelectedCampaignId(campaign.id)
+                        }
+                      >
+                        <TableCell className="font-medium text-sm">
+                          {campaign.title}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          ₹
+                          {campaign.budget >= 100000
+                            ? `${(campaign.budget / 100000).toFixed(1)}L`
+                            : campaign.budget.toLocaleString()}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {campaign.niche || "-"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              campaign.status === "active"
+                                ? "default"
+                                : "secondary"
+                            }
+                            className="text-xs"
+                          >
+                            {campaign.status === "active"
+                              ? "🟢 Active"
+                              : "⚫ " + campaign.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {campaign.status === "active" && (
+                            <Button
+                              variant={
+                                selectedCampaignId === campaign.id
+                                  ? "default"
+                                  : "ghost"
+                              }
+                              size="sm"
+                              className="text-xs gap-1"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedCampaignId(campaign.id);
+                              }}
+                            >
+                              <Brain className="w-3 h-3" /> Find Creators
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </CardContent>
         </Card>
       </motion.div>
 
-      {/* Suggested Creators */}
+      {/* AI-Suggested Creators */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.4 }}
       >
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-foreground mb-1">Suggested Creators</h2>
-          <p className="text-sm text-muted-foreground">
-            Creators matched to your campaigns
-          </p>
+        <div className="mb-6 flex items-center gap-2">
+          <Brain className="w-5 h-5 text-primary" />
+          <div>
+            <h2 className="text-xl font-semibold text-foreground mb-0.5">
+              AI-Suggested Creators
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {selectedCampaignId
+                ? `Creators matched for "${
+                    campaigns.find((c) => c.id === selectedCampaignId)?.title ||
+                    "campaign"
+                  }"`
+                : "Select a campaign above to see matched creators"}
+            </p>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {creators.slice(0, 6).map((creator, index) => (
-            <CreatorCard
-              key={creator.id}
-              {...creator}
-              onSendRequest={() => handleSendRequest(creator.id)}
-              index={index}
-            />
-          ))}
-        </div>
+        {!selectedCampaignId ? (
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-8 text-center">
+              <Brain className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+              <p className="text-muted-foreground">
+                Select an active campaign to see AI-matched creators
+              </p>
+            </CardContent>
+          </Card>
+        ) : creatorsLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto mb-3" />
+              <p className="text-sm text-muted-foreground">
+                Finding best creators with AI...
+              </p>
+            </div>
+          </div>
+        ) : matchedCreators.length === 0 ? (
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-8 text-center">
+              <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+              <p className="text-muted-foreground">
+                No matching creators found for this campaign yet.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {matchedCreators.slice(0, 9).map((creator, index) => (
+              <motion.div
+                key={creator.uid}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 + index * 0.08, duration: 0.4 }}
+                whileHover={{ y: -4 }}
+              >
+                <Card className="overflow-hidden border-0 shadow-sm hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <h3 className="text-base font-semibold text-foreground">
+                          {creator.name}
+                        </h3>
+                        <Badge variant="secondary" className="text-xs mt-1">
+                          {creator.niche}
+                        </Badge>
+                      </div>
+                      <div className="flex flex-col items-center justify-center w-14 h-14 rounded-lg bg-primary/10">
+                        <span className="text-sm font-bold text-primary">
+                          {creator.matchScore}%
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          match
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3 mb-3 py-3 border-y border-border/50">
+                      <div>
+                        <p className="text-[10px] text-muted-foreground mb-0.5">
+                          Followers
+                        </p>
+                        <p className="text-sm font-semibold text-foreground">
+                          {creator.followers >= 1_000_000
+                            ? `${(creator.followers / 1_000_000).toFixed(1)}M`
+                            : creator.followers >= 1000
+                            ? `${(creator.followers / 1000).toFixed(1)}K`
+                            : creator.followers}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-muted-foreground mb-0.5">
+                          Engagement
+                        </p>
+                        <p className="text-sm font-semibold text-primary">
+                          {creator.engagementRate}%
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-muted-foreground mb-0.5">
+                          Avg Views
+                        </p>
+                        <p className="text-sm font-semibold text-foreground">
+                          {creator.avgViews >= 1_000_000
+                            ? `${(creator.avgViews / 1_000_000).toFixed(1)}M`
+                            : creator.avgViews >= 1000
+                            ? `${(creator.avgViews / 1000).toFixed(1)}K`
+                            : creator.avgViews}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Match reasons */}
+                    <div className="mb-4">
+                      <p
+                        className={`text-xs font-medium mb-1.5 ${getMatchColor(
+                          creator.matchScore
+                        )}`}
+                      >
+                        {formatMatchScore(creator.matchScore)}
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {creator.matchReasons.slice(0, 3).map((reason, i) => (
+                          <span
+                            key={i}
+                            className="text-[10px] px-1.5 py-0.5 rounded bg-secondary text-muted-foreground"
+                          >
+                            {reason}
+                          </span>
+                        ))}
+                      </div>
+                      {creator.semanticScore && creator.semanticScore > 0 && (
+                        <p className="text-[10px] text-muted-foreground mt-1.5 flex items-center gap-1">
+                          <Brain className="w-3 h-3" /> AI Relevance:{" "}
+                          {creator.semanticScore}%
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Link
+                        href={`/creators/${creator.uid}`}
+                        className="flex-1"
+                      >
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full text-xs"
+                        >
+                          View Profile
+                        </Button>
+                      </Link>
+                      <Button
+                        size="sm"
+                        className="flex-1 text-xs bg-primary hover:bg-primary/90"
+                        onClick={() => handleSendRequest(creator.uid)}
+                      >
+                        Send Request
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </motion.div>
     </div>
   );

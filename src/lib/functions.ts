@@ -56,6 +56,7 @@ export interface MatchedCampaign {
   niche: string;
   status: string;
   matchScore: number;
+  semanticScore?: number;
   matchReasons: string[];
 }
 
@@ -69,6 +70,7 @@ export interface MatchedCreator {
   engagementRate: number;
   verified: boolean;
   matchScore: number;
+  semanticScore?: number;
   matchReasons: string[];
 }
 
@@ -199,4 +201,92 @@ export async function callGetCreatorsForCampaign(campaignId: string) {
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "Failed to fetch creators");
   return data as { creators: MatchedCreator[] };
+}
+
+// --------------------------------------------------
+// AI Embedding & Search functions
+// --------------------------------------------------
+
+/**
+ * Generate embedding for a creator profile.
+ * Called after onboarding or profile update.
+ */
+export async function callGenerateCreatorEmbedding(creatorId: string) {
+  return apiCall<{ success: boolean; skipped: boolean; message: string }>(
+    "/api/embeddings/generate",
+    { type: "creator", id: creatorId }
+  );
+}
+
+/**
+ * Generate embedding for a campaign.
+ * Called after campaign creation or update.
+ */
+export async function callGenerateCampaignEmbedding(campaignId: string) {
+  return apiCall<{ success: boolean; skipped: boolean; message: string }>(
+    "/api/embeddings/generate",
+    { type: "campaign", id: campaignId }
+  );
+}
+
+/**
+ * Batch generate all missing creator embeddings.
+ */
+export async function callBatchGenerateCreatorEmbeddings() {
+  return apiCall<{
+    success: boolean;
+    total: number;
+    generated: number;
+    skipped: number;
+    failed: number;
+  }>("/api/embeddings/generate", { type: "batch-creators" });
+}
+
+/**
+ * Batch generate all missing campaign embeddings.
+ */
+export async function callBatchGenerateCampaignEmbeddings() {
+  return apiCall<{
+    success: boolean;
+    total: number;
+    generated: number;
+    skipped: number;
+    failed: number;
+  }>("/api/embeddings/generate", { type: "batch-campaigns" });
+}
+
+/**
+ * Semantic search across creators using natural language.
+ */
+export async function callSearchCreators(query: string, limit?: number) {
+  const accessToken = await getAccessToken();
+  const res = await fetch("/api/search", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ target: "creators", query, limit }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Search failed");
+  return data as { creators: MatchedCreator[] };
+}
+
+/**
+ * Semantic search across campaigns using natural language.
+ */
+export async function callSearchCampaigns(query: string, limit?: number) {
+  const accessToken = await getAccessToken();
+  const res = await fetch("/api/search", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ target: "campaigns", query, limit }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Search failed");
+  return data as { campaigns: MatchedCampaign[] };
 }

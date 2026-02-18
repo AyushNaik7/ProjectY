@@ -4,17 +4,16 @@
  * POST /api/matched-campaigns
  * Headers: Authorization: Bearer <access_token>
  *
- * Returns campaigns scored against creator profile.
+ * Uses AI vector embeddings (pgvector) for semantic similarity matching,
+ * combined with hybrid scoring (engagement, budget, niche).
+ * Falls back to rule-based scoring if embeddings are not yet generated.
+ *
  * minRatePrivate is used for scoring but NEVER returned to the frontend.
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin, verifyAccessToken } from "@/lib/supabase-server";
-import {
-  computeMatchScore,
-  CreatorData,
-  CampaignData,
-} from "@/lib/server-matching";
+import { verifyAccessToken } from "@/lib/supabase-server";
+import { getVectorMatchedCampaigns } from "@/lib/vector-matching";
 
 function getToken(req: NextRequest): string | null {
   const auth = req.headers.get("authorization");
@@ -44,67 +43,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Fetch creator profile
-    const { data: creatorRow, error: creatorErr } = await supabaseAdmin
-      .from("creators")
-      .select("*")
-      .eq("id", uid)
-      .single();
+    // Use vector matching with hybrid scoring (falls back to rule-based)
+    const campaigns = await getVectorMatchedCampaigns(uid);
 
-    if (creatorErr || !creatorRow) {
-      return NextResponse.json(
-        { error: "Creator profile not found" },
-        { status: 404 }
-      );
-    }
-
-    const creator: CreatorData = {
-      niche: creatorRow.niche,
-      followers: creatorRow.instagram_followers || 0,
-      avgViews: creatorRow.avg_views || 0,
-      engagementRate: creatorRow.instagram_engagement || 0,
-      minRatePrivate: creatorRow.min_rate_private || 0,
-      verified: creatorRow.verified || false,
-    };
-
-    // Fetch active campaigns
-    const { data: campaigns, error: campErr } = await supabaseAdmin
-      .from("campaigns")
-      .select("*")
-      .eq("status", "active")
-      .order("created_at", { ascending: false })
-      .limit(50);
-
-    if (campErr) {
-      return NextResponse.json({ error: campErr.message }, { status: 500 });
-    }
-
-    const matchedCampaigns = (campaigns || []).map((c) => {
-      const campaignData: CampaignData = {
-        niche: c.niche || "",
-        budget: c.budget,
-      };
-      const match = computeMatchScore(creator, campaignData);
-
-      return {
-        id: c.id,
-        brandId: c.brand_id,
-        title: c.title,
-        description: c.description,
-        deliverableType: c.deliverable_type,
-        budget: c.budget,
-        timeline: c.timeline,
-        niche: c.niche || "",
-        status: c.status,
-        matchScore: match.score,
-        matchReasons: match.reasons,
-      };
-    });
-
-    // Sort by match score, best first
-    matchedCampaigns.sort((a, b) => b.matchScore - a.matchScore);
-
-    return NextResponse.json({ campaigns: matchedCampaigns });
+    return NextResponse.json({ campaigns });
   } catch (error: unknown) {
     const err = error as { message?: string };
     console.error("Error fetching matched campaigns:", err);

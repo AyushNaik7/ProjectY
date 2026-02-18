@@ -5,17 +5,16 @@
  * Headers: Authorization: Bearer <access_token>
  * Body: { campaignId }
  *
- * Returns potential creators matched against a specific campaign.
+ * Uses AI vector embeddings (pgvector) for semantic similarity matching,
+ * combined with hybrid scoring (engagement, budget, niche).
+ * Falls back to rule-based scoring if embeddings are not yet generated.
+ *
  * NEVER returns minRatePrivate to the frontend.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin, verifyAccessToken } from "@/lib/supabase-server";
-import {
-  computeMatchScore,
-  CreatorData,
-  CampaignData,
-} from "@/lib/server-matching";
+import { getVectorMatchedCreators } from "@/lib/vector-matching";
 
 function getToken(req: NextRequest): string | null {
   const auth = req.headers.get("authorization");
@@ -53,10 +52,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Fetch campaign
+    // Ensure brand owns the campaign
     const { data: campaign, error: campErr } = await supabaseAdmin
       .from("campaigns")
-      .select("*")
+      .select("id, brand_id")
       .eq("id", campaignId)
       .single();
 
@@ -67,7 +66,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Ensure brand owns the campaign
     if (campaign.brand_id !== uid) {
       return NextResponse.json(
         { error: "Unauthorized access to campaign" },
@@ -75,54 +73,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const campaignData: CampaignData = {
-      niche: campaign.niche || "",
-      budget: campaign.budget,
-    };
+    // Use vector matching with hybrid scoring (falls back to rule-based)
+    const creators = await getVectorMatchedCreators(campaignId);
 
-    // Fetch creators (limit 100 for MVP)
-    const { data: creators, error: creatorsErr } = await supabaseAdmin
-      .from("creators")
-      .select("*")
-      .limit(100);
-
-    if (creatorsErr) {
-      return NextResponse.json({ error: creatorsErr.message }, { status: 500 });
-    }
-
-    const matchedCreators = (creators || []).map((c) => {
-      const creatorData: CreatorData = {
-        niche: c.niche,
-        followers: c.instagram_followers || 0,
-        avgViews: c.avg_views || 0,
-        engagementRate: c.instagram_engagement || 0,
-        minRatePrivate: c.min_rate_private || 0,
-        verified: c.verified || false,
-      };
-
-      const match = computeMatchScore(creatorData, campaignData);
-
-      // Return SANITIZED creator object — minRatePrivate excluded
-      return {
-        uid: c.id,
-        name: c.name,
-        instagramHandle: c.instagram_handle || "",
-        niche: c.niche,
-        followers: c.instagram_followers || 0,
-        avgViews: c.avg_views || 0,
-        engagementRate: c.instagram_engagement || 0,
-        verified: c.verified || false,
-        matchScore: match.score,
-        matchReasons: match.reasons,
-      };
-    });
-
-    // Filter low scores and sort by best match
-    const results = matchedCreators
-      .filter((c) => c.matchScore >= 20)
-      .sort((a, b) => b.matchScore - a.matchScore);
-
-    return NextResponse.json({ creators: results });
+    return NextResponse.json({ creators });
   } catch (error: unknown) {
     const err = error as { message?: string };
     console.error("Error fetching matched creators:", err);

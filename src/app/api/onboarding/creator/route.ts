@@ -8,6 +8,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin, verifyAccessToken } from "@/lib/supabase-server";
+import { generateCreatorEmbedding } from "@/lib/embeddings";
 
 function getToken(req: NextRequest): string | null {
   const auth = req.headers.get("authorization");
@@ -119,6 +120,11 @@ export async function POST(req: NextRequest) {
     await supabaseAdmin.auth.admin.updateUserById(uid, {
       user_metadata: { role: "creator", onboarding_complete: true },
     });
+
+    // Generate AI embedding asynchronously (don't block the response)
+    generateCreatorEmbedding(uid).catch((err) =>
+      console.error("Background embedding generation failed:", err)
+    );
 
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
