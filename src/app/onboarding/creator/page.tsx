@@ -1,295 +1,382 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import DashboardShell from '@/components/DashboardShell';
-import { SocialStatsCard } from '@/components/SocialStatsCard';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
+import { callCompleteCreatorOnboarding } from "@/lib/functions";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  User,
   Instagram,
-  Youtube,
-  TrendingUp,
-  Zap,
   ArrowRight,
-  CheckCircle,
-} from 'lucide-react';
-import { TikTok } from 'lucide-react';
+  Loader2,
+  IndianRupee,
+  TrendingUp,
+  Eye,
+  BarChart3,
+} from "lucide-react";
 
-// Mock creator data
-const creatorStats = {
-  name: 'Sarah Anderson',
-  niche: 'Fashion & Lifestyle',
-  totalReach: 2500000,
-  totalEngagement: 8.5,
-  platforms: [
-    {
-      platform: 'Instagram',
-      followers: 850000,
-      engagement: 8.2,
-      icon: Instagram,
-      color: 'bg-gradient-to-br from-pink-500 to-purple-600',
-    },
-    {
-      platform: 'YouTube',
-      followers: 1200000,
-      engagement: 9.1,
-      icon: Youtube,
-      color: 'bg-red-600',
-    },
-    {
-      platform: 'TikTok',
-      followers: 450000,
-      engagement: 12.5,
-      icon: TikTok,
-      color: 'bg-black',
-    },
-  ],
-};
-
-const opportunities = [
-  {
-    title: 'High-Value Deals',
-    description: 'Get matched with premium brands offering ₹50K - ₹5L per collaboration',
-    icon: Zap,
-  },
-  {
-    title: 'Verified Brands',
-    description: 'Work only with verified, legitimate brands in your niche',
-    icon: CheckCircle,
-  },
-  {
-    title: 'Instant Payouts',
-    description: 'Get paid directly to your account within 48 hours of delivery',
-    icon: TrendingUp,
-  },
+const NICHE_OPTIONS = [
+  "Fashion & Lifestyle",
+  "Tech & Gadgets",
+  "Food & Cooking",
+  "Travel & Adventure",
+  "Beauty & Skincare",
+  "Fitness & Health",
+  "Education & Learning",
+  "Gaming",
+  "Finance & Business",
+  "Entertainment & Comedy",
+  "Photography & Art",
+  "Music & Dance",
+  "Parenting & Family",
 ];
 
-export default function CreatorOnboarding() {
+export default function CreatorOnboardingPage() {
+  const [formData, setFormData] = useState({
+    name: "",
+    instagramHandle: "",
+    niche: "",
+    followers: "",
+    avgViews: "",
+    engagementRate: "",
+    minRatePrivate: "",
+  });
+  const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const { user, role, loading: authLoading } = useSupabaseAuth();
 
-  const handleStartMatching = async () => {
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      router.push('/dashboard/creator');
-    }, 1000);
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      router.push("/auth?role=creator");
+      return;
+    }
+    if (role === "brand") {
+      router.push("/onboarding/brand");
+    }
+  }, [user, role, authLoading, router]);
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    setError("");
+    setLoading(true);
+    try {
+      await callCompleteCreatorOnboarding({
+        name: formData.name.trim(),
+        instagramHandle: formData.instagramHandle.trim(),
+        niche: formData.niche,
+        followers: parseInt(formData.followers) || 0,
+        avgViews: parseInt(formData.avgViews) || 0,
+        engagementRate: parseFloat(formData.engagementRate) || 0,
+        minRatePrivate: parseInt(formData.minRatePrivate) || 0,
+      });
+      router.push("/dashboard/creator");
+    } catch (err: unknown) {
+      const e = err as { message?: string };
+      setError(e.message || "Failed to complete onboarding");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isStep1Valid =
+    formData.name.length >= 2 &&
+    formData.instagramHandle.length >= 2 &&
+    formData.niche !== "";
+  const isStep2Valid =
+    formData.followers !== "" &&
+    formData.avgViews !== "" &&
+    formData.engagementRate !== "" &&
+    formData.minRatePrivate !== "";
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background">
-      {/* Top Navigation */}
-      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
-          <Link href="/" className="flex items-center gap-2">
-            <img src="/logo.svg" alt="Collabo" className="w-8 h-8 rounded-lg" />
-            <span className="text-lg font-bold tracking-tight hidden sm:block">Collabo</span>
-          </Link>
-          <Button variant="outline" size="sm">
-            Sign Out
-          </Button>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="w-full max-w-lg"
+      >
+        {/* Progress indicator */}
+        <div className="flex items-center gap-2 mb-6 px-1">
+          <div
+            className={`h-1.5 flex-1 rounded-full transition-colors ${
+              step >= 1 ? "bg-primary" : "bg-secondary"
+            }`}
+          />
+          <div
+            className={`h-1.5 flex-1 rounded-full transition-colors ${
+              step >= 2 ? "bg-primary" : "bg-secondary"
+            }`}
+          />
         </div>
-      </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-12">
-        {/* Welcome Section */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mb-12"
-        >
-          <div className="flex items-center gap-3 mb-3">
-            <Badge className="bg-primary/20 text-primary border-0">Welcome</Badge>
-          </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-3">
-            Hey {creatorStats.name}! 👋
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl">
-            We've analyzed your social media presence across all platforms. Here's your creator profile
-            and the amazing opportunities waiting for you.
-          </p>
-        </motion.div>
+        <Card className="border-0 shadow-lg">
+          <CardHeader className="text-center pb-2">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center mx-auto mb-3">
+              <User className="w-7 h-7 text-primary" />
+            </div>
+            <CardTitle className="text-2xl">
+              {step === 1 ? "Tell us about yourself" : "Your social stats"}
+            </CardTitle>
+            <CardDescription>
+              {step === 1
+                ? "Set up your creator profile to get matched with brands"
+                : "Help us match you with the right campaigns"}
+            </CardDescription>
+          </CardHeader>
 
-        {/* Creator Profile Summary */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="mb-12"
-        >
-          <Card className="border-0 shadow-sm bg-gradient-to-br from-primary/5 to-primary/10">
-            <CardContent className="p-8">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Niche</p>
-                  <p className="text-2xl font-bold text-foreground">{creatorStats.niche}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Total Reach</p>
-                  <p className="text-2xl font-bold text-foreground">
-                    {(creatorStats.totalReach / 1000000).toFixed(1)}M
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Avg Engagement</p>
-                  <p className="text-2xl font-bold text-primary">{creatorStats.totalEngagement}%</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Platforms</p>
-                  <p className="text-2xl font-bold text-foreground">
-                    {creatorStats.platforms.length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Social Media Stats */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="mb-12"
-        >
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-foreground mb-2">Your Social Media Stats</h2>
-            <p className="text-muted-foreground">
-              Connected accounts and their performance metrics
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {creatorStats.platforms.map((platform, index) => (
-              <SocialStatsCard
-                key={platform.platform}
-                {...platform}
-                index={index}
-              />
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Why Collabo */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          className="mb-12"
-        >
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-foreground mb-2">Why Collabo?</h2>
-            <p className="text-muted-foreground">
-              Get matched with brands that align with your audience and values
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {opportunities.map((opp, index) => {
-              const Icon = opp.icon;
-              return (
+          <CardContent>
+            <form onSubmit={handleSubmit}>
+              {step === 1 && (
                 <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 + index * 0.1, duration: 0.4 }}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="space-y-5"
                 >
-                  <Card className="border-0 shadow-sm hover:shadow-md transition-shadow h-full">
-                    <CardContent className="p-6">
-                      <div className="p-3 rounded-lg bg-primary/10 w-fit mb-4">
-                        <Icon className="w-6 h-6 text-primary" />
+                  <div>
+                    <Label
+                      htmlFor="name"
+                      className="text-sm font-medium mb-1.5 block"
+                    >
+                      Display Name
+                    </Label>
+                    <Input
+                      id="name"
+                      name="name"
+                      placeholder="Your name or brand name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      required
+                      className="h-11"
+                    />
+                  </div>
+
+                  <div>
+                    <Label
+                      htmlFor="instagramHandle"
+                      className="text-sm font-medium mb-1.5 block"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Instagram className="w-4 h-4 text-pink-600" />
+                        Instagram Handle
                       </div>
-                      <h3 className="font-semibold text-foreground mb-2">{opp.title}</h3>
-                      <p className="text-sm text-muted-foreground">{opp.description}</p>
-                    </CardContent>
-                  </Card>
+                    </Label>
+                    <Input
+                      id="instagramHandle"
+                      name="instagramHandle"
+                      placeholder="@yourhandle"
+                      value={formData.instagramHandle}
+                      onChange={handleChange}
+                      required
+                      className="h-11"
+                    />
+                  </div>
+
+                  <div>
+                    <Label
+                      htmlFor="niche"
+                      className="text-sm font-medium mb-1.5 block"
+                    >
+                      Content Niche
+                    </Label>
+                    <select
+                      id="niche"
+                      name="niche"
+                      value={formData.niche}
+                      onChange={handleChange}
+                      required
+                      className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <option value="" disabled>
+                        Select your niche
+                      </option>
+                      {NICHE_OPTIONS.map((n) => (
+                        <option key={n} value={n}>
+                          {n}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <Button
+                    type="button"
+                    className="w-full h-11 gap-2"
+                    disabled={!isStep1Valid}
+                    onClick={() => setStep(2)}
+                  >
+                    Continue <ArrowRight className="w-4 h-4" />
+                  </Button>
                 </motion.div>
-              );
-            })}
-          </div>
-        </motion.div>
+              )}
 
-        {/* CTA Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-          className="mb-12"
-        >
-          <Card className="border-0 shadow-sm bg-gradient-to-r from-primary/10 to-primary/5">
-            <CardContent className="p-8">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                <div>
-                  <h3 className="text-2xl font-bold text-foreground mb-2">
-                    Ready to start earning?
-                  </h3>
-                  <p className="text-muted-foreground">
-                    Browse matched campaigns and apply to the ones that interest you.
-                  </p>
-                </div>
-                <Button
-                  size="lg"
-                  onClick={handleStartMatching}
-                  disabled={isLoading}
-                  className="gap-2 bg-primary hover:bg-primary/90 whitespace-nowrap"
+              {step === 2 && (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="space-y-5"
                 >
-                  {isLoading ? 'Loading...' : 'Start Matching'}
-                  <ArrowRight className="w-5 h-5" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Stats Breakdown */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.6 }}
-        >
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-foreground mb-2">Platform Breakdown</h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {creatorStats.platforms.map((platform, index) => (
-              <Card key={platform.platform} className="border-0 shadow-sm">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className={`p-2 rounded-lg ${platform.color}`}>
-                      <platform.icon className="w-5 h-5 text-white" />
-                    </div>
-                    <h4 className="font-semibold text-foreground">{platform.platform}</h4>
-                  </div>
-
-                  <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-xs text-muted-foreground mb-1">Followers</p>
-                      <p className="text-lg font-bold text-foreground">
-                        {(platform.followers / 1000000).toFixed(2)}M
-                      </p>
+                      <Label
+                        htmlFor="followers"
+                        className="text-sm font-medium mb-1.5 flex items-center gap-1.5"
+                      >
+                        <TrendingUp className="w-3.5 h-3.5 text-muted-foreground" />{" "}
+                        Followers
+                      </Label>
+                      <Input
+                        id="followers"
+                        name="followers"
+                        type="number"
+                        min="0"
+                        placeholder="e.g. 50000"
+                        value={formData.followers}
+                        onChange={handleChange}
+                        required
+                        className="h-11"
+                      />
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground mb-1">Engagement Rate</p>
-                      <p className="text-lg font-bold text-primary">{platform.engagement}%</p>
-                    </div>
-                    <div className="pt-3 border-t border-border/50">
-                      <p className="text-xs text-muted-foreground">
-                        ✓ Connected & Verified
-                      </p>
+                      <Label
+                        htmlFor="avgViews"
+                        className="text-sm font-medium mb-1.5 flex items-center gap-1.5"
+                      >
+                        <Eye className="w-3.5 h-3.5 text-muted-foreground" />{" "}
+                        Avg Views
+                      </Label>
+                      <Input
+                        id="avgViews"
+                        name="avgViews"
+                        type="number"
+                        min="0"
+                        placeholder="e.g. 10000"
+                        value={formData.avgViews}
+                        onChange={handleChange}
+                        required
+                        className="h-11"
+                      />
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </motion.div>
-      </main>
+
+                  <div>
+                    <Label
+                      htmlFor="engagementRate"
+                      className="text-sm font-medium mb-1.5 flex items-center gap-1.5"
+                    >
+                      <BarChart3 className="w-3.5 h-3.5 text-muted-foreground" />{" "}
+                      Engagement Rate (%)
+                    </Label>
+                    <Input
+                      id="engagementRate"
+                      name="engagementRate"
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      placeholder="e.g. 5.2"
+                      value={formData.engagementRate}
+                      onChange={handleChange}
+                      required
+                      className="h-11"
+                    />
+                  </div>
+
+                  <div>
+                    <Label
+                      htmlFor="minRatePrivate"
+                      className="text-sm font-medium mb-1.5 flex items-center gap-1.5"
+                    >
+                      <IndianRupee className="w-3.5 h-3.5 text-muted-foreground" />{" "}
+                      Minimum Rate (₹) — kept private
+                    </Label>
+                    <Input
+                      id="minRatePrivate"
+                      name="minRatePrivate"
+                      type="number"
+                      min="0"
+                      placeholder="e.g. 5000"
+                      value={formData.minRatePrivate}
+                      onChange={handleChange}
+                      required
+                      className="h-11"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      This is private and only used internally for AI matching.
+                      Brands will not see this.
+                    </p>
+                  </div>
+
+                  {error && (
+                    <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+                      <p className="text-sm text-destructive">{error}</p>
+                    </div>
+                  )}
+
+                  <div className="flex gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="flex-1 h-11"
+                      onClick={() => setStep(1)}
+                    >
+                      Back
+                    </Button>
+                    <Button
+                      type="submit"
+                      className="flex-1 h-11 gap-2"
+                      disabled={loading || !isStep2Valid}
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Setting up...
+                        </>
+                      ) : (
+                        <>
+                          Complete Setup <ArrowRight className="w-4 h-4" />
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
+            </form>
+          </CardContent>
+        </Card>
+
+        <p className="text-center text-xs text-muted-foreground mt-4">
+          You can update your profile anytime from your dashboard
+        </p>
+      </motion.div>
     </div>
   );
 }

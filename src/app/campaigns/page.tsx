@@ -4,7 +4,6 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
-import { callGetMatchedCampaigns, MatchedCampaign } from "@/lib/functions";
 import { supabase } from "@/lib/supabase";
 import DashboardShell from "@/components/DashboardShell";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,6 +24,7 @@ import {
 interface CampaignItem {
   id: string;
   brandId: string;
+  brandName?: string;
   title: string;
   description: string;
   deliverableType: string;
@@ -74,7 +74,7 @@ export default function CampaignsPage() {
   /**
    * Fetch campaigns:
    * - BRAND: Supabase query (own campaigns)
-   * - CREATOR: API call — returns server-scored matches with matchScore
+   * - CREATOR / OTHER: All active campaigns from Supabase
    */
   const fetchCampaigns = useCallback(
     async (loadMore = false) => {
@@ -84,64 +84,48 @@ export default function CampaignsPage() {
       else setLoading(true);
 
       try {
-        if (role === "creator") {
-          // Creator uses API route — scores computed server-side
-          const result = await callGetMatchedCampaigns();
-          const matchedCampaigns: CampaignItem[] = result.campaigns.map(
-            (c: MatchedCampaign) => ({
-              id: c.id,
-              brandId: c.brandId,
-              title: c.title,
-              description: c.description,
-              deliverableType: c.deliverableType,
-              budget: c.budget,
-              timeline: c.timeline,
-              niche: c.niche,
-              status: c.status,
-              matchScore: c.matchScore,
-              matchReasons: c.matchReasons,
-              createdAt: new Date(),
-            })
-          );
-          setCampaigns(matchedCampaigns);
-          setHasMore(false);
+        const currentPage = loadMore ? page + 1 : 0;
+        const from = currentPage * PAGE_SIZE;
+        const to = from + PAGE_SIZE - 1;
+
+        let query = supabase
+          .from("campaigns")
+          .select("*, brands(name)")
+          .order("created_at", { ascending: false })
+          .range(from, to);
+
+        // Brands see only their own; everyone else sees all active campaigns
+        if (role === "brand") {
+          query = query.eq("brand_id", user.id);
         } else {
-          // Brand reads their own campaigns via Supabase
-          const currentPage = loadMore ? page + 1 : 0;
-          const from = currentPage * PAGE_SIZE;
-          const to = from + PAGE_SIZE - 1;
-
-          const { data, error } = await supabase
-            .from("campaigns")
-            .select("*")
-            .eq("brand_id", user.id)
-            .order("created_at", { ascending: false })
-            .range(from, to);
-
-          if (error) throw error;
-
-          const newCampaigns: CampaignItem[] = (data || []).map((c) => ({
-            id: c.id,
-            brandId: c.brand_id,
-            title: c.title,
-            description: c.description,
-            deliverableType: c.deliverable_type,
-            budget: c.budget,
-            timeline: c.timeline,
-            niche: c.niche || "",
-            status: c.status,
-            createdAt: new Date(c.created_at),
-          }));
-
-          if (loadMore) {
-            setCampaigns((prev) => [...prev, ...newCampaigns]);
-          } else {
-            setCampaigns(newCampaigns);
-          }
-
-          setPage(currentPage);
-          setHasMore(newCampaigns.length === PAGE_SIZE);
+          query = query.eq("status", "active");
         }
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        const newCampaigns: CampaignItem[] = (data || []).map((c: any) => ({
+          id: c.id,
+          brandId: c.brand_id,
+          brandName: c.brands?.name || "",
+          title: c.title,
+          description: c.description,
+          deliverableType: c.deliverable_type,
+          budget: c.budget,
+          timeline: c.timeline,
+          niche: c.niche || "",
+          status: c.status,
+          createdAt: new Date(c.created_at),
+        }));
+
+        if (loadMore) {
+          setCampaigns((prev) => [...prev, ...newCampaigns]);
+        } else {
+          setCampaigns(newCampaigns);
+        }
+
+        setPage(currentPage);
+        setHasMore(newCampaigns.length === PAGE_SIZE);
       } catch (error) {
         console.error("Error fetching campaigns:", error);
       } finally {
@@ -248,7 +232,7 @@ export default function CampaignsPage() {
                           variant={
                             campaign.status === "active"
                               ? "success"
-                              : campaign.status === "paused"
+                              : campaign.status === "draft"
                               ? "warning"
                               : "secondary"
                           }
@@ -272,6 +256,12 @@ export default function CampaignsPage() {
                         <Badge variant="outline" className="w-fit mb-3">
                           {campaign.niche}
                         </Badge>
+                      )}
+
+                      {campaign.brandName && (
+                        <p className="text-xs text-muted-foreground mb-3">
+                          by <span className="font-medium text-foreground">{campaign.brandName}</span>
+                        </p>
                       )}
 
                       <div className="flex items-center justify-between pt-4 border-t border-border/50">

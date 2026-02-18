@@ -1,120 +1,138 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { CreatorCard } from '@/components/CreatorCard';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
+import { supabase } from "@/lib/supabase";
+import { callSendCollaborationRequest } from "@/lib/functions";
+import DashboardShell from "@/components/DashboardShell";
+import { CreatorCard } from "@/components/CreatorCard";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Search } from 'lucide-react';
+} from "@/components/ui/select";
+import { Search, Users, Loader2 } from "lucide-react";
 
-// Mock data
-const mockCreators = [
-  {
-    id: '1',
-    name: 'Sarah Anderson',
-    niche: 'Fashion & Lifestyle',
-    followers: 850000,
-    engagement: 8.2,
-    avgViews: 125000,
-  },
-  {
-    id: '2',
-    name: 'Alex Kumar',
-    niche: 'Tech Reviews',
-    followers: 620000,
-    engagement: 9.5,
-    avgViews: 95000,
-  },
-  {
-    id: '3',
-    name: 'Emma Wilson',
-    niche: 'Beauty & Makeup',
-    followers: 1200000,
-    engagement: 7.8,
-    avgViews: 180000,
-  },
-  {
-    id: '4',
-    name: 'Raj Patel',
-    niche: 'Fitness',
-    followers: 450000,
-    engagement: 10.2,
-    avgViews: 65000,
-  },
-  {
-    id: '5',
-    name: 'Lisa Chen',
-    niche: 'Food & Travel',
-    followers: 780000,
-    engagement: 8.9,
-    avgViews: 110000,
-  },
-  {
-    id: '6',
-    name: 'Marcus Johnson',
-    niche: 'Gaming',
-    followers: 920000,
-    engagement: 11.3,
-    avgViews: 150000,
-  },
-  {
-    id: '7',
-    name: 'Priya Singh',
-    niche: 'Fashion & Lifestyle',
-    followers: 680000,
-    engagement: 8.7,
-    avgViews: 105000,
-  },
-  {
-    id: '8',
-    name: 'David Brown',
-    niche: 'Tech Reviews',
-    followers: 540000,
-    engagement: 9.1,
-    avgViews: 82000,
-  },
-];
+interface CreatorItem {
+  id: string;
+  name: string;
+  niche: string;
+  followers: number;
+  engagement: number;
+  avgViews: number;
+}
 
 export default function FindCreatorsPage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedFollowers, setSelectedFollowers] = useState('all');
+  const router = useRouter();
+  const { user, role, loading: authLoading } = useSupabaseAuth();
+  const [creators, setCreators] = useState<CreatorItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedFollowers, setSelectedFollowers] = useState("all");
 
-  const handleSendRequest = (creatorId: string) => {
-    console.log('Send request to creator:', creatorId);
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/login");
+    }
+  }, [user, authLoading, router]);
+
+  // Fetch creators from Supabase
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("creators")
+          .select(
+            "id, name, niche, instagram_followers, instagram_engagement, avg_views"
+          )
+          .order("instagram_followers", { ascending: false });
+
+        if (error) throw error;
+
+        const mapped: CreatorItem[] = (data || []).map((c: any) => ({
+          id: c.id,
+          name: c.name || "Unknown Creator",
+          niche: c.niche || "General",
+          followers: c.instagram_followers || 0,
+          engagement: c.instagram_engagement || 0,
+          avgViews: c.avg_views || 0,
+        }));
+
+        setCreators(mapped);
+      } catch (err) {
+        console.error("Failed to load creators:", err);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [user]);
+
+  const [sendingTo, setSendingTo] = useState<string | null>(null);
+
+  const handleSendRequest = async (creatorId: string) => {
+    if (!user || role !== "brand") {
+      alert("Only brands can send collaboration requests. Please log in as a brand.");
+      return;
+    }
+    setSendingTo(creatorId);
+    try {
+      await callSendCollaborationRequest({
+        creatorId,
+        message: "Hi! We'd love to collaborate with you on our next campaign.",
+      });
+      alert("Request sent successfully!");
+    } catch (err: any) {
+      alert(err.message || "Failed to send request");
+    } finally {
+      setSendingTo(null);
+    }
   };
 
-  const filteredCreators = mockCreators.filter((creator) => {
+  const filteredCreators = creators.filter((creator) => {
     const matchesSearch =
+      !searchQuery ||
       creator.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       creator.niche.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesCategory =
-      selectedCategory === 'all' ||
+      selectedCategory === "all" ||
       creator.niche.toLowerCase().includes(selectedCategory.toLowerCase());
 
     const matchesFollowers =
-      selectedFollowers === 'all' ||
-      (selectedFollowers === '100k-500k' &&
+      selectedFollowers === "all" ||
+      (selectedFollowers === "10k-100k" &&
+        creator.followers >= 10000 &&
+        creator.followers < 100000) ||
+      (selectedFollowers === "100k-500k" &&
         creator.followers >= 100000 &&
         creator.followers < 500000) ||
-      (selectedFollowers === '500k-1m' &&
+      (selectedFollowers === "500k-1m" &&
         creator.followers >= 500000 &&
         creator.followers < 1000000) ||
-      (selectedFollowers === '1m+' && creator.followers >= 1000000);
+      (selectedFollowers === "1m+" && creator.followers >= 1000000);
 
     return matchesSearch && matchesCategory && matchesFollowers;
   });
 
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background">
+    <DashboardShell role={role || "brand"}>
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -122,7 +140,10 @@ export default function FindCreatorsPage() {
         transition={{ duration: 0.5 }}
         className="mb-8"
       >
-        <h1 className="text-3xl font-bold text-foreground mb-2">Find Creators</h1>
+        <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-3">
+          <Users className="w-7 h-7 text-primary" />
+          Find Creators
+        </h1>
         <p className="text-muted-foreground">
           Browse and discover creators that match your brand
         </p>
@@ -138,7 +159,6 @@ export default function FindCreatorsPage() {
         <Card className="border-0 shadow-sm">
           <CardContent className="p-6">
             <div className="space-y-4">
-              {/* Search Bar */}
               <div className="relative">
                 <Search className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
                 <Input
@@ -149,38 +169,46 @@ export default function FindCreatorsPage() {
                 />
               </div>
 
-              {/* Filters */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-muted-foreground mb-2 block">
                     Category
                   </label>
-                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <Select
+                    value={selectedCategory}
+                    onValueChange={setSelectedCategory}
+                  >
                     <SelectTrigger className="border-border/50">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Categories</SelectItem>
-                      <SelectItem value="fashion">Fashion & Lifestyle</SelectItem>
-                      <SelectItem value="tech">Tech Reviews</SelectItem>
-                      <SelectItem value="beauty">Beauty & Makeup</SelectItem>
+                      <SelectItem value="fashion">
+                        Fashion & Lifestyle
+                      </SelectItem>
+                      <SelectItem value="tech">Tech</SelectItem>
+                      <SelectItem value="beauty">Beauty & Skincare</SelectItem>
                       <SelectItem value="fitness">Fitness</SelectItem>
                       <SelectItem value="food">Food & Travel</SelectItem>
                       <SelectItem value="gaming">Gaming</SelectItem>
+                      <SelectItem value="education">Education</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-
                 <div>
                   <label className="text-sm font-medium text-muted-foreground mb-2 block">
                     Followers
                   </label>
-                  <Select value={selectedFollowers} onValueChange={setSelectedFollowers}>
+                  <Select
+                    value={selectedFollowers}
+                    onValueChange={setSelectedFollowers}
+                  >
                     <SelectTrigger className="border-border/50">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Followers</SelectItem>
+                      <SelectItem value="10k-100k">10K - 100K</SelectItem>
                       <SelectItem value="100k-500k">100K - 500K</SelectItem>
                       <SelectItem value="500k-1m">500K - 1M</SelectItem>
                       <SelectItem value="1m+">1M+</SelectItem>
@@ -193,25 +221,35 @@ export default function FindCreatorsPage() {
         </Card>
       </motion.div>
 
-      {/* Results Count */}
+      {/* Results */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.2 }}
-        className="mb-6"
+        className="mb-4"
       >
         <p className="text-sm text-muted-foreground">
-          Showing {filteredCreators.length} creator{filteredCreators.length !== 1 ? 's' : ''}
+          {loading
+            ? "Loading creators..."
+            : `Showing ${filteredCreators.length} creator${
+                filteredCreators.length !== 1 ? "s" : ""
+              }`}
         </p>
       </motion.div>
 
-      {/* Creator Grid */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-      >
-        {filteredCreators.length > 0 ? (
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-3" />
+            <p className="text-sm text-muted-foreground">Loading creators...</p>
+          </div>
+        </div>
+      ) : filteredCreators.length > 0 ? (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredCreators.map((creator, index) => (
               <CreatorCard
@@ -222,17 +260,18 @@ export default function FindCreatorsPage() {
               />
             ))}
           </div>
-        ) : (
-          <Card className="border-0 shadow-sm">
-            <CardContent className="p-12 text-center">
-              <p className="text-muted-foreground mb-2">No creators found</p>
-              <p className="text-sm text-muted-foreground">
-                Try adjusting your search or filters
-              </p>
-            </CardContent>
-          </Card>
-        )}
-      </motion.div>
-    </div>
+        </motion.div>
+      ) : (
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-12 text-center">
+            <Users className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-40" />
+            <p className="text-muted-foreground mb-2">No creators found</p>
+            <p className="text-sm text-muted-foreground">
+              Try adjusting your search or filters
+            </p>
+          </CardContent>
+        </Card>
+      )}
+    </DashboardShell>
   );
 }

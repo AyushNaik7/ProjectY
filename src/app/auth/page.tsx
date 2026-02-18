@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import Link from 'next/link';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { ThemeToggle } from '@/components/ThemeToggle';
-import { Users, Briefcase, ArrowRight } from 'lucide-react';
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { Users, Briefcase, ArrowRight } from "lucide-react";
 
 export default function AuthPage() {
   return (
@@ -15,7 +15,9 @@ export default function AuthPage() {
         <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-2">
             <img src="/logo.png" alt="Collabo" className="w-8 h-8 rounded-lg" />
-            <span className="text-lg font-bold tracking-tight hidden sm:block">Collabo</span>
+            <span className="text-lg font-bold tracking-tight hidden sm:block">
+              Collabo
+            </span>
           </Link>
           <ThemeToggle />
         </div>
@@ -53,9 +55,12 @@ export default function AuthPage() {
                     <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto mb-6">
                       <Users className="w-8 h-8 text-primary" />
                     </div>
-                    <h2 className="text-2xl font-bold text-foreground mb-3">I'm a Creator</h2>
+                    <h2 className="text-2xl font-bold text-foreground mb-3">
+                      I&apos;m a Creator
+                    </h2>
                     <p className="text-muted-foreground">
-                      Find brand deals, collaborate with premium brands, and earn what you deserve.
+                      Find brand deals, collaborate with premium brands, and
+                      earn what you deserve.
                     </p>
                   </div>
 
@@ -87,9 +92,12 @@ export default function AuthPage() {
                     <div className="w-16 h-16 rounded-2xl bg-blue-600/20 flex items-center justify-center mx-auto mb-6">
                       <Briefcase className="w-8 h-8 text-blue-600" />
                     </div>
-                    <h2 className="text-2xl font-bold text-foreground mb-3">I'm a Brand</h2>
+                    <h2 className="text-2xl font-bold text-foreground mb-3">
+                      I&apos;m a Brand
+                    </h2>
                     <p className="text-muted-foreground">
-                      Post campaigns, find creators, and manage collaborations all in one place.
+                      Post campaigns, find creators, and manage collaborations
+                      all in one place.
                     </p>
                   </div>
 
@@ -122,16 +130,19 @@ export default function AuthPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
-                title: 'Smart Matching',
-                description: 'AI-powered algorithm matches creators with brands based on niche and audience',
+                title: "Smart Matching",
+                description:
+                  "AI-powered algorithm matches creators with brands based on niche and audience",
               },
               {
-                title: 'Secure Payments',
-                description: 'Safe and transparent payment system with instant payouts',
+                title: "Secure Payments",
+                description:
+                  "Safe and transparent payment system with instant payouts",
               },
               {
-                title: 'Easy Collaboration',
-                description: 'Streamlined communication and deal management in one platform',
+                title: "Easy Collaboration",
+                description:
+                  "Streamlined communication and deal management in one platform",
               },
             ].map((feature, index) => (
               <motion.div
@@ -144,8 +155,12 @@ export default function AuthPage() {
                 <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-4">
                   <div className="w-6 h-6 rounded-full bg-primary" />
                 </div>
-                <h4 className="font-semibold text-foreground mb-2">{feature.title}</h4>
-                <p className="text-sm text-muted-foreground">{feature.description}</p>
+                <h4 className="font-semibold text-foreground mb-2">
+                  {feature.title}
+                </h4>
+                <p className="text-sm text-muted-foreground">
+                  {feature.description}
+                </p>
               </motion.div>
             ))}
           </div>

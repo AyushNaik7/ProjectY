@@ -23,6 +23,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Plus, TrendingUp, Users, Zap, Brain, ChevronDown } from "lucide-react";
+import DashboardShell from "@/components/DashboardShell";
 import { supabase } from "@/lib/supabase";
 import {
   callGetCreatorsForCampaign,
@@ -71,15 +72,17 @@ export default function BrandDashboard() {
             .eq("brand_id", user.id)
             .order("created_at", { ascending: false }),
         ]);
+        const metaName =
+          ((user.user_metadata as Record<string, unknown>)
+            ?.brandName as string) ||
+          ((user.user_metadata as Record<string, unknown>)?.name as string);
         setBrandName(
-          (brand?.name as string) || user.email?.split("@")[0] || "Brand"
+          (brand?.name as string) ||
+            metaName ||
+            user.email?.split("@")[0] ||
+            "Brand"
         );
         setCampaigns((camps as CampaignRow[]) || []);
-        // Auto-select first active campaign for matching
-        const firstActive = (camps || []).find(
-          (c: CampaignRow) => c.status === "active"
-        );
-        if (firstActive) setSelectedCampaignId(firstActive.id);
       } catch (err) {
         console.error("Failed to load brand data:", err);
       } finally {
@@ -102,9 +105,10 @@ export default function BrandDashboard() {
     }
   }, []);
 
-  useEffect(() => {
+  // Only fetch when user explicitly triggers
+  const handleFindCreators = () => {
     if (selectedCampaignId) fetchMatches(selectedCampaignId);
-  }, [selectedCampaignId, fetchMatches]);
+  };
 
   if (loading) {
     return (
@@ -150,7 +154,7 @@ export default function BrandDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <DashboardShell role="brand">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -327,9 +331,10 @@ export default function BrandDashboard() {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setSelectedCampaignId(campaign.id);
+                                setMatchedCreators([]);
                               }}
                             >
-                              <Brain className="w-3 h-3" /> Find Creators
+                              <Brain className="w-3 h-3" /> Select
                             </Button>
                           )}
                         </TableCell>
@@ -356,22 +361,72 @@ export default function BrandDashboard() {
               AI-Suggested Creators
             </h2>
             <p className="text-sm text-muted-foreground">
-              {selectedCampaignId
-                ? `Creators matched for "${
-                    campaigns.find((c) => c.id === selectedCampaignId)?.title ||
-                    "campaign"
-                  }"`
-                : "Select a campaign above to see matched creators"}
+              Select a campaign and find the best creators using AI matching
             </p>
           </div>
         </div>
 
-        {!selectedCampaignId ? (
+        {/* Campaign selector + Find button */}
+        <Card className="border-0 shadow-sm mb-6">
+          <CardContent className="p-6">
+            <div className="flex flex-col sm:flex-row gap-4 items-end">
+              <div className="flex-1 w-full">
+                <label className="text-sm font-medium text-foreground mb-2 block">
+                  Select Campaign to Match
+                </label>
+                <select
+                  value={selectedCampaignId || ""}
+                  onChange={(e) => {
+                    setSelectedCampaignId(e.target.value || null);
+                    setMatchedCreators([]);
+                  }}
+                  className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <option value="">Choose a campaign...</option>
+                  {activeCampaigns.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.title} — ₹{c.budget.toLocaleString()} (
+                      {c.niche || "General"})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <Button
+                size="lg"
+                className="gap-2 bg-primary hover:bg-primary/90 shrink-0"
+                disabled={!selectedCampaignId || creatorsLoading}
+                onClick={handleFindCreators}
+              >
+                {creatorsLoading ? (
+                  <>
+                    <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                    Matching...
+                  </>
+                ) : (
+                  <>
+                    <Brain className="w-5 h-5" /> Find Creators
+                  </>
+                )}
+              </Button>
+            </div>
+            {selectedCampaignId && (
+              <p className="text-xs text-muted-foreground mt-3">
+                AI will analyze creator profiles, engagement rates, niche
+                alignment, budget fit, and semantic relevance to find the best
+                matches.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Results */}
+        {!selectedCampaignId && matchedCreators.length === 0 ? (
           <Card className="border-0 shadow-sm">
             <CardContent className="p-8 text-center">
               <Brain className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
               <p className="text-muted-foreground">
-                Select an active campaign to see AI-matched creators
+                Select a campaign above and click &quot;Find Creators&quot; to
+                see AI-matched results
               </p>
             </CardContent>
           </Card>
@@ -514,6 +569,6 @@ export default function BrandDashboard() {
           </div>
         )}
       </motion.div>
-    </div>
+    </DashboardShell>
   );
 }

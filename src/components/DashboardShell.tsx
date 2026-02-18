@@ -14,6 +14,7 @@ import {
   LogOut,
   Plus,
   User,
+  Users,
 } from "lucide-react";
 
 interface DashboardShellProps {
@@ -43,6 +44,7 @@ export default function DashboardShell({
           },
           { href: "/campaigns", label: "Campaigns", icon: Megaphone },
           { href: "/campaigns/new", label: "New Campaign", icon: Plus },
+          { href: "/creators", label: "Find Creators", icon: Users },
           { href: "/requests", label: "Requests", icon: Send },
         ]
       : [

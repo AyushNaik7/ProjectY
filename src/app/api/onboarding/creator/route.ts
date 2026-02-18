@@ -118,7 +118,11 @@ export async function POST(req: NextRequest) {
 
     // Mark onboarding complete in user metadata
     await supabaseAdmin.auth.admin.updateUserById(uid, {
-      user_metadata: { role: "creator", onboarding_complete: true },
+      user_metadata: {
+        role: "creator",
+        onboarding_complete: true,
+        name: name.trim(),
+      },
     });
 
     // Generate AI embedding asynchronously (don't block the response)
