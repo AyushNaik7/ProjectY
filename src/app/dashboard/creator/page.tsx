@@ -31,8 +31,9 @@ export default function CreatorDashboard() {
   const [matchedCampaigns, setMatchedCampaigns] = useState<MatchedCampaign[]>(
     []
   );
-  const [matchLoading, setMatchLoading] = useState(true);
+  const [matchLoading, setMatchLoading] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [matchTriggered, setMatchTriggered] = useState(false);
 
   // Fetch creator profile
   useEffect(() => {
@@ -53,23 +54,28 @@ export default function CreatorDashboard() {
     })();
   }, [user]);
 
-  // Fetch AI-matched campaigns
-  useEffect(() => {
+  // Fetch AI-matched campaigns — only when user triggers
+  const handleFindCampaigns = async () => {
     if (!user) return;
-    (async () => {
-      try {
-        const result = await callGetMatchedCampaigns();
-        setMatchedCampaigns(result.campaigns || []);
-      } catch (err) {
-        console.error("Failed to load matches:", err);
-      } finally {
-        setMatchLoading(false);
-      }
-    })();
-  }, [user]);
+    setMatchLoading(true);
+    setMatchTriggered(true);
+    try {
+      const result = await callGetMatchedCampaigns();
+      setMatchedCampaigns(result.campaigns || []);
+    } catch (err) {
+      console.error("Failed to load matches:", err);
+    } finally {
+      setMatchLoading(false);
+    }
+  };
 
+  const metaName = (user?.user_metadata as Record<string, unknown>)
+    ?.name as string;
   const creatorName =
-    (creatorProfile?.name as string) || user?.email?.split("@")[0] || "Creator";
+    (creatorProfile?.name as string) ||
+    metaName ||
+    user?.email?.split("@")[0] ||
+    "Creator";
   const niche = (creatorProfile?.niche as string) || "Not set";
   const igFollowers = (creatorProfile?.instagram_followers as number) || 0;
   const ytFollowers = (creatorProfile?.youtube_followers as number) || 0;
@@ -272,10 +278,48 @@ export default function CreatorDashboard() {
           </h2>
         </div>
         <p className="text-sm text-muted-foreground mb-4">
-          Campaigns matched to your profile using semantic AI analysis
+          Discover campaigns matched to your profile using AI analysis
         </p>
 
-        {matchLoading ? (
+        {/* Trigger Card */}
+        {!matchTriggered && matchedCampaigns.length === 0 && (
+          <Card className="border-0 shadow-sm mb-6">
+            <CardContent className="p-8 text-center">
+              <Brain className="w-12 h-12 text-primary mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                Find Your Perfect Campaigns
+              </h3>
+              <p className="text-muted-foreground text-sm max-w-md mx-auto mb-2">
+                Our AI analyzes your niche ({niche}), engagement rate (
+                {avgEngagement}%), audience size, and content style to find the
+                best-fit brand campaigns for you.
+              </p>
+              <p className="text-xs text-muted-foreground mb-6">
+                Matching considers: niche alignment, budget compatibility,
+                audience quality, and semantic profile relevance.
+              </p>
+              <Button
+                size="lg"
+                className="gap-2 bg-primary hover:bg-primary/90"
+                onClick={handleFindCampaigns}
+                disabled={matchLoading}
+              >
+                {matchLoading ? (
+                  <>
+                    <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                    Analyzing...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-5 h-5" /> Discover Matching Campaigns
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {matchLoading && matchTriggered ? (
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto mb-3" />
@@ -284,14 +328,21 @@ export default function CreatorDashboard() {
               </p>
             </div>
           </div>
-        ) : matchedCampaigns.length === 0 ? (
+        ) : matchedCampaigns.length === 0 && matchTriggered ? (
           <Card className="border-0 shadow-sm">
             <CardContent className="p-8 text-center">
               <Brain className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground">
-                No matching campaigns found yet. New campaigns will appear here
-                automatically.
+              <p className="text-muted-foreground mb-4">
+                No matching campaigns found yet. Try again later as brands post
+                new campaigns.
               </p>
+              <Button
+                variant="outline"
+                onClick={handleFindCampaigns}
+                className="gap-2"
+              >
+                <Brain className="w-4 h-4" /> Retry
+              </Button>
             </CardContent>
           </Card>
         ) : (

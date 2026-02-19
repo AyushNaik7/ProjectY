@@ -91,7 +91,12 @@ export async function POST(req: NextRequest) {
 
     // Mark onboarding complete in user metadata
     await supabaseAdmin.auth.admin.updateUserById(uid, {
-      user_metadata: { role: "brand", onboarding_complete: true },
+      user_metadata: {
+        role: "brand",
+        onboarding_complete: true,
+        brandName: brandName.trim(),
+        name: brandName.trim(),
+      },
     });
 
     return NextResponse.json({ success: true });

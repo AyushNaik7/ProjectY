@@ -45,6 +45,12 @@ export interface UpdateRequestStatusPayload {
   status: "accepted" | "rejected";
 }
 
+export interface SendCollaborationRequestPayload {
+  creatorId: string;
+  campaignId?: string;
+  message?: string;
+}
+
 export interface MatchedCampaign {
   id: string;
   brandId: string;
@@ -162,6 +168,19 @@ export async function callUpdateRequestStatus(
     "/api/requests",
     data as unknown as Record<string, unknown>,
     "PATCH"
+  );
+}
+
+/**
+ * Send a collaboration request to a creator — brand only.
+ */
+export async function callSendCollaborationRequest(
+  data: SendCollaborationRequestPayload
+) {
+  return apiCall<{ success: boolean; requestId: string }>(
+    "/api/requests",
+    data as unknown as Record<string, unknown>,
+    "POST"
   );
 }
 

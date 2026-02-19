@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useSupabaseAuth } from '@/context/SupabaseAuthContext';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { ThemeToggle } from '@/components/ThemeToggle';
-import { Users, Briefcase, ArrowRight } from 'lucide-react';
+import { useEffect } from "react";
+import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { Users, Briefcase, ArrowRight } from "lucide-react";
 
 export default function RoleSelectPage() {
   const router = useRouter();
@@ -17,26 +17,33 @@ export default function RoleSelectPage() {
   useEffect(() => {
     // If not logged in, go to login
     if (!user) {
-      router.push('/login');
+      router.push("/login");
       return;
     }
 
     // If user already has a role in metadata or localStorage, redirect to the appropriate page
-    const metaRole = (user.user_metadata as any)?.role as 'creator' | 'brand' | undefined;
-    const savedRole = (metaRole as 'creator' | 'brand') || (localStorage.getItem('userRole') as 'creator' | 'brand' | null);
-    if (savedRole === 'creator') {
-      router.push('/');
-    } else if (savedRole === 'brand') {
-      router.push('/dashboard/brand');
+    const metaRole = (user.user_metadata as any)?.role as
+      | "creator"
+      | "brand"
+      | undefined;
+    const onboardingComplete = (user.user_metadata as any)?.onboarding_complete;
+    const savedRole =
+      (metaRole as "creator" | "brand") ||
+      (localStorage.getItem("userRole") as "creator" | "brand" | null);
+    if (savedRole === "creator") {
+      router.push(onboardingComplete ? "/dashboard/creator" : "/onboarding/creator");
+    } else if (savedRole === "brand") {
+      router.push(onboardingComplete ? "/dashboard/brand" : "/onboarding/brand");
     }
   }, [user, router]);
 
-  const handleSelectRole = async (selectedRole: 'creator' | 'brand') => {
+  const handleSelectRole = async (selectedRole: "creator" | "brand") => {
     await setRole(selectedRole);
-    if (selectedRole === 'creator') {
-      router.push('/');
+    // Redirect to onboarding so the user completes their profile
+    if (selectedRole === "creator") {
+      router.push("/onboarding/creator");
     } else {
-      router.push('/dashboard/brand');
+      router.push("/onboarding/brand");
     }
   };
 
@@ -47,7 +54,9 @@ export default function RoleSelectPage() {
         <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-2">
             <img src="/logo.png" alt="Collabo" className="w-8 h-8 rounded-lg" />
-            <span className="text-lg font-bold tracking-tight hidden sm:block">Collabo</span>
+            <span className="text-lg font-bold tracking-tight hidden sm:block">
+              Collabo
+            </span>
           </Link>
           <ThemeToggle />
         </div>
@@ -65,7 +74,8 @@ export default function RoleSelectPage() {
             Choose Your Role
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Select whether you're a creator looking for brand deals or a brand seeking creators.
+            Select whether you&apos;re a creator looking for brand deals or a
+            brand seeking creators.
           </p>
         </motion.div>
 
@@ -84,15 +94,18 @@ export default function RoleSelectPage() {
                   <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto mb-6">
                     <Users className="w-8 h-8 text-primary" />
                   </div>
-                  <h2 className="text-2xl font-bold text-foreground mb-3">I'm a Creator</h2>
+                  <h2 className="text-2xl font-bold text-foreground mb-3">
+                    I&apos;m a Creator
+                  </h2>
                   <p className="text-muted-foreground">
-                    Find brand deals, collaborate with premium brands, and earn what you deserve.
+                    Find brand deals, collaborate with premium brands, and earn
+                    what you deserve.
                   </p>
                 </div>
 
                 <div className="w-full">
                   <Button
-                    onClick={() => handleSelectRole('creator')}
+                    onClick={() => handleSelectRole("creator")}
                     size="lg"
                     className="w-full gap-2 bg-primary hover:bg-primary/90"
                   >
@@ -117,15 +130,18 @@ export default function RoleSelectPage() {
                   <div className="w-16 h-16 rounded-2xl bg-blue-600/20 flex items-center justify-center mx-auto mb-6">
                     <Briefcase className="w-8 h-8 text-blue-600" />
                   </div>
-                  <h2 className="text-2xl font-bold text-foreground mb-3">I'm a Brand</h2>
+                  <h2 className="text-2xl font-bold text-foreground mb-3">
+                    I&apos;m a Brand
+                  </h2>
                   <p className="text-muted-foreground">
-                    Post campaigns, find creators, and manage collaborations all in one place.
+                    Post campaigns, find creators, and manage collaborations all
+                    in one place.
                   </p>
                 </div>
 
                 <div className="w-full">
                   <Button
-                    onClick={() => handleSelectRole('brand')}
+                    onClick={() => handleSelectRole("brand")}
                     size="lg"
                     className="w-full gap-2 bg-blue-600 hover:bg-blue-700"
                   >

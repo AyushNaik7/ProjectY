@@ -1,331 +1,388 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { useRouter, useParams } from 'next/navigation';
-import { useSupabaseAuth } from '@/context/SupabaseAuthContext';
-import { supabase } from '@/lib/supabase';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Instagram, MessageSquare, AlertCircle, Loader2 } from 'lucide-react';
-import Link from 'next/link';
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { useRouter, useParams } from "next/navigation";
+import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
+import { supabase } from "@/lib/supabase";
+import { callSendCollaborationRequest } from "@/lib/functions";
+import DashboardShell from "@/components/DashboardShell";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  ArrowLeft,
+  Instagram,
+  Youtube,
+  MessageSquare,
+  Loader2,
+  TrendingUp,
+} from "lucide-react";
+import Link from "next/link";
 
 interface CreatorData {
   id: string;
   name: string;
   niche: string;
-  instagram_handle: string;
-  followers: number;
-  engagement_rate: number;
-  avg_views: number;
   bio: string;
-  audience_age_group?: string;
-  audience_gender?: string;
-  audience_location?: string;
+  instagram_handle: string;
+  instagram_followers: number;
+  youtube_followers: number;
+  tiktok_followers: number;
+  instagram_engagement: number;
+  youtube_engagement: number;
+  tiktok_engagement: number;
+  avg_views: number;
 }
 
 export default function CreatorProfilePage() {
   const router = useRouter();
   const params = useParams();
   const { user, role, loading: authLoading } = useSupabaseAuth();
-  const [creatorData, setCreatorData] = useState<CreatorData | null>(null);
+  const [creator, setCreator] = useState<CreatorData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const creatorId = params?.id as string;
 
-  // Auth guard
+  const creatorId = params.id as string;
+
   useEffect(() => {
-    if (!authLoading && (!user || role !== 'brand')) {
-      router.push('/login');
+    if (!authLoading && !user) {
+      router.push("/login");
     }
-  }, [user, role, authLoading, router]);
+  }, [user, authLoading, router]);
 
-  // Load creator data
   useEffect(() => {
     if (!creatorId) return;
-
-    const loadCreator = async () => {
+    (async () => {
       try {
-        setLoading(true);
-        setError('');
-
-        const { data, error: fetchError } = await supabase
-          .from('creators')
-          .select('id, name, niche, instagram_handle, followers, engagement_rate, avg_views, bio, audience_age_group, audience_gender, audience_location')
-          .eq('id', creatorId)
+        const { data, error } = await supabase
+          .from("creators")
+          .select("*")
+          .eq("id", creatorId)
           .single();
-
-        if (fetchError) throw fetchError;
-
-        if (!data) {
-          setError('Creator not found');
-          return;
-        }
-
-        setCreatorData(data);
+        if (error) throw error;
+        setCreator(data as CreatorData);
       } catch (err) {
-        console.error('Failed to load creator:', err);
-        setError('Failed to load creator profile. Please try again.');
+        console.error("Failed to load creator:", err);
       } finally {
         setLoading(false);
       }
-    };
-
-    loadCreator();
+    })();
   }, [creatorId]);
 
-  const handleSendRequest = () => {
-    if (!creatorData) return;
-    console.log('Send collaboration request to:', creatorData.name);
-    // TODO: Implement request modal/dialog
+  const [sendingRequest, setSendingRequest] = useState(false);
+
+  const handleSendRequest = async () => {
+    if (!user || role !== "brand") {
+      alert("Only brands can send collaboration requests.");
+      return;
+    }
+    if (!creator) return;
+    setSendingRequest(true);
+    try {
+      await callSendCollaborationRequest({
+        creatorId: creator.id,
+        message: `Hi ${creator.name}! We'd love to collaborate with you.`,
+      });
+      alert("Request sent successfully!");
+    } catch (err: any) {
+      alert(err.message || "Failed to send request");
+    } finally {
+      setSendingRequest(false);
+    }
   };
 
+  const fmt = (num: number) => {
+    if (!num) return "0";
+    if (num >= 1_000_000) return (num / 1_000_000).toFixed(1) + "M";
+    if (num >= 1000) return (num / 1000).toFixed(1) + "K";
+    return num.toString();
+  };
+
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <DashboardShell role={role || "brand"}>
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </DashboardShell>
+    );
+  }
+
+  if (!creator) {
+    return (
+      <DashboardShell role={role || "brand"}>
+        <div className="text-center py-20">
+          <p className="text-muted-foreground mb-4">Creator not found</p>
+          <Link href="/creators">
+            <Button variant="outline">Back to Creators</Button>
+          </Link>
+        </div>
+      </DashboardShell>
+    );
+  }
+
+  const totalFollowers =
+    (creator.instagram_followers || 0) +
+    (creator.youtube_followers || 0) +
+    (creator.tiktok_followers || 0);
+  const platforms = [
+    ...(creator.instagram_followers > 0
+      ? [
+          {
+            name: "Instagram",
+            followers: creator.instagram_followers,
+            engagement: creator.instagram_engagement || 0,
+            icon: Instagram,
+            color: "text-pink-600",
+            bg: "bg-pink-50",
+          },
+        ]
+      : []),
+    ...(creator.youtube_followers > 0
+      ? [
+          {
+            name: "YouTube",
+            followers: creator.youtube_followers,
+            engagement: creator.youtube_engagement || 0,
+            icon: Youtube,
+            color: "text-red-600",
+            bg: "bg-red-50",
+          },
+        ]
+      : []),
+    ...(creator.tiktok_followers > 0
+      ? [
+          {
+            name: "TikTok",
+            followers: creator.tiktok_followers,
+            engagement: creator.tiktok_engagement || 0,
+            icon: TrendingUp,
+            color: "text-slate-900",
+            bg: "bg-slate-100",
+          },
+        ]
+      : []),
+  ];
+
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
+    <DashboardShell role={role || "brand"}>
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
         className="mb-8 flex items-center gap-4"
       >
         <Link href="/creators">
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" className="rounded-full">
             <ArrowLeft className="w-5 h-5" />
           </Button>
         </Link>
         <div>
-          {loading ? (
-            <>
-              <div className="h-8 w-48 bg-muted rounded animate-pulse mb-2" />
-              <div className="h-5 w-32 bg-muted rounded animate-pulse" />
-            </>
-          ) : error ? (
-            <>
-              <h1 className="text-3xl font-bold text-foreground">Creator Not Found</h1>
-              <p className="text-muted-foreground">{error}</p>
-            </>
-          ) : creatorData ? (
-            <>
-              <h1 className="text-3xl font-bold text-foreground">{creatorData.name}</h1>
-              <p className="text-muted-foreground">{creatorData.niche}</p>
-            </>
-          ) : null}
+          <h1 className="text-3xl font-bold text-foreground">{creator.name}</h1>
+          <p className="text-muted-foreground">{creator.niche}</p>
         </div>
       </motion.div>
 
-      {/* Loading State */}
-      {loading && (
-        <div className="flex items-center justify-center py-20">
-          <div className="text-center">
-            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
-            <p className="text-muted-foreground">Loading creator profile...</p>
-          </div>
-        </div>
-      )}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-8">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center mb-4">
+                  <span className="text-2xl font-bold text-primary">
+                    {creator.name?.charAt(0)}
+                  </span>
+                </div>
+                <h2 className="text-2xl font-bold text-foreground mb-2">
+                  {creator.name}
+                </h2>
+                <Badge className="mb-4">{creator.niche}</Badge>
+                {creator.bio && (
+                  <p className="text-muted-foreground mt-3 max-w-2xl">
+                    {creator.bio}
+                  </p>
+                )}
+                {creator.instagram_handle && (
+                  <div className="flex items-center gap-2 mt-4 mb-6">
+                    <Instagram className="w-5 h-5 text-pink-600" />
+                    <a
+                      href={`https://instagram.com/${creator.instagram_handle.replace(
+                        "@",
+                        ""
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline"
+                    >
+                      {creator.instagram_handle.startsWith("@")
+                        ? creator.instagram_handle
+                        : `@${creator.instagram_handle}`}
+                    </a>
+                  </div>
+                )}
+                {role === "brand" && (
+                  <Button
+                    onClick={handleSendRequest}
+                    disabled={sendingRequest}
+                    size="lg"
+                    className="gap-2 bg-primary hover:bg-primary/90 mt-2"
+                  >
+                    {sendingRequest ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <MessageSquare className="w-5 h-5" />
+                    )}
+                    {sendingRequest ? "Sending..." : "Send Collaboration Request"}
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
 
-      {/* Error State */}
-      {error && !loading && (
-        <div className="flex gap-3 p-4 rounded-lg bg-destructive/10 border border-destructive/20 mb-6">
-          <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-medium text-destructive">Error loading creator</p>
-            <p className="text-sm text-destructive/80">{error}</p>
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-3"
-              onClick={() => router.back()}
-            >
-              Go Back
-            </Button>
-          </div>
-        </div>
-      )}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { label: "Total Followers", value: fmt(totalFollowers) },
+                {
+                  label: "Engagement Rate",
+                  value: `${creator.instagram_engagement || 0}%`,
+                  highlight: true,
+                },
+                { label: "Avg Views", value: fmt(creator.avg_views || 0) },
+                { label: "Platforms", value: String(platforms.length) },
+              ].map((s, i) => (
+                <Card key={i} className="border-0 shadow-sm">
+                  <CardContent className="p-4">
+                    <p className="text-xs text-muted-foreground mb-1">
+                      {s.label}
+                    </p>
+                    <p
+                      className={`text-xl font-bold ${
+                        s.highlight ? "text-primary" : "text-foreground"
+                      }`}
+                    >
+                      {s.value}
+                    </p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </motion.div>
 
-      {/* Profile Content */}
-      {creatorData && !loading && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Profile Card */}
+          {platforms.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
+              transition={{ delay: 0.3 }}
             >
               <Card className="border-0 shadow-sm">
-                <CardContent className="p-8">
-                  <div className="flex items-start justify-between mb-6">
-                    <div>
-                      <h2 className="text-2xl font-bold text-foreground mb-2">
-                        {creatorData.name}
-                      </h2>
-                      <Badge className="mb-4">{creatorData.niche}</Badge>
-                      <p className="text-muted-foreground max-w-2xl">{creatorData.bio || 'No bio available'}</p>
-                    </div>
-                  </div>
-
-                  {creatorData.instagram_handle && (
-                    <div className="flex items-center gap-2 mb-6">
-                      <Instagram className="w-5 h-5 text-pink-600" />
-                      <a
-                        href={`https://instagram.com/${creatorData.instagram_handle.replace('@', '')}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline"
+                <CardHeader>
+                  <CardTitle>Platform Breakdown</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {platforms.map((p) => {
+                    const Icon = p.icon;
+                    return (
+                      <div
+                        key={p.name}
+                        className="flex items-center justify-between p-4 rounded-lg bg-secondary/30"
                       >
-                        {creatorData.instagram_handle}
-                      </a>
-                    </div>
-                  )}
-
-                  <Button
-                    onClick={handleSendRequest}
-                    size="lg"
-                    className="gap-2 bg-primary hover:bg-primary/90"
-                  >
-                    <MessageSquare className="w-5 h-5" />
-                    Send Collaboration Request
-                  </Button>
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-lg ${p.bg}`}>
+                            <Icon className={`w-5 h-5 ${p.color}`} />
+                          </div>
+                          <div>
+                            <p className="font-medium text-foreground">
+                              {p.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {fmt(p.followers)} followers
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-semibold text-primary">
+                            {p.engagement}%
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            engagement
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </CardContent>
               </Card>
             </motion.div>
+          )}
+        </div>
 
-            {/* Stats Grid */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card className="border-0 shadow-sm">
-                  <CardContent className="p-4">
-                    <p className="text-xs text-muted-foreground mb-1">Followers</p>
-                    <p className="text-xl font-bold text-foreground">
-                      {creatorData.followers >= 1000000
-                        ? `${(creatorData.followers / 1000000).toFixed(1)}M`
-                        : creatorData.followers >= 1000
-                        ? `${(creatorData.followers / 1000).toFixed(0)}K`
-                        : creatorData.followers}
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="border-0 shadow-sm">
-                  <CardContent className="p-4">
-                    <p className="text-xs text-muted-foreground mb-1">Engagement</p>
-                    <p className="text-xl font-bold text-foreground">{creatorData.engagement_rate}%</p>
-                  </CardContent>
-                </Card>
-                <Card className="border-0 shadow-sm">
-                  <CardContent className="p-4">
-                    <p className="text-xs text-muted-foreground mb-1">Avg Views</p>
-                    <p className="text-xl font-bold text-foreground">
-                      {creatorData.avg_views >= 1000000
-                        ? `${(creatorData.avg_views / 1000000).toFixed(1)}M`
-                        : creatorData.avg_views >= 1000
-                        ? `${(creatorData.avg_views / 1000).toFixed(0)}K`
-                        : creatorData.avg_views}
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="border-0 shadow-sm">
-                  <CardContent className="p-4">
-                    <p className="text-xs text-muted-foreground mb-1">Verified</p>
-                    <p className="text-xl font-bold text-primary">✓</p>
-                  </CardContent>
-                </Card>
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+          className="lg:col-span-1"
+        >
+          <Card className="border-0 shadow-sm sticky top-24">
+            <CardHeader>
+              <CardTitle className="text-lg">Quick Stats</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
+                <p className="text-xs text-muted-foreground mb-1">
+                  Total Followers
+                </p>
+                <p className="text-2xl font-bold text-foreground">
+                  {fmt(totalFollowers)}
+                </p>
               </div>
-            </motion.div>
-
-            {/* Audience Info */}
-            {(creatorData.audience_age_group || creatorData.audience_gender || creatorData.audience_location) && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-              >
-                <Card className="border-0 shadow-sm">
-                  <CardHeader>
-                    <CardTitle>Audience Demographics</CardTitle>
-                    <CardDescription>Creator's audience breakdown</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {creatorData.audience_age_group && (
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">Age Group</p>
-                        <p className="text-sm font-semibold text-foreground">
-                          {creatorData.audience_age_group}
-                        </p>
-                      </div>
-                    )}
-                    {creatorData.audience_gender && (
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">Gender</p>
-                        <p className="text-sm font-semibold text-foreground">
-                          {creatorData.audience_gender}
-                        </p>
-                      </div>
-                    )}
-                    {creatorData.audience_location && (
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">Primary Locations</p>
-                        <p className="text-sm font-semibold text-foreground">
-                          {creatorData.audience_location}
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-          </div>
-
-          {/* Sidebar */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="lg:col-span-1"
-          >
-            <Card className="border-0 shadow-sm sticky top-24">
-              <CardHeader>
-                <CardTitle className="text-lg">Quick Stats</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
-                  <p className="text-xs text-muted-foreground mb-1">Total Followers</p>
-                  <p className="text-2xl font-bold text-foreground">
-                    {creatorData.followers >= 1000000
-                      ? `${(creatorData.followers / 1000000).toFixed(2)}M`
-                      : `${(creatorData.followers / 1000).toFixed(0)}K`}
-                  </p>
-                </div>
-
-                <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
-                  <p className="text-xs text-muted-foreground mb-1">Engagement Rate</p>
-                  <p className="text-2xl font-bold text-primary">{creatorData.engagement_rate}%</p>
-                </div>
-
-                <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
-                  <p className="text-xs text-muted-foreground mb-1">Avg Views</p>
-                  <p className="text-2xl font-bold text-foreground">
-                    {creatorData.avg_views >= 1000000
-                      ? `${(creatorData.avg_views / 1000000).toFixed(1)}M`
-                      : `${(creatorData.avg_views / 1000).toFixed(0)}K`}
-                  </p>
-                </div>
-
+              <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
+                <p className="text-xs text-muted-foreground mb-1">
+                  Engagement Rate
+                </p>
+                <p className="text-2xl font-bold text-primary">
+                  {creator.instagram_engagement || 0}%
+                </p>
+              </div>
+              <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
+                <p className="text-xs text-muted-foreground mb-1">Avg Views</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {fmt(creator.avg_views || 0)}
+                </p>
+              </div>
+              {role === "brand" && (
                 <Button
                   onClick={handleSendRequest}
                   className="w-full gap-2 bg-primary hover:bg-primary/90"
                 >
-                  <MessageSquare className="w-4 h-4" />
-                  Send Request
+                  <MessageSquare className="w-4 h-4" /> Send Request
                 </Button>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
-      )}
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    </DashboardShell>
+  );
+}

@@ -1,265 +1,490 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import Link from 'next/link';
-import { useSupabaseAuth } from '@/context/SupabaseAuthContext';
-import { Button } from '@/components/ui/button';
-import { LogOut, Sparkles, Zap, CheckCircle, TrendingUp, ArrowRight } from 'lucide-react';
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Sparkles,
+  Zap,
+  Shield,
+  ArrowRight,
+  Users,
+  Briefcase,
+  BarChart3,
+  Star,
+} from "lucide-react";
 
-// Mock data
-const mockCampaigns = [
+const features = [
   {
-    id: '1',
-    brandName: 'Nike',
-    category: 'Sports',
-    deliverable: 'Instagram Reel',
-    budgetMin: 50000,
-    budgetMax: 100000,
-    timeline: '7 days',
-    matchScore: 92,
-  },
-  {
-    id: '2',
-    brandName: 'Zara',
-    category: 'Fashion',
-    deliverable: 'TikTok Video',
-    budgetMin: 30000,
-    budgetMax: 60000,
-    timeline: '5 days',
-    matchScore: 87,
-  },
-  {
-    id: '3',
-    brandName: 'Starbucks',
-    category: 'F&B',
-    deliverable: 'Instagram Post',
-    budgetMin: 25000,
-    budgetMax: 50000,
-    timeline: '3 days',
-    matchScore: 85,
-  },
-];
-
-const mockRequests = [
-  {
-    id: '1',
-    campaignTitle: 'Summer Collection Launch',
-    brandName: 'H&M',
-    status: 'pending' as const,
-  },
-  {
-    id: '2',
-    campaignTitle: 'Product Review Campaign',
-    brandName: 'OnePlus',
-    status: 'accepted' as const,
-  },
-];
-
-const opportunities = [
-  {
-    title: 'Smart Matching',
-    description: 'AI-powered algorithm connects you with brands perfect for your niche',
+    title: "AI-Powered Matching",
+    description:
+      "Our algorithm analyzes audience, niche, engagement and content style to find your perfect match.",
     icon: Sparkles,
+    color: "bg-blue-500/10 text-blue-600",
   },
   {
-    title: 'Verified Brands',
-    description: 'Work only with verified, legitimate premium brands',
-    icon: CheckCircle,
+    title: "Verified Profiles",
+    description:
+      "Every creator and brand is verified to ensure authentic, professional collaborations.",
+    icon: Shield,
+    color: "bg-emerald-500/10 text-emerald-600",
   },
   {
-    title: 'Instant Payouts',
-    description: 'Get paid directly to your account within 48 hours',
-    icon: TrendingUp,
+    title: "Real-Time Analytics",
+    description:
+      "Track campaign performance, engagement metrics, and ROI with detailed dashboards.",
+    icon: BarChart3,
+    color: "bg-purple-500/10 text-purple-600",
+  },
+  {
+    title: "Instant Payouts",
+    description:
+      "Creators get paid directly within 48 hours of content delivery. No hassle.",
+    icon: Zap,
+    color: "bg-amber-500/10 text-amber-600",
+  },
+];
+
+const stats = [
+  { label: "Active Creators", value: "10K+" },
+  { label: "Brand Partners", value: "2.5K+" },
+  { label: "Campaigns Completed", value: "50K+" },
+  { label: "Total Paid Out", value: "\u20B925Cr+" },
+];
+
+const testimonials = [
+  {
+    name: "Priya Sharma",
+    role: "Fashion Creator",
+    text: "Collabo matched me with brands I actually love. My earnings tripled in 3 months!",
+    rating: 5,
+  },
+  {
+    name: "Rohit Verma",
+    role: "Marketing Head, D2C Brand",
+    text: "Finding the right creators used to take weeks. Now it takes minutes with AI matching.",
+    rating: 5,
+  },
+  {
+    name: "Ananya Patel",
+    role: "Lifestyle Influencer",
+    text: "The instant payouts and transparent process make Collabo the best platform for creators.",
+    rating: 5,
   },
 ];
 
 export default function HomePage() {
   const router = useRouter();
-  const { user, role, loading, signOut } = useSupabaseAuth();
+  const { user, role, loading } = useSupabaseAuth();
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
+    if (!loading && user && role) {
+      if (role === "creator") router.push("/dashboard/creator");
+      else if (role === "brand") router.push("/dashboard/brand");
     }
-  }, [user, loading, router]);
+    if (!loading && user && !role) router.push("/role-select");
+  }, [user, role, loading, router]);
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="w-8 h-8 rounded-full border-2 border-blue-600 border-t-transparent animate-spin mx-auto mb-4" />
-          <p className="text-slate-600">Loading...</p>
-        </div>
+        <div className="w-8 h-8 rounded-full border-2 border-blue-600 border-t-transparent animate-spin" />
       </div>
     );
   }
 
-  if (!user || role !== 'creator') {
-    return null;
-  }
-
-  const handleSignOut = async () => {
-    await signOut();
-    router.push('/login');
-  };
+  if (user) return null;
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Top Navigation */}
-      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur-xl">
+      {/* Navigation */}
+      <header className="sticky top-0 z-50 border-b border-slate-100 bg-white/90 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
-          <Link href="/" className="flex items-center gap-2">
-            <img src="/logo.png" alt="Collabo" className="w-8 h-8 rounded-lg" />
-            <span className="text-lg font-bold tracking-tight hidden sm:block">Collabo</span>
+          <Link href="/" className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xl font-bold text-slate-900 tracking-tight">
+              Collabo
+            </span>
           </Link>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={handleSignOut} 
-            className="gap-2 text-slate-700 hover:bg-slate-100"
-          >
-            <LogOut className="w-4 h-4" />
-            <span className="hidden sm:inline">Sign Out</span>
-          </Button>
+          <div className="flex items-center gap-3">
+            <Link href="/login">
+              <Button
+                variant="ghost"
+                className="text-slate-700 hover:text-slate-900 font-medium"
+              >
+                Sign In
+              </Button>
+            </Link>
+            <Link href="/signup">
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-5">
+                Get Started
+              </Button>
+            </Link>
+          </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-12">
-        {/* Hero Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="space-y-12"
-        >
-          <div>
-            <h1 className="text-5xl md:text-6xl font-bold text-slate-900 mb-6 leading-tight">
-              Find Your <span className="text-blue-600">Perfect</span> Brand Match
+      {/* Hero */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-purple-50" />
+        <div className="relative max-w-7xl mx-auto px-6 pt-20 pb-28">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center max-w-4xl mx-auto"
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-sm font-medium mb-8">
+              <Sparkles className="w-4 h-4" />
+              India&apos;s #1 Creator-Brand Matching Platform
+            </div>
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-slate-900 mb-6 leading-[1.1] tracking-tight">
+              Where Brands Meet{" "}
+              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Creators
+              </span>
             </h1>
-            <p className="text-xl text-slate-600 max-w-2xl leading-relaxed">
-              Connect with premium brands, collaborate on authentic campaigns, and earn what you deserve. Your next opportunity is just one click away.
+            <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed mb-10">
+              Connect with the perfect partners using AI-powered matching.
+              Launch campaigns, collaborate authentically, and grow &mdash; all
+              in one platform.
             </p>
-            <div className="flex gap-4 mt-8">
-              <Link href="/campaigns">
-                <Button className="gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5">
-                  Explore Campaigns
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              </Link>
-              <Link href="/dashboard/creator">
-                <Button variant="outline" className="gap-2 border-slate-300 text-slate-700 px-6 py-2.5">
-                  View Dashboard
-                </Button>
-              </Link>
-            </div>
-          </div>
-
-          {/* Features Grid */}
-          <div>
-            <h2 className="text-3xl font-bold text-slate-900 mb-8">Why Creators Love Collabo</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {opportunities.map((opp, index) => {
-                const Icon = opp.icon;
-                return (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 + index * 0.1, duration: 0.4 }}
-                    className="p-6 rounded-2xl bg-slate-50 border border-slate-200 hover:border-slate-300 transition-all hover:shadow-lg"
-                  >
-                    <div className="p-3 rounded-lg bg-blue-100 w-fit mb-4">
-                      <Icon className="w-6 h-6 text-blue-600" />
-                    </div>
-                    <h3 className="font-semibold text-lg text-slate-900 mb-2">{opp.title}</h3>
-                    <p className="text-slate-600 leading-relaxed">{opp.description}</p>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Featured Campaigns */}
-          <div>
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h2 className="text-3xl font-bold text-slate-900 mb-2">Featured Opportunities</h2>
-                <p className="text-slate-600">Top matched campaigns for your niche</p>
-              </div>
-              <Link href="/campaigns">
-                <Button variant="outline" className="gap-2 border-slate-300">
-                  View All
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              </Link>
-            </div>
-
-            <div className="space-y-4">
-              {mockCampaigns.slice(0, 3).map((campaign, index) => (
-                <motion.div
-                  key={campaign.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 + index * 0.1, duration: 0.4 }}
-                  className="p-6 rounded-xl bg-white border border-slate-200 hover:border-slate-300 hover:shadow-md transition-all"
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link href="/signup">
+                <Button
+                  size="lg"
+                  className="gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-base font-semibold shadow-lg shadow-blue-600/20"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <h3 className="text-lg font-semibold text-slate-900">{campaign.brandName}</h3>
-                        <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                          {campaign.category}
-                        </span>
-                        <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                          {campaign.matchScore}% match
-                        </span>
-                      </div>
-                      <p className="text-slate-600 mb-3">{campaign.deliverable} • {campaign.timeline}</p>
-                      <p className="font-semibold text-slate-900">
-                        ₹{campaign.budgetMin.toLocaleString()} - ₹{campaign.budgetMax.toLocaleString()}
-                      </p>
-                    </div>
-                    <Link href="/campaigns">
-                      <Button className="gap-2 bg-blue-600 hover:bg-blue-700">
-                        View Details
-                        <ArrowRight className="w-4 h-4" />
-                      </Button>
-                    </Link>
-                  </div>
-                </motion.div>
-              ))}
+                  Start Free Today
+                  <ArrowRight className="w-5 h-5" />
+                </Button>
+              </Link>
+              <Link href="/login">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="gap-2 border-slate-300 text-slate-700 px-8 py-3 text-base font-semibold"
+                >
+                  I Already Have an Account
+                </Button>
+              </Link>
             </div>
-          </div>
+          </motion.div>
+        </div>
+      </section>
 
-          {/* CTA Section */}
+      {/* Stats */}
+      <section className="border-y border-slate-100 bg-slate-50/80">
+        <div className="max-w-7xl mx-auto px-6 py-10">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {stats.map((stat, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="text-center"
+              >
+                <p className="text-3xl font-extrabold text-slate-900">
+                  {stat.value}
+                </p>
+                <p className="text-sm text-slate-500 mt-1">{stat.label}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="py-24">
+        <div className="max-w-7xl mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.5 }}
-            className="rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 text-white p-12 text-center"
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
           >
-            <Zap className="w-12 h-12 mx-auto mb-4 opacity-80" />
-            <h2 className="text-3xl font-bold mb-4">Ready to Start Earning?</h2>
-            <p className="text-blue-100 text-lg mb-8 max-w-2xl mx-auto">
-              Browse all available campaigns and find the perfect brand to collaborate with
+            <h2 className="text-4xl font-bold text-slate-900 mb-4">
+              How Collabo Works
+            </h2>
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+              Three simple steps to start collaborating
             </p>
-            <Link href="/campaigns">
-              <Button className="gap-2 bg-white hover:bg-slate-100 text-blue-600 font-semibold px-8 py-2.5">
-                Explore All Campaigns
-                <ArrowRight className="w-4 h-4" />
+          </motion.div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+            >
+              <Card className="border border-slate-200 shadow-sm h-full">
+                <CardContent className="p-8">
+                  <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center mb-6">
+                    <Users className="w-7 h-7 text-blue-600" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-slate-900 mb-4">
+                    For Creators
+                  </h3>
+                  <div className="space-y-4">
+                    {[
+                      "Create your profile",
+                      "Get AI-matched campaigns",
+                      "Apply & earn",
+                    ].map((step, j) => (
+                      <div key={j} className="flex items-start gap-3">
+                        <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <span className="text-xs font-bold text-blue-600">
+                            {j + 1}
+                          </span>
+                        </div>
+                        <p className="font-medium text-slate-900">{step}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <Link href="/signup" className="block mt-6">
+                    <Button className="w-full gap-2 bg-blue-600 hover:bg-blue-700">
+                      Join as Creator <ArrowRight className="w-4 h-4" />
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+            >
+              <Card className="border border-slate-200 shadow-sm h-full">
+                <CardContent className="p-8">
+                  <div className="w-14 h-14 rounded-2xl bg-purple-50 flex items-center justify-center mb-6">
+                    <Briefcase className="w-7 h-7 text-purple-600" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-slate-900 mb-4">
+                    For Brands
+                  </h3>
+                  <div className="space-y-4">
+                    {[
+                      "Post a campaign",
+                      "Discover matched creators",
+                      "Collaborate & grow",
+                    ].map((step, j) => (
+                      <div key={j} className="flex items-start gap-3">
+                        <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <span className="text-xs font-bold text-purple-600">
+                            {j + 1}
+                          </span>
+                        </div>
+                        <p className="font-medium text-slate-900">{step}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <Link href="/signup" className="block mt-6">
+                    <Button className="w-full gap-2 bg-purple-600 hover:bg-purple-700 text-white">
+                      Join as Brand <ArrowRight className="w-4 h-4" />
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features */}
+      <section className="py-24 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl font-bold text-slate-900 mb-4">
+              Why Choose Collabo?
+            </h2>
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+              Built for the modern creator economy
+            </p>
+          </motion.div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {features.map((feat, i) => {
+              const Icon = feat.icon;
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                >
+                  <Card className="border border-slate-200 shadow-sm hover:shadow-md transition-shadow h-full">
+                    <CardContent className="p-6">
+                      <div
+                        className={`w-12 h-12 rounded-xl ${feat.color} flex items-center justify-center mb-4`}
+                      >
+                        <Icon className="w-6 h-6" />
+                      </div>
+                      <h3 className="font-semibold text-lg text-slate-900 mb-2">
+                        {feat.title}
+                      </h3>
+                      <p className="text-sm text-slate-600 leading-relaxed">
+                        {feat.description}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-24">
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl font-bold text-slate-900 mb-4">
+              Loved by Creators & Brands
+            </h2>
+          </motion.div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {testimonials.map((t, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+              >
+                <Card className="border border-slate-200 shadow-sm h-full">
+                  <CardContent className="p-6">
+                    <div className="flex gap-1 mb-4">
+                      {Array.from({ length: t.rating }).map((_, j) => (
+                        <Star
+                          key={j}
+                          className="w-4 h-4 fill-amber-400 text-amber-400"
+                        />
+                      ))}
+                    </div>
+                    <p className="text-slate-700 mb-6 leading-relaxed">
+                      &ldquo;{t.text}&rdquo;
+                    </p>
+                    <div>
+                      <p className="font-semibold text-slate-900">{t.name}</p>
+                      <p className="text-sm text-slate-500">{t.role}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-24">
+        <div className="max-w-4xl mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="rounded-3xl bg-gradient-to-br from-blue-600 via-blue-700 to-purple-700 text-white p-12 md:p-16 text-center"
+          >
+            <Zap className="w-12 h-12 mx-auto mb-6 opacity-80" />
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Ready to Start Collaborating?
+            </h2>
+            <p className="text-blue-100 text-lg mb-8 max-w-2xl mx-auto">
+              Join thousands of creators and brands building amazing
+              partnerships.
+            </p>
+            <Link href="/signup">
+              <Button
+                size="lg"
+                className="gap-2 bg-white hover:bg-slate-100 text-blue-700 font-semibold px-8"
+              >
+                Create Free Account <ArrowRight className="w-5 h-5" />
               </Button>
             </Link>
           </motion.div>
-        </motion.div>
-      </main>
+        </div>
+      </section>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 bg-slate-50 mt-20 py-12">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center text-slate-600">
-            <p>© 2026 Collabo. Connecting creators with opportunities.</p>
+      <footer className="border-t border-slate-200 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-6 py-12">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="col-span-2 md:col-span-1">
+              <div className="flex items-center gap-2.5 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-white" />
+                </div>
+                <span className="text-lg font-bold text-slate-900">
+                  Collabo
+                </span>
+              </div>
+              <p className="text-sm text-slate-500">
+                India&apos;s premium creator-brand matching platform.
+              </p>
+            </div>
+            <div>
+              <h4 className="font-semibold text-slate-900 mb-3">Platform</h4>
+              <div className="space-y-2">
+                <Link
+                  href="/campaigns"
+                  className="block text-sm text-slate-500 hover:text-slate-700"
+                >
+                  Campaigns
+                </Link>
+                <Link
+                  href="/creators"
+                  className="block text-sm text-slate-500 hover:text-slate-700"
+                >
+                  Find Creators
+                </Link>
+                <Link
+                  href="/signup"
+                  className="block text-sm text-slate-500 hover:text-slate-700"
+                >
+                  Get Started
+                </Link>
+              </div>
+            </div>
+            <div>
+              <h4 className="font-semibold text-slate-900 mb-3">Company</h4>
+              <div className="space-y-2">
+                <span className="block text-sm text-slate-500">About Us</span>
+                <span className="block text-sm text-slate-500">Contact</span>
+              </div>
+            </div>
+            <div>
+              <h4 className="font-semibold text-slate-900 mb-3">Legal</h4>
+              <div className="space-y-2">
+                <span className="block text-sm text-slate-500">
+                  Privacy Policy
+                </span>
+                <span className="block text-sm text-slate-500">
+                  Terms of Service
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="border-t border-slate-200 mt-8 pt-8 text-center">
+            <p className="text-sm text-slate-500">
+              &copy; 2026 Collabo. All rights reserved.
+            </p>
           </div>
         </div>
       </footer>

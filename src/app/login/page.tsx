@@ -1,59 +1,65 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useSupabaseAuth } from '@/context/SupabaseAuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Loader2, Search, Zap, Shield } from 'lucide-react';
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2, Search, Zap, Shield } from "lucide-react";
 
 const features = [
   {
     icon: Search,
-    title: 'Smart Matching',
-    description: 'AI-driven matching connects you with the perfect creators or brands.'
+    title: "Smart Matching",
+    description:
+      "AI-driven matching connects you with the perfect creators or brands.",
   },
   {
     icon: Zap,
-    title: 'Instant Opportunities',
-    description: 'Get matched with high-value brand deals and collaborations instantly.'
+    title: "Instant Opportunities",
+    description:
+      "Get matched with high-value brand deals and collaborations instantly.",
   },
   {
     icon: Shield,
-    title: 'Secure & Verified',
-    description: 'Identity verification ensures you connect with real professionals.'
-  }
+    title: "Secure & Verified",
+    description:
+      "Identity verification ensures you connect with real professionals.",
+  },
 ];
 
 export default function LoginPage() {
   const router = useRouter();
   const { signIn } = useSupabaseAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setIsLoading(true);
 
     try {
       const res: any = await signIn(email, password);
       const user = res?.user;
-      const roleFromMeta = (user?.user_metadata as any)?.role as 'creator' | 'brand' | undefined;
-      if (roleFromMeta === 'creator') {
-        router.push('/');
-      } else if (roleFromMeta === 'brand') {
-        router.push('/dashboard/brand');
+      const roleFromMeta = (user?.user_metadata as any)?.role as
+        | "creator"
+        | "brand"
+        | undefined;
+      if (roleFromMeta === "creator") {
+        router.push("/");
+      } else if (roleFromMeta === "brand") {
+        router.push("/dashboard/brand");
       } else {
-        router.push('/role-select');
+        router.push("/role-select");
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to sign in');
+      setError(err.message || "Failed to sign in");
     } finally {
       setIsLoading(false);
     }
@@ -69,7 +75,11 @@ export default function LoginPage() {
           transition={{ duration: 0.5 }}
         >
           <Link href="/" className="flex items-center gap-3 mb-12">
-            <img src="/logo.png" alt="Collabo" className="w-10 h-10 rounded-lg" />
+            <img
+              src="/logo.png"
+              alt="Collabo"
+              className="w-10 h-10 rounded-lg"
+            />
             <span className="text-xl font-bold">Collabo</span>
           </Link>
         </motion.div>
@@ -85,7 +95,8 @@ export default function LoginPage() {
               Find your perfect <span className="text-blue-400">match.</span>
             </h1>
             <p className="text-lg text-slate-300">
-              Connect with top creators and premium brands. Build meaningful collaborations that drive real results.
+              Connect with top creators and premium brands. Build meaningful
+              collaborations that drive real results.
             </p>
           </div>
 
@@ -124,7 +135,6 @@ export default function LoginPage() {
           © 2026 Collabo. All rights reserved.
         </motion.div>
       </div>
-
       {/* Right Side - Form Section */}
       <div className="w-full lg:w-1/2 bg-white flex items-center justify-center p-6 sm:p-12">
         <motion.div
@@ -134,14 +144,19 @@ export default function LoginPage() {
           className="w-full max-w-md"
         >
           <div className="mb-8">
-            <h2 className="text-3xl font-bold text-slate-900 mb-2">Welcome Back</h2>
+            <h2 className="text-3xl font-bold text-slate-900 mb-2">
+              Welcome Back
+            </h2>
             <p className="text-slate-600">Sign in to your Collabo account</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email */}
             <div>
-              <Label htmlFor="email" className="text-sm font-medium text-slate-700 block mb-2">
+              <Label
+                htmlFor="email"
+                className="text-sm font-medium text-slate-700 block mb-2"
+              >
                 Email Address
               </Label>
               <Input
@@ -159,10 +174,16 @@ export default function LoginPage() {
             {/* Password */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <Label htmlFor="password" className="text-sm font-medium text-slate-700">
+                <Label
+                  htmlFor="password"
+                  className="text-sm font-medium text-slate-700"
+                >
                   Password
                 </Label>
-                <Link href="#" className="text-sm text-blue-600 hover:text-blue-700">
+                <Link
+                  href="#"
+                  className="text-sm text-blue-600 hover:text-blue-700"
+                >
                   Forgot password?
                 </Link>
               </div>
@@ -201,7 +222,7 @@ export default function LoginPage() {
                   Signing in...
                 </>
               ) : (
-                'Sign In'
+                "Sign In"
               )}
             </Button>
 
@@ -211,7 +232,9 @@ export default function LoginPage() {
                 <div className="w-full border-t border-slate-300" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-slate-600">OR CONTINUE WITH</span>
+                <span className="px-2 bg-white text-slate-600">
+                  OR CONTINUE WITH
+                </span>
               </div>
             </div>
 
@@ -222,18 +245,33 @@ export default function LoginPage() {
               className="w-full py-2.5 border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition duration-200"
             >
               <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                <path
+                  fill="currentColor"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                />
+                <path
+                  fill="currentColor"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                />
+                <path
+                  fill="currentColor"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                />
+                <path
+                  fill="currentColor"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                />
               </svg>
               Google
             </Button>
 
             {/* Sign Up Link */}
             <p className="text-center text-sm text-slate-600">
-              Don't have an account?{' '}
-              <Link href="/signup" className="text-blue-600 font-semibold hover:text-blue-700">
+              Don&apos;t have an account?{" "}
+              <Link
+                href="/signup"
+                className="text-blue-600 font-semibold hover:text-blue-700"
+              >
                 Create Account
               </Link>
             </p>
@@ -243,6 +281,7 @@ export default function LoginPage() {
             🔒 Encrypted & Secure Connection
           </p>
         </motion.div>
-      </div>    </div>
+      </div>{" "}
+    </div>
   );
 }

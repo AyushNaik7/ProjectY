@@ -1,152 +1,154 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import DashboardShell from "@/components/DashboardShell";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
-import Link from 'next/link';
+} from "@/components/ui/select";
+import { ArrowLeft, Loader2, Megaphone, CheckCircle } from "lucide-react";
+import Link from "next/link";
+import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
+import { callCreateCampaign } from "@/lib/functions";
+
+const NICHE_OPTIONS = [
+  "Fashion & Lifestyle",
+  "Tech & Gadgets",
+  "Beauty & Skincare",
+  "Travel & Adventure",
+  "Food & Cooking",
+  "Fitness & Health",
+  "Gaming",
+  "Education & Learning",
+  "Finance & Business",
+  "Entertainment & Comedy",
+  "Art & Design",
+  "Music",
+  "Automotive",
+  "Any",
+];
 
 export default function PostCampaignPage() {
   const router = useRouter();
+  const { user, role, loading: authLoading } = useSupabaseAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-  const [submitError, setSubmitError] = useState('');
+  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    deliverable: '',
-    budget: '',
-    timeline: '',
+    title: "",
+    description: "",
+    deliverable: "",
+    budget: "",
+    timeline: "",
+    niche: "",
   });
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user || role !== "brand") {
+    router.push("/login");
+    return null;
+  }
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    // Clear validation error for this field on change
-    if (validationErrors[name]) {
-      setValidationErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    // Clear validation error for this field on change
-    if (validationErrors[name]) {
-      setValidationErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
-  };
-
-  const validateForm = (): boolean => {
-    const errors: Record<string, string> = {};
-
-    if (!formData.title.trim()) {
-      errors.title = 'Campaign title is required';
-    } else if (formData.title.length < 3) {
-      errors.title = 'Campaign title must be at least 3 characters';
-    }
-
-    if (!formData.description.trim()) {
-      errors.description = 'Description is required';
-    } else if (formData.description.length < 10) {
-      errors.description = 'Description must be at least 10 characters';
-    }
-
-    if (!formData.deliverable) {
-      errors.deliverable = 'Please select a deliverable type';
-    }
-
-    if (!formData.budget) {
-      errors.budget = 'Budget is required';
-    } else if (parseInt(formData.budget) <= 0) {
-      errors.budget = 'Budget must be greater than 0';
-    } else if (parseInt(formData.budget) > 10000000) {
-      errors.budget = 'Budget cannot exceed ₹1 crore';
-    }
-
-    if (!formData.timeline) {
-      errors.timeline = 'Please select a timeline';
-    }
-
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitError('');
-    setSuccess(false);
-
-    if (!validateForm()) {
-      return;
-    }
-
+    setError("");
     setIsLoading(true);
 
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/campaigns', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(formData),
-      // });
+      const deliverableMap: Record<string, "Reel" | "Post" | "Story"> = {
+        reel: "Reel",
+        post: "Post",
+        story: "Story",
+        tiktok: "Reel",
+        youtube: "Reel",
+        "youtube-short": "Reel",
+      };
 
-      // if (!response.ok) {
-      //   const error = await response.json();
-      //   throw new Error(error.message || 'Failed to create campaign');
-      // }
+      await callCreateCampaign({
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        deliverableType: deliverableMap[formData.deliverable] || "Reel",
+        budget: parseInt(formData.budget),
+        timeline: formData.timeline,
+        niche: formData.niche,
+      });
 
       setSuccess(true);
-      setTimeout(() => {
-        router.push('/dashboard/brand');
-      }, 1500);
-    } catch (err) {
-      const error = err as { message?: string };
-      console.error('Campaign creation error:', err);
-      setSubmitError(error.message || 'Failed to create campaign. Please try again.');
+      setTimeout(() => router.push("/dashboard/brand"), 1500);
+    } catch (err: any) {
+      setError(err.message || "Failed to create campaign");
     } finally {
       setIsLoading(false);
     }
   };
 
   const isFormValid =
-    formData.title &&
-    formData.description &&
+    formData.title.trim().length >= 3 &&
+    formData.description.trim().length >= 10 &&
     formData.deliverable &&
     formData.budget &&
+    parseInt(formData.budget) > 0 &&
     formData.timeline &&
-    Object.keys(validationErrors).length === 0;
+    formData.niche;
+
+  if (success) {
+    return (
+      <DashboardShell role="brand">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-md mx-auto text-center py-20"
+        >
+          <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-6">
+            <CheckCircle className="w-8 h-8 text-emerald-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-foreground mb-2">
+            Campaign Published!
+          </h2>
+          <p className="text-muted-foreground">
+            Your campaign is now live. AI is matching creators for you.
+          </p>
+        </motion.div>
+      </DashboardShell>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-background">
+    <DashboardShell role="brand">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -155,14 +157,17 @@ export default function PostCampaignPage() {
         className="mb-8 flex items-center gap-4"
       >
         <Link href="/dashboard/brand">
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" className="rounded-full">
             <ArrowLeft className="w-5 h-5" />
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Post a New Campaign</h1>
-          <p className="text-muted-foreground">
-            Fill in the details and reach creators instantly
+          <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+            <Megaphone className="w-7 h-7 text-primary" />
+            Post a New Campaign
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Fill in the details and reach matched creators instantly
           </p>
         </div>
       </motion.div>
@@ -178,12 +183,12 @@ export default function PostCampaignPage() {
           <CardHeader>
             <CardTitle>Campaign Details</CardTitle>
             <CardDescription>
-              Provide information about your campaign to attract the right creators
+              Provide information about your campaign to attract the right
+              creators
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Campaign Title */}
               <div className="space-y-2">
                 <Label htmlFor="title" className="text-sm font-medium">
                   Campaign Title
@@ -194,17 +199,10 @@ export default function PostCampaignPage() {
                   placeholder="e.g., Summer Collection Launch"
                   value={formData.title}
                   onChange={handleChange}
-                  className={`border-border/50 ${
-                    validationErrors.title ? 'border-destructive' : ''
-                  }`}
-                  disabled={isLoading}
+                  className="border-border/50"
                 />
-                {validationErrors.title && (
-                  <p className="text-xs text-destructive">{validationErrors.title}</p>
-                )}
               </div>
 
-              {/* Description */}
               <div className="space-y-2">
                 <Label htmlFor="description" className="text-sm font-medium">
                   Description
@@ -216,130 +214,104 @@ export default function PostCampaignPage() {
                   value={formData.description}
                   onChange={handleChange}
                   rows={4}
-                  className={`border-border/50 ${
-                    validationErrors.description ? 'border-destructive' : ''
-                  }`}
-                  disabled={isLoading}
+                  className="border-border/50"
                 />
-                {validationErrors.description && (
-                  <p className="text-xs text-destructive">{validationErrors.description}</p>
-                )}
               </div>
 
-              {/* Deliverable Type */}
-              <div className="space-y-2">
-                <Label htmlFor="deliverable" className="text-sm font-medium">
-                  Deliverable Type
-                </Label>
-                <Select
-                  value={formData.deliverable}
-                  onValueChange={(value) =>
-                    handleSelectChange('deliverable', value)
-                  }
-                  disabled={isLoading}
-                >
-                  <SelectTrigger
-                    className={`border-border/50 ${
-                      validationErrors.deliverable ? 'border-destructive' : ''
-                    }`}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">
+                    Deliverable Type
+                  </Label>
+                  <Select
+                    value={formData.deliverable}
+                    onValueChange={(v) => handleSelectChange("deliverable", v)}
                   >
-                    <SelectValue placeholder="Select deliverable type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="reel">Instagram Reel</SelectItem>
-                    <SelectItem value="post">Instagram Post</SelectItem>
-                    <SelectItem value="story">Instagram Story</SelectItem>
-                    <SelectItem value="tiktok">TikTok Video</SelectItem>
-                    <SelectItem value="youtube">YouTube Video</SelectItem>
-                    <SelectItem value="youtube-short">YouTube Short</SelectItem>
-                  </SelectContent>
-                </Select>
-                {validationErrors.deliverable && (
-                  <p className="text-xs text-destructive">{validationErrors.deliverable}</p>
-                )}
-              </div>
+                    <SelectTrigger className="border-border/50">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="reel">Instagram Reel</SelectItem>
+                      <SelectItem value="post">Instagram Post</SelectItem>
+                      <SelectItem value="story">Instagram Story</SelectItem>
+                      <SelectItem value="tiktok">TikTok Video</SelectItem>
+                      <SelectItem value="youtube">YouTube Video</SelectItem>
+                      <SelectItem value="youtube-short">
+                        YouTube Short
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              {/* Budget */}
-              <div className="space-y-2">
-                <Label htmlFor="budget" className="text-sm font-medium">
-                  Budget (₹)
-                </Label>
-                <Input
-                  id="budget"
-                  name="budget"
-                  type="number"
-                  placeholder="e.g., 50000"
-                  value={formData.budget}
-                  onChange={handleChange}
-                  className={`border-border/50 ${
-                    validationErrors.budget ? 'border-destructive' : ''
-                  }`}
-                  disabled={isLoading}
-                />
-                {validationErrors.budget && (
-                  <p className="text-xs text-destructive">{validationErrors.budget}</p>
-                )}
-              </div>
-
-              {/* Timeline */}
-              <div className="space-y-2">
-                <Label htmlFor="timeline" className="text-sm font-medium">
-                  Timeline
-                </Label>
-                <Select
-                  value={formData.timeline}
-                  onValueChange={(value) =>
-                    handleSelectChange('timeline', value)
-                  }
-                  disabled={isLoading}
-                >
-                  <SelectTrigger
-                    className={`border-border/50 ${
-                      validationErrors.timeline ? 'border-destructive' : ''
-                    }`}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">
+                    Niche / Category
+                  </Label>
+                  <Select
+                    value={formData.niche}
+                    onValueChange={(v) => handleSelectChange("niche", v)}
                   >
-                    <SelectValue placeholder="Select timeline" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1-day">1 Day</SelectItem>
-                    <SelectItem value="2-days">2 Days</SelectItem>
-                    <SelectItem value="3-days">3 Days</SelectItem>
-                    <SelectItem value="1-week">1 Week</SelectItem>
-                    <SelectItem value="2-weeks">2 Weeks</SelectItem>
-                    <SelectItem value="1-month">1 Month</SelectItem>
-                  </SelectContent>
-                </Select>
-                {validationErrors.timeline && (
-                  <p className="text-xs text-destructive">{validationErrors.timeline}</p>
-                )}
+                    <SelectTrigger className="border-border/50">
+                      <SelectValue placeholder="Select niche" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {NICHE_OPTIONS.map((n) => (
+                        <SelectItem key={n} value={n}>
+                          {n}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
-              {/* Error Message */}
-              {submitError && (
-                <div className="flex gap-3 p-4 rounded-lg bg-destructive/10 border border-destructive/20">
-                  <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-destructive">{submitError}</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="budget" className="text-sm font-medium">
+                    Budget (\u20B9)
+                  </Label>
+                  <Input
+                    id="budget"
+                    name="budget"
+                    type="number"
+                    placeholder="e.g., 50000"
+                    value={formData.budget}
+                    onChange={handleChange}
+                    min={0}
+                    className="border-border/50"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Timeline</Label>
+                  <Select
+                    value={formData.timeline}
+                    onValueChange={(v) => handleSelectChange("timeline", v)}
+                  >
+                    <SelectTrigger className="border-border/50">
+                      <SelectValue placeholder="Select timeline" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1 Day">1 Day</SelectItem>
+                      <SelectItem value="2 Days">2 Days</SelectItem>
+                      <SelectItem value="3 Days">3 Days</SelectItem>
+                      <SelectItem value="1 Week">1 Week</SelectItem>
+                      <SelectItem value="2 Weeks">2 Weeks</SelectItem>
+                      <SelectItem value="1 Month">1 Month</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {error && (
+                <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+                  {error}
                 </div>
               )}
 
-              {/* Success Message */}
-              {success && (
-                <div className="flex gap-3 p-4 rounded-lg bg-green-500/10 border border-green-500/20">
-                  <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 text-white text-sm font-bold">
-                    ✓
-                  </div>
-                  <p className="text-sm text-green-700">Campaign created successfully! Redirecting...</p>
-                </div>
-              )}
-
-              {/* Submit Buttons */}
               <div className="flex gap-3 pt-4">
                 <Link href="/dashboard/brand" className="flex-1">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full"
-                  >
+                  <Button type="button" variant="outline" className="w-full">
                     Cancel
                   </Button>
                 </Link>
@@ -354,7 +326,7 @@ export default function PostCampaignPage() {
                       Publishing...
                     </>
                   ) : (
-                    'Publish Campaign'
+                    "Publish Campaign"
                   )}
                 </Button>
               </div>
@@ -362,6 +334,6 @@ export default function PostCampaignPage() {
           </CardContent>
         </Card>
       </motion.div>
-    </div>
+    </DashboardShell>
   );
 }
