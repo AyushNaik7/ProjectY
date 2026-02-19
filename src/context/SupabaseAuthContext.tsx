@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-browser";
 import { User } from "@supabase/supabase-js";
 
 interface AuthContextType {
@@ -14,6 +14,7 @@ interface AuthContextType {
     password: string,
     metadata?: Record<string, unknown>
   ) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   setRole: (role: "creator" | "brand") => Promise<void>;
 }
@@ -28,12 +29,18 @@ export function SupabaseAuthProvider({
   const [user, setUser] = useState<User | null>(null);
   const [role, setRoleState] = useState<"creator" | "brand" | null>(null);
   const [loading, setLoading] = useState(true);
+  const supabase = createClient();
 
   useEffect(() => {
     // Check current session
     const checkSession = async () => {
       try {
+        console.log("=== Checking session ===");
         const { data } = await supabase.auth.getSession();
+        console.log("Session data:", data);
+        console.log("User:", data.session?.user?.email);
+        console.log("User metadata:", data.session?.user?.user_metadata);
+        
         if (data.session?.user) {
           setUser(data.session.user);
           // Prefer role from user metadata, fallback to localStorage
@@ -44,7 +51,11 @@ export function SupabaseAuthProvider({
           const savedRole =
             (metaRole as "creator" | "brand") ||
             (localStorage.getItem("userRole") as "creator" | "brand" | null);
+          console.log("Meta role:", metaRole);
+          console.log("Saved role:", savedRole);
           setRoleState(savedRole);
+        } else {
+          console.log("No session found");
         }
       } catch (error) {
         console.error("Error checking session:", error);
@@ -132,6 +143,48 @@ export function SupabaseAuthProvider({
     if (error) throw error;
   };
 
+  const signInWithGoogle = async () => {
+    console.log("=== signInWithGoogle called ===");
+    
+    // Check if there's a pending role in localStorage (from signup)
+    const pendingRole = localStorage.getItem('userRolePending');
+    console.log("Pending role from localStorage:", pendingRole);
+    
+    // Build redirect URL with role as query param - use dynamic origin
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+    let redirectUrl = `${origin}/auth/callback`;
+    if (pendingRole) {
+      redirectUrl += `?role=${pendingRole}`;
+      console.log("Added role to redirect URL:", redirectUrl);
+    }
+    
+    console.log("Final redirect URL:", redirectUrl);
+    
+    const oauthOptions: any = {
+      redirectTo: redirectUrl,
+      skipBrowserRedirect: false,
+    };
+    
+    console.log("OAuth options:", oauthOptions);
+    console.log("Calling supabase.auth.signInWithOAuth...");
+    
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: oauthOptions,
+    });
+    
+    console.log("OAuth response - data:", data);
+    console.log("OAuth response - error:", error);
+    
+    if (error) {
+      console.error("OAuth error:", error);
+      throw error;
+    }
+    
+    console.log("OAuth initiated successfully");
+    console.log("OAuth URL:", data.url);
+  };
+
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
@@ -157,7 +210,7 @@ export function SupabaseAuthProvider({
 
   return (
     <AuthContext.Provider
-      value={{ user, role, loading, signIn, signUp, signOut, setRole }}
+      value={{ user, role, loading, signIn, signUp, signInWithGoogle, signOut, setRole }}
     >
       {children}
     </AuthContext.Provider>

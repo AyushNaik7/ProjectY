@@ -30,7 +30,7 @@ const features = [
 
 export default function SignupPage() {
   const router = useRouter();
-  const { signUp } = useSupabaseAuth();
+  const { signUp, signInWithGoogle } = useSupabaseAuth();
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -72,6 +72,34 @@ export default function SignupPage() {
       setError(err.message || 'Failed to sign up');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignUp = async () => {
+    console.log("=== Google Sign Up Clicked ===");
+    console.log("Selected role:", selectedRole);
+    
+    if (!selectedRole) {
+      setError('Please select your role first');
+      console.error("No role selected");
+      return;
+    }
+    
+    try {
+      setError('');
+      console.log("Saving role to localStorage:", selectedRole);
+      localStorage.setItem('userRolePending', selectedRole);
+      
+      // Verify it was saved
+      const saved = localStorage.getItem('userRolePending');
+      console.log("Verified saved role:", saved);
+      
+      console.log("Calling signInWithGoogle...");
+      await signInWithGoogle();
+      console.log("signInWithGoogle completed - should redirect to Google now");
+    } catch (err: any) {
+      console.error("Google sign-up error:", err);
+      setError(err.message || 'Failed to sign up with Google');
     }
   };
 
@@ -304,7 +332,9 @@ export default function SignupPage() {
             <Button
               type="button"
               variant="outline"
-              className="w-full py-2.5 border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition duration-200"
+              onClick={handleGoogleSignUp}
+              disabled={!selectedRole}
+              className="w-full py-2.5 border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                 <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>

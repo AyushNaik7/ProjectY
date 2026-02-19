@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import DashboardShell from "@/components/DashboardShell";
 import { SocialStatsCard } from "@/components/SocialStatsCard";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,7 +24,8 @@ import { callGetMatchedCampaigns, type MatchedCampaign } from "@/lib/functions";
 import { formatMatchScore, getMatchColor } from "@/lib/matching";
 
 export default function CreatorDashboard() {
-  const { user } = useSupabaseAuth();
+  const router = useRouter();
+  const { user, role, loading } = useSupabaseAuth();
   const [creatorProfile, setCreatorProfile] = useState<Record<
     string,
     unknown
@@ -34,6 +36,21 @@ export default function CreatorDashboard() {
   const [matchLoading, setMatchLoading] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
   const [matchTriggered, setMatchTriggered] = useState(false);
+
+  // Auth guard
+  useEffect(() => {
+    if (loading) return;
+    
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+    
+    if (role !== "creator") {
+      router.push("/role-select");
+      return;
+    }
+  }, [user, role, loading, router]);
 
   // Fetch creator profile
   useEffect(() => {

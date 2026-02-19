@@ -12,9 +12,12 @@ import { Users, Briefcase, ArrowRight } from "lucide-react";
 
 export default function RoleSelectPage() {
   const router = useRouter();
-  const { user, setRole } = useSupabaseAuth();
+  const { user, setRole, loading } = useSupabaseAuth();
 
   useEffect(() => {
+    // Wait for auth to finish loading before checking
+    if (loading) return;
+    
     // If not logged in, go to login
     if (!user) {
       router.push("/login");
@@ -35,7 +38,7 @@ export default function RoleSelectPage() {
     } else if (savedRole === "brand") {
       router.push(onboardingComplete ? "/dashboard/brand" : "/onboarding/brand");
     }
-  }, [user, router]);
+  }, [user, router, loading]);
 
   const handleSelectRole = async (selectedRole: "creator" | "brand") => {
     await setRole(selectedRole);
@@ -46,6 +49,18 @@ export default function RoleSelectPage() {
       router.push("/onboarding/brand");
     }
   };
+
+  // Show loading state while auth is initializing
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
