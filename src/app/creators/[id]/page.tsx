@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useRouter, useParams } from "next/navigation";
 import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-browser";
 import { callSendCollaborationRequest } from "@/lib/functions";
 import DashboardShell from "@/components/DashboardShell";
 import {
@@ -60,6 +60,7 @@ export default function CreatorProfilePage() {
     if (!creatorId) return;
     (async () => {
       try {
+        const supabase = createClient();
         const { data, error } = await supabase
           .from("creators")
           .select("*")
@@ -249,7 +250,9 @@ export default function CreatorProfilePage() {
                     ) : (
                       <MessageSquare className="w-5 h-5" />
                     )}
-                    {sendingRequest ? "Sending..." : "Send Collaboration Request"}
+                    {sendingRequest
+                      ? "Sending..."
+                      : "Send Collaboration Request"}
                   </Button>
                 )}
               </CardContent>

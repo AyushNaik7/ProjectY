@@ -19,7 +19,7 @@ import {
   Brain,
 } from "lucide-react";
 import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-browser";
 import { callGetMatchedCampaigns, type MatchedCampaign } from "@/lib/functions";
 import { formatMatchScore, getMatchColor } from "@/lib/matching";
 
@@ -40,12 +40,12 @@ export default function CreatorDashboard() {
   // Auth guard
   useEffect(() => {
     if (loading) return;
-    
+
     if (!user) {
       router.push("/login");
       return;
     }
-    
+
     if (role !== "creator") {
       router.push("/role-select");
       return;
@@ -57,23 +57,40 @@ export default function CreatorDashboard() {
     if (!user) return;
     (async () => {
       try {
-        const { data } = await supabase
+        const supabase = createClient();
+        const { data, error } = await supabase
           .from("creators")
           .select("*")
           .eq("id", user.id)
           .single();
+
+        if (error || !data) {
+          // No profile found - redirect to onboarding
+          console.log("No creator profile found, redirecting to onboarding");
+          router.push("/onboarding/creator");
+          return;
+        }
+
         setCreatorProfile(data);
       } catch (err) {
         console.error("Failed to load profile:", err);
+        router.push("/onboarding/creator");
       } finally {
         setProfileLoading(false);
       }
     })();
-  }, [user]);
+  }, [user, router]);
 
   // Fetch AI-matched campaigns — only when user triggers
   const handleFindCampaigns = async () => {
     if (!user) return;
+
+    if (!creatorProfile) {
+      alert("Please complete your onboarding first");
+      router.push("/onboarding/creator");
+      return;
+    }
+
     setMatchLoading(true);
     setMatchTriggered(true);
     try {
@@ -81,6 +98,15 @@ export default function CreatorDashboard() {
       setMatchedCampaigns(result.campaigns || []);
     } catch (err) {
       console.error("Failed to load matches:", err);
+      const errorMsg =
+        err instanceof Error ? err.message : "Failed to load matches";
+
+      if (errorMsg.includes("Creator profile not found")) {
+        alert("Your profile is incomplete. Please complete onboarding first.");
+        router.push("/onboarding/creator");
+      } else {
+        alert(`Error: ${errorMsg}`);
+      }
     } finally {
       setMatchLoading(false);
     }

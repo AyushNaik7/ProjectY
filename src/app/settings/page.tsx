@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-browser";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,7 +15,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Settings, Loader2, LogOut, IndianRupee, AlertCircle } from "lucide-react";
+import {
+  Settings,
+  Loader2,
+  LogOut,
+  IndianRupee,
+  AlertCircle,
+} from "lucide-react";
 
 const CATEGORY_OPTIONS = [
   "D2C / E-commerce",
@@ -76,6 +82,7 @@ export default function SettingsPage() {
     const loadSettings = async () => {
       try {
         setLoading(true);
+        const supabase = createClient();
         const { data, error: fetchError } = await supabase
           .from("brands")
           .select("name, category, budget_min, budget_max")
@@ -137,12 +144,15 @@ export default function SettingsPage() {
     }
 
     if (formData.budget_max < formData.budget_min) {
-      setError("Maximum budget must be greater than or equal to minimum budget.");
+      setError(
+        "Maximum budget must be greater than or equal to minimum budget."
+      );
       setSaving(false);
       return;
     }
 
     try {
+      const supabase = createClient();
       const { error: updateError } = await supabase
         .from("brands")
         .update({
@@ -266,7 +276,9 @@ export default function SettingsPage() {
 
                 {/* Budget Range */}
                 <div className="space-y-4">
-                  <Label className="text-sm font-medium">Budget Preference</Label>
+                  <Label className="text-sm font-medium">
+                    Budget Preference
+                  </Label>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label
@@ -393,7 +405,8 @@ export default function SettingsPage() {
               <div className="p-4 rounded-lg bg-blue-500/5 border border-blue-500/20 space-y-2">
                 <p className="text-xs font-medium text-blue-700">Pro Tip</p>
                 <p className="text-xs text-muted-foreground">
-                  Your brand profile helps creators understand your requirements and match them accurately.
+                  Your brand profile helps creators understand your requirements
+                  and match them accurately.
                 </p>
               </div>
             </CardContent>

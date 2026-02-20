@@ -34,9 +34,13 @@ export default function RoleSelectPage() {
       (metaRole as "creator" | "brand") ||
       (localStorage.getItem("userRole") as "creator" | "brand" | null);
     if (savedRole === "creator") {
-      router.push(onboardingComplete ? "/dashboard/creator" : "/onboarding/creator");
+      router.push(
+        onboardingComplete ? "/dashboard/creator" : "/onboarding/creator"
+      );
     } else if (savedRole === "brand") {
-      router.push(onboardingComplete ? "/dashboard/brand" : "/onboarding/brand");
+      router.push(
+        onboardingComplete ? "/dashboard/brand" : "/onboarding/brand"
+      );
     }
   }, [user, router, loading]);
 

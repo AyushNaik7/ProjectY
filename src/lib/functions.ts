@@ -6,7 +6,7 @@
  * The frontend NEVER writes to the database directly (except through Supabase services).
  */
 
-import { supabase } from "./supabase";
+import { createClient } from "./supabase-browser";
 
 // --------------------------------------------------
 // Type definitions for request/response payloads
@@ -85,6 +85,7 @@ export interface MatchedCreator {
 // --------------------------------------------------
 
 async function getAccessToken(): Promise<string> {
+  const supabase = createClient();
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
   if (!token) throw new Error("Not authenticated");

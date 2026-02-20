@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-browser";
 import { callSendCollaborationRequest } from "@/lib/functions";
 import DashboardShell from "@/components/DashboardShell";
 import { CreatorCard } from "@/components/CreatorCard";
@@ -49,6 +49,7 @@ export default function FindCreatorsPage() {
     if (!user) return;
     (async () => {
       try {
+        const supabase = createClient();
         const { data, error } = await supabase
           .from("creators")
           .select(
@@ -80,7 +81,9 @@ export default function FindCreatorsPage() {
 
   const handleSendRequest = async (creatorId: string) => {
     if (!user || role !== "brand") {
-      alert("Only brands can send collaboration requests. Please log in as a brand.");
+      alert(
+        "Only brands can send collaboration requests. Please log in as a brand."
+      );
       return;
     }
     setSendingTo(creatorId);

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-browser";
 import { callUpdateRequestStatus } from "@/lib/functions";
 import DashboardShell from "@/components/DashboardShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -79,6 +79,7 @@ export default function RequestsPage() {
     try {
       // Fetch requests with joined data in a single query
       const col = role === "brand" ? "brand_id" : "creator_id";
+      const supabase = createClient();
       const { data: reqs, error } = await supabase
         .from("collaboration_requests")
         .select("*, campaigns(title, budget), brands(name), creators(name)")

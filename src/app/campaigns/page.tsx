@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-browser";
 import DashboardShell from "@/components/DashboardShell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -88,6 +88,7 @@ export default function CampaignsPage() {
         const from = currentPage * PAGE_SIZE;
         const to = from + PAGE_SIZE - 1;
 
+        const supabase = createClient();
         let query = supabase
           .from("campaigns")
           .select("*, brands(name)")
@@ -260,7 +261,10 @@ export default function CampaignsPage() {
 
                       {campaign.brandName && (
                         <p className="text-xs text-muted-foreground mb-3">
-                          by <span className="font-medium text-foreground">{campaign.brandName}</span>
+                          by{" "}
+                          <span className="font-medium text-foreground">
+                            {campaign.brandName}
+                          </span>
                         </p>
                       )}
 

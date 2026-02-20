@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/table";
 import { Plus, TrendingUp, Users, Zap, Brain, ChevronDown } from "lucide-react";
 import DashboardShell from "@/components/DashboardShell";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-browser";
 import {
   callGetCreatorsForCampaign,
   type MatchedCreator,
@@ -64,14 +64,24 @@ export default function BrandDashboard() {
     if (!user) return;
     (async () => {
       try {
-        const [{ data: brand }, { data: camps }] = await Promise.all([
-          supabase.from("brands").select("name").eq("id", user.id).single(),
-          supabase
-            .from("campaigns")
-            .select("*")
-            .eq("brand_id", user.id)
-            .order("created_at", { ascending: false }),
-        ]);
+        const supabase = createClient();
+        const [{ data: brand, error: brandError }, { data: camps }] =
+          await Promise.all([
+            supabase.from("brands").select("name").eq("id", user.id).single(),
+            supabase
+              .from("campaigns")
+              .select("*")
+              .eq("brand_id", user.id)
+              .order("created_at", { ascending: false }),
+          ]);
+
+        if (brandError || !brand) {
+          // No brand profile found - redirect to onboarding
+          console.log("No brand profile found, redirecting to onboarding");
+          router.push("/onboarding/brand");
+          return;
+        }
+
         const metaName =
           ((user.user_metadata as Record<string, unknown>)
             ?.brandName as string) ||
@@ -85,11 +95,12 @@ export default function BrandDashboard() {
         setCampaigns((camps as CampaignRow[]) || []);
       } catch (err) {
         console.error("Failed to load brand data:", err);
+        router.push("/onboarding/brand");
       } finally {
         setCampaignsLoading(false);
       }
     })();
-  }, [user]);
+  }, [user, router]);
 
   // Fetch AI-matched creators for selected campaign
   const fetchMatches = useCallback(async (campaignId: string) => {
