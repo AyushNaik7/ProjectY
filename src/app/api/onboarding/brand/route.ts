@@ -7,25 +7,22 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin, verifyAccessToken } from "@/lib/supabase-server";
-
-function getToken(req: NextRequest): string | null {
-  const auth = req.headers.get("authorization");
-  if (auth?.startsWith("Bearer ")) return auth.slice(7);
-  return null;
-}
+import { supabaseAdmin } from "@/lib/supabase-server";
+import { requireUser } from "@/lib/request-auth";
+import {
+  attachRequestId,
+  createRequestContext,
+  logRequestCompleted,
+} from "@/lib/request-context";
 
 export async function POST(req: NextRequest) {
-  try {
-    const token = getToken(req);
-    if (!token) {
-      return NextResponse.json(
-        { error: "Authentication required" },
-        { status: 401 }
-      );
-    }
+  const { requestId, startTimeMs, log } = createRequestContext(req);
 
-    const user = await verifyAccessToken(token);
+  try {
+    const auth = await requireUser(req);
+    if (auth.error) return attachRequestId(auth.error, requestId);
+
+    const user = auth.user;
     const uid = user.id;
     const body = await req.json();
     const { brandName, category, budgetMin, budgetMax, website, description } =
@@ -33,10 +30,11 @@ export async function POST(req: NextRequest) {
 
     const role = (user.user_metadata as Record<string, unknown>)?.role;
     if (role !== "brand") {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: "Only brands can complete brand onboarding" },
         { status: 403 }
       );
+      return attachRequestId(res, requestId);
     }
 
     // Validation
@@ -45,34 +43,39 @@ export async function POST(req: NextRequest) {
       typeof brandName !== "string" ||
       brandName.trim().length < 2
     ) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: "Brand name must be at least 2 characters" },
         { status: 400 }
       );
+      return attachRequestId(res, requestId);
     }
     if (!category || typeof category !== "string") {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: "Category is required" },
         { status: 400 }
       );
+      return attachRequestId(res, requestId);
     }
     if (typeof budgetMin !== "number" || budgetMin < 0) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: "Minimum budget must be a non-negative number" },
         { status: 400 }
       );
+      return attachRequestId(res, requestId);
     }
     if (typeof budgetMax !== "number" || budgetMax < 0) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: "Maximum budget must be a non-negative number" },
         { status: 400 }
       );
+      return attachRequestId(res, requestId);
     }
     if (budgetMax < budgetMin) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: "Maximum budget must be >= minimum budget" },
         { status: 400 }
       );
+      return attachRequestId(res, requestId);
     }
 
     // Upsert brand profile
@@ -86,7 +89,11 @@ export async function POST(req: NextRequest) {
     });
 
     if (brandError) {
-      return NextResponse.json({ error: brandError.message }, { status: 500 });
+      const res = NextResponse.json(
+        { error: brandError.message },
+        { status: 500 }
+      );
+      return attachRequestId(res, requestId);
     }
 
     // Mark onboarding complete in user metadata
@@ -99,13 +106,17 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({ success: true });
+    const res = NextResponse.json({ success: true });
+    logRequestCompleted(log, startTimeMs, 200);
+    return attachRequestId(res, requestId);
   } catch (error: unknown) {
     const err = error as { message?: string };
-    console.error("Error in brand onboarding:", err);
-    return NextResponse.json(
+    log.error({ err }, "onboarding.brand_failed");
+    const res = NextResponse.json(
       { error: err.message || "Internal server error" },
       { status: 500 }
     );
+    logRequestCompleted(log, startTimeMs, 500);
+    return attachRequestId(res, requestId);
   }
 }

@@ -9,32 +9,30 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin, verifyAccessToken } from "@/lib/supabase-server";
-
-function getToken(req: NextRequest): string | null {
-  const auth = req.headers.get("authorization");
-  if (auth?.startsWith("Bearer ")) return auth.slice(7);
-  return null;
-}
+import { supabaseAdmin } from "@/lib/supabase-server";
+import { requireUser } from "@/lib/request-auth";
+import {
+  attachRequestId,
+  createRequestContext,
+  logRequestCompleted,
+} from "@/lib/request-context";
 
 export async function POST(req: NextRequest) {
-  try {
-    const token = getToken(req);
-    if (!token) {
-      return NextResponse.json(
-        { error: "Authentication required" },
-        { status: 401 }
-      );
-    }
+  const { requestId, startTimeMs, log } = createRequestContext(req);
 
-    const user = await verifyAccessToken(token);
+  try {
+    const auth = await requireUser(req);
+    if (auth.error) return attachRequestId(auth.error, requestId);
+
+    const user = auth.user;
     const { role } = await req.json();
 
     if (!["creator", "brand"].includes(role)) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: "role (creator/brand) is required" },
         { status: 400 }
       );
+      return attachRequestId(res, requestId);
     }
 
     // Update user metadata with the selected role
@@ -43,16 +41,21 @@ export async function POST(req: NextRequest) {
     });
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      const res = NextResponse.json({ error: error.message }, { status: 500 });
+      return attachRequestId(res, requestId);
     }
 
-    return NextResponse.json({ success: true });
+    const res = NextResponse.json({ success: true });
+    logRequestCompleted(log, startTimeMs, 200);
+    return attachRequestId(res, requestId);
   } catch (error: unknown) {
     const err = error as { message?: string };
-    console.error("Error in initialize-user:", err);
-    return NextResponse.json(
+    log.error({ err }, "initialize_user.failed");
+    const res = NextResponse.json(
       { error: err.message || "Internal server error" },
       { status: 500 }
     );
+    logRequestCompleted(log, startTimeMs, 500);
+    return attachRequestId(res, requestId);
   }
 }

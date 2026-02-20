@@ -13,43 +13,42 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin, verifyAccessToken } from "@/lib/supabase-server";
+import { supabaseAdmin } from "@/lib/supabase-server";
 import { getVectorMatchedCreators } from "@/lib/vector-matching";
-
-function getToken(req: NextRequest): string | null {
-  const auth = req.headers.get("authorization");
-  if (auth?.startsWith("Bearer ")) return auth.slice(7);
-  return null;
-}
+import { requireUser } from "@/lib/request-auth";
+import {
+  attachRequestId,
+  createRequestContext,
+  logRequestCompleted,
+} from "@/lib/request-context";
 
 export async function POST(req: NextRequest) {
-  try {
-    const token = getToken(req);
-    if (!token) {
-      return NextResponse.json(
-        { error: "Authentication required" },
-        { status: 401 }
-      );
-    }
+  const { requestId, startTimeMs, log } = createRequestContext(req);
 
-    const user = await verifyAccessToken(token);
+  try {
+    const auth = await requireUser(req);
+    if (auth.error) return attachRequestId(auth.error, requestId);
+
+    const user = auth.user;
     const uid = user.id;
     const { campaignId } = await req.json();
 
     if (!campaignId) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: "Missing campaignId" },
         { status: 400 }
       );
+      return attachRequestId(res, requestId);
     }
 
     // Verify brand role
     const role = (user.user_metadata as Record<string, unknown>)?.role;
     if (role !== "brand") {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: "Only brands can view creator matches" },
         { status: 403 }
       );
+      return attachRequestId(res, requestId);
     }
 
     // Ensure brand owns the campaign
@@ -60,29 +59,35 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (campErr || !campaign) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: "Campaign not found" },
         { status: 404 }
       );
+      return attachRequestId(res, requestId);
     }
 
     if (campaign.brand_id !== uid) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: "Unauthorized access to campaign" },
         { status: 403 }
       );
+      return attachRequestId(res, requestId);
     }
 
     // Use vector matching with hybrid scoring (falls back to rule-based)
-    const creators = await getVectorMatchedCreators(campaignId);
+    const creators = await getVectorMatchedCreators(campaignId, log);
 
-    return NextResponse.json({ creators });
+    const res = NextResponse.json({ creators });
+    logRequestCompleted(log, startTimeMs, 200);
+    return attachRequestId(res, requestId);
   } catch (error: unknown) {
     const err = error as { message?: string };
-    console.error("Error fetching matched creators:", err);
-    return NextResponse.json(
+    log.error({ err }, "creators_for_campaign.failed");
+    const res = NextResponse.json(
       { error: err.message || "Internal server error" },
       { status: 500 }
     );
+    logRequestCompleted(log, startTimeMs, 500);
+    return attachRequestId(res, requestId);
   }
 }

@@ -12,45 +12,41 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { verifyAccessToken } from "@/lib/supabase-server";
+import { requireUser } from "@/lib/request-auth";
 import {
   searchCreatorsByQuery,
   searchCampaignsByQuery,
 } from "@/lib/vector-matching";
-
-function getToken(req: NextRequest): string | null {
-  const auth = req.headers.get("authorization");
-  if (auth?.startsWith("Bearer ")) return auth.slice(7);
-  return null;
-}
+import {
+  attachRequestId,
+  createRequestContext,
+  logRequestCompleted,
+} from "@/lib/request-context";
 
 export async function POST(req: NextRequest) {
-  try {
-    const token = getToken(req);
-    if (!token) {
-      return NextResponse.json(
-        { error: "Authentication required" },
-        { status: 401 }
-      );
-    }
+  const { requestId, startTimeMs, log } = createRequestContext(req);
 
-    await verifyAccessToken(token);
+  try {
+    const auth = await requireUser(req);
+    if (auth.error) return attachRequestId(auth.error, requestId);
 
     const body = await req.json();
     const { target, query, limit } = body;
 
     if (!target || !query) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: 'Missing "target" or "query" field' },
         { status: 400 }
       );
+      return attachRequestId(res, requestId);
     }
 
     if (typeof query !== "string" || query.trim().length < 3) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: "Query must be at least 3 characters" },
         { status: 400 }
       );
+      return attachRequestId(res, requestId);
     }
 
     const resultLimit = Math.min(Math.max(limit || 10, 1), 50);
@@ -58,24 +54,31 @@ export async function POST(req: NextRequest) {
     switch (target) {
       case "creators": {
         const results = await searchCreatorsByQuery(query.trim(), resultLimit);
-        return NextResponse.json({ creators: results });
+        const res = NextResponse.json({ creators: results });
+        logRequestCompleted(log, startTimeMs, 200);
+        return attachRequestId(res, requestId);
       }
       case "campaigns": {
         const results = await searchCampaignsByQuery(query.trim(), resultLimit);
-        return NextResponse.json({ campaigns: results });
+        const res = NextResponse.json({ campaigns: results });
+        logRequestCompleted(log, startTimeMs, 200);
+        return attachRequestId(res, requestId);
       }
       default:
-        return NextResponse.json(
+        const res = NextResponse.json(
           { error: `Invalid target: ${target}. Use "creators" or "campaigns"` },
           { status: 400 }
         );
+        return attachRequestId(res, requestId);
     }
   } catch (error: unknown) {
     const err = error as { message?: string };
-    console.error("Search error:", err);
-    return NextResponse.json(
+    log.error({ err }, "search.failed");
+    const res = NextResponse.json(
       { error: err.message || "Internal server error" },
       { status: 500 }
     );
+    logRequestCompleted(log, startTimeMs, 500);
+    return attachRequestId(res, requestId);
   }
 }

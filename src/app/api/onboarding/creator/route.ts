@@ -7,26 +7,27 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin, verifyAccessToken } from "@/lib/supabase-server";
+import { supabaseAdmin } from "@/lib/supabase-server";
 import { generateCreatorEmbedding } from "@/lib/embeddings";
-
-function getToken(req: NextRequest): string | null {
-  const auth = req.headers.get("authorization");
-  if (auth?.startsWith("Bearer ")) return auth.slice(7);
-  return null;
-}
+import { requireUser } from "@/lib/request-auth";
+import {
+  attachRequestId,
+  createRequestContext,
+  logRequestCompleted,
+} from "@/lib/request-context";
+import {
+  invalidateAllCampaignMatches,
+  invalidateCreatorMatchCache,
+} from "@/lib/cache";
 
 export async function POST(req: NextRequest) {
-  try {
-    const token = getToken(req);
-    if (!token) {
-      return NextResponse.json(
-        { error: "Authentication required" },
-        { status: 401 }
-      );
-    }
+  const { requestId, startTimeMs, log } = createRequestContext(req);
 
-    const user = await verifyAccessToken(token);
+  try {
+    const auth = await requireUser(req);
+    if (auth.error) return attachRequestId(auth.error, requestId);
+
+    const user = auth.user;
     const uid = user.id;
     const body = await req.json();
     const {
@@ -42,55 +43,66 @@ export async function POST(req: NextRequest) {
     // Verify role
     const role = (user.user_metadata as Record<string, unknown>)?.role;
     if (role !== "creator") {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: "Only creators can complete creator onboarding" },
         { status: 403 }
       );
+      return attachRequestId(res, requestId);
     }
 
     // Server-side validation
     if (!name || typeof name !== "string" || name.trim().length < 2) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: "Name must be at least 2 characters" },
         { status: 400 }
       );
+      return attachRequestId(res, requestId);
     }
     if (!instagramHandle || typeof instagramHandle !== "string") {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: "Instagram handle is required" },
         { status: 400 }
       );
+      return attachRequestId(res, requestId);
     }
     if (!niche || typeof niche !== "string") {
-      return NextResponse.json({ error: "Niche is required" }, { status: 400 });
+      const res = NextResponse.json(
+        { error: "Niche is required" },
+        { status: 400 }
+      );
+      return attachRequestId(res, requestId);
     }
     if (typeof followers !== "number" || followers < 0) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: "Followers must be a non-negative number" },
         { status: 400 }
       );
+      return attachRequestId(res, requestId);
     }
     if (typeof avgViews !== "number" || avgViews < 0) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: "Average views must be a non-negative number" },
         { status: 400 }
       );
+      return attachRequestId(res, requestId);
     }
     if (
       typeof engagementRate !== "number" ||
       engagementRate < 0 ||
       engagementRate > 100
     ) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: "Engagement rate must be between 0 and 100" },
         { status: 400 }
       );
+      return attachRequestId(res, requestId);
     }
     if (typeof minRatePrivate !== "number" || minRatePrivate < 0) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: "Minimum rate must be a non-negative number" },
         { status: 400 }
       );
+      return attachRequestId(res, requestId);
     }
 
     // Upsert creator profile
@@ -110,10 +122,11 @@ export async function POST(req: NextRequest) {
       });
 
     if (creatorError) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: creatorError.message },
         { status: 500 }
       );
+      return attachRequestId(res, requestId);
     }
 
     // Mark onboarding complete in user metadata
@@ -125,18 +138,25 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    await invalidateCreatorMatchCache(uid);
+    await invalidateAllCampaignMatches();
+
     // Generate AI embedding asynchronously (don't block the response)
     generateCreatorEmbedding(uid).catch((err) =>
       console.error("Background embedding generation failed:", err)
     );
 
-    return NextResponse.json({ success: true });
+    const res = NextResponse.json({ success: true });
+    logRequestCompleted(log, startTimeMs, 200);
+    return attachRequestId(res, requestId);
   } catch (error: unknown) {
     const err = error as { message?: string };
-    console.error("Error in creator onboarding:", err);
-    return NextResponse.json(
+    log.error({ err }, "onboarding.creator_failed");
+    const res = NextResponse.json(
       { error: err.message || "Internal server error" },
       { status: 500 }
     );
+    logRequestCompleted(log, startTimeMs, 500);
+    return attachRequestId(res, requestId);
   }
 }

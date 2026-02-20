@@ -6,26 +6,24 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin, verifyAccessToken } from "@/lib/supabase-server";
-
-function getToken(req: NextRequest): string | null {
-  const auth = req.headers.get("authorization");
-  if (auth?.startsWith("Bearer ")) return auth.slice(7);
-  return null;
-}
+import { supabaseAdmin } from "@/lib/supabase-server";
+import { requireUser } from "@/lib/request-auth";
+import {
+  attachRequestId,
+  createRequestContext,
+  logRequestCompleted,
+} from "@/lib/request-context";
+import { timedQuery } from "@/lib/db-timing";
 
 /* ── POST: brand sends a collaboration request ── */
 export async function POST(req: NextRequest) {
-  try {
-    const token = getToken(req);
-    if (!token) {
-      return NextResponse.json(
-        { error: "Authentication required" },
-        { status: 401 }
-      );
-    }
+  const { requestId, startTimeMs, log } = createRequestContext(req);
 
-    const user = await verifyAccessToken(token);
+  try {
+    const auth = await requireUser(req);
+    if (auth.error) return attachRequestId(auth.error, requestId);
+
+    const user = auth.user;
     const uid = user.id;
     const body = await req.json();
     const { creatorId, campaignId, message } = body;
@@ -33,38 +31,48 @@ export async function POST(req: NextRequest) {
     // Verify brand role
     const role = (user.user_metadata as Record<string, unknown>)?.role;
     if (role !== "brand") {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: "Only brands can send collaboration requests" },
         { status: 403 }
       );
+      return attachRequestId(res, requestId);
     }
 
     if (!creatorId) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: "creatorId is required" },
         { status: 400 }
       );
+      return attachRequestId(res, requestId);
     }
 
     // If campaignId provided, verify brand owns the campaign
     if (campaignId) {
-      const { data: campaign, error: campErr } = await supabaseAdmin
-        .from("campaigns")
-        .select("id, brand_id")
-        .eq("id", campaignId)
-        .single();
+      const { data: campaign, error: campErr } = await timedQuery(
+        log,
+        "campaigns.select_owner",
+        () =>
+          supabaseAdmin
+            .from("campaigns")
+            .select("id, brand_id")
+            .eq("id", campaignId)
+            .single(),
+        { brandId: uid }
+      );
 
       if (campErr || !campaign) {
-        return NextResponse.json(
+        const res = NextResponse.json(
           { error: "Campaign not found" },
           { status: 404 }
         );
+        return attachRequestId(res, requestId);
       }
       if (campaign.brand_id !== uid) {
-        return NextResponse.json(
+        const res = NextResponse.json(
           { error: "You don't own this campaign" },
           { status: 403 }
         );
+        return attachRequestId(res, requestId);
       }
     }
 
@@ -78,10 +86,11 @@ export async function POST(req: NextRequest) {
     if (campaignId) dupQuery.eq("campaign_id", campaignId);
     const { data: existing } = await dupQuery.limit(1);
     if (existing && existing.length > 0) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: "A pending request already exists for this creator" },
         { status: 409 }
       );
+      return attachRequestId(res, requestId);
     }
 
     // Build insert payload — campaignId may be null for a general request
@@ -93,99 +102,135 @@ export async function POST(req: NextRequest) {
     };
     if (campaignId) insertPayload.campaign_id = campaignId;
 
-    const { data, error } = await supabaseAdmin
-      .from("collaboration_requests")
-      .insert(insertPayload)
-      .select("id")
-      .single();
+    const { data, error } = await timedQuery(
+      log,
+      "collaboration_requests.insert",
+      () =>
+        supabaseAdmin
+          .from("collaboration_requests")
+          .insert(insertPayload)
+          .select("id")
+          .single(),
+      { brandId: uid }
+    );
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      const res = NextResponse.json({ error: error.message }, { status: 500 });
+      return attachRequestId(res, requestId);
     }
 
-    return NextResponse.json({ success: true, requestId: data.id });
+    const res = NextResponse.json({ success: true, requestId: data.id });
+    logRequestCompleted(log, startTimeMs, 200);
+    return attachRequestId(res, requestId);
   } catch (error: unknown) {
     const err = error as { message?: string };
-    console.error("Error creating request:", err);
-    return NextResponse.json(
+    log.error({ err }, "requests.create_failed");
+    const res = NextResponse.json(
       { error: err.message || "Internal server error" },
       { status: 500 }
     );
+    logRequestCompleted(log, startTimeMs, 500);
+    return attachRequestId(res, requestId);
   }
 }
 
 /* ── PATCH: creator accepts/rejects a collaboration request ── */
 export async function PATCH(req: NextRequest) {
-  try {
-    const token = getToken(req);
-    if (!token) {
-      return NextResponse.json(
-        { error: "Authentication required" },
-        { status: 401 }
-      );
-    }
+  const { requestId, startTimeMs, log } = createRequestContext(req);
 
-    const user = await verifyAccessToken(token);
+  try {
+    const auth = await requireUser(req);
+    if (auth.error) return attachRequestId(auth.error, requestId);
+
+    const user = auth.user;
     const uid = user.id;
     const body = await req.json();
-    const { requestId, status } = body;
+    const { requestId: bodyRequestId, status } = body;
 
     // Verify creator role
     const role = (user.user_metadata as Record<string, unknown>)?.role;
     if (role !== "creator") {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: "Only creators can respond to requests" },
         { status: 403 }
       );
+      return attachRequestId(res, requestId);
     }
 
-    if (!requestId || !["accepted", "rejected"].includes(status)) {
-      return NextResponse.json(
+    if (!bodyRequestId || !["accepted", "rejected"].includes(status)) {
+      const res = NextResponse.json(
         { error: "requestId and status (accepted/rejected) required" },
         { status: 400 }
       );
+      return attachRequestId(res, requestId);
     }
 
     // Fetch and validate the request
-    const { data: requestData, error: fetchErr } = await supabaseAdmin
-      .from("collaboration_requests")
-      .select("*")
-      .eq("id", requestId)
-      .single();
+    const { data: requestData, error: fetchErr } = await timedQuery(
+      log,
+      "collaboration_requests.select_by_id",
+      () =>
+        supabaseAdmin
+          .from("collaboration_requests")
+          .select("*")
+          .eq("id", bodyRequestId)
+          .single(),
+      { creatorId: uid }
+    );
 
     if (fetchErr || !requestData) {
-      return NextResponse.json({ error: "Request not found" }, { status: 404 });
+      const res = NextResponse.json(
+        { error: "Request not found" },
+        { status: 404 }
+      );
+      return attachRequestId(res, requestId);
     }
 
     // Verify this creator owns the request
     if (requestData.creator_id !== uid) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+      const res = NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+      return attachRequestId(res, requestId);
     }
 
     // Only pending requests can be updated
     if (requestData.status !== "pending") {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: `Request is already ${requestData.status}` },
         { status: 400 }
       );
+      return attachRequestId(res, requestId);
     }
 
-    const { error: updateErr } = await supabaseAdmin
-      .from("collaboration_requests")
-      .update({ status, updated_at: new Date().toISOString() })
-      .eq("id", requestId);
+    const { error: updateErr } = await timedQuery(
+      log,
+      "collaboration_requests.update_status",
+      () =>
+        supabaseAdmin
+          .from("collaboration_requests")
+          .update({ status, updated_at: new Date().toISOString() })
+          .eq("id", bodyRequestId),
+      { creatorId: uid }
+    );
 
     if (updateErr) {
-      return NextResponse.json({ error: updateErr.message }, { status: 500 });
+      const res = NextResponse.json(
+        { error: updateErr.message },
+        { status: 500 }
+      );
+      return attachRequestId(res, requestId);
     }
 
-    return NextResponse.json({ success: true });
+    const res = NextResponse.json({ success: true });
+    logRequestCompleted(log, startTimeMs, 200);
+    return attachRequestId(res, requestId);
   } catch (error: unknown) {
     const err = error as { message?: string };
-    console.error("Error updating request:", err);
-    return NextResponse.json(
+    log.error({ err }, "requests.update_failed");
+    const res = NextResponse.json(
       { error: err.message || "Internal server error" },
       { status: 500 }
     );
+    logRequestCompleted(log, startTimeMs, 500);
+    return attachRequestId(res, requestId);
   }
 }

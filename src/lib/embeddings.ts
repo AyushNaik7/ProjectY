@@ -9,6 +9,8 @@
  */
 
 import { supabaseAdmin } from "@/lib/supabase-server";
+import { logger } from "@/lib/logger";
+import { estimateEmbeddingCost } from "@/lib/embedding-utils";
 
 // ============================================================
 // Configuration
@@ -80,6 +82,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     try {
+      const startedAt = Date.now();
       const response = await fetch("https://api.openai.com/v1/embeddings", {
         method: "POST",
         headers: {
@@ -105,6 +108,20 @@ export async function generateEmbedding(text: string): Promise<number[]> {
       }
 
       const data: EmbeddingResponse = await response.json();
+      const durationMs = Date.now() - startedAt;
+      const tokens = data.usage?.total_tokens ?? 0;
+
+      logger.info(
+        {
+          durationMs,
+          model: EMBEDDING_MODEL,
+          promptTokens: data.usage?.prompt_tokens ?? 0,
+          totalTokens: tokens,
+          estimatedCostUsd: estimateEmbeddingCost(tokens),
+        },
+        "openai.embedding_call"
+      );
+
       return data.data[0].embedding;
     } catch (err) {
       lastError = err as Error;

@@ -12,47 +12,48 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { verifyAccessToken } from "@/lib/supabase-server";
 import { getVectorMatchedCampaigns } from "@/lib/vector-matching";
-
-function getToken(req: NextRequest): string | null {
-  const auth = req.headers.get("authorization");
-  if (auth?.startsWith("Bearer ")) return auth.slice(7);
-  return null;
-}
+import { requireUser } from "@/lib/request-auth";
+import {
+  attachRequestId,
+  createRequestContext,
+  logRequestCompleted,
+} from "@/lib/request-context";
 
 export async function POST(req: NextRequest) {
-  try {
-    const token = getToken(req);
-    if (!token) {
-      return NextResponse.json(
-        { error: "Authentication required" },
-        { status: 401 }
-      );
-    }
+  const { requestId, startTimeMs, log } = createRequestContext(req);
 
-    const user = await verifyAccessToken(token);
+  try {
+    const auth = await requireUser(req);
+    if (auth.error) return attachRequestId(auth.error, requestId);
+
+    const user = auth.user;
     const uid = user.id;
 
     // Verify creator role
     const role = (user.user_metadata as Record<string, unknown>)?.role;
     if (role !== "creator") {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: "Only creators can view matches" },
         { status: 403 }
       );
+      return attachRequestId(res, requestId);
     }
 
     // Use vector matching with hybrid scoring (falls back to rule-based)
-    const campaigns = await getVectorMatchedCampaigns(uid);
+    const campaigns = await getVectorMatchedCampaigns(uid, log);
 
-    return NextResponse.json({ campaigns });
+    const res = NextResponse.json({ campaigns });
+    logRequestCompleted(log, startTimeMs, 200);
+    return attachRequestId(res, requestId);
   } catch (error: unknown) {
     const err = error as { message?: string };
-    console.error("Error fetching matched campaigns:", err);
-    return NextResponse.json(
+    log.error({ err }, "matched_campaigns.failed");
+    const res = NextResponse.json(
       { error: err.message || "Internal server error" },
       { status: 500 }
     );
+    logRequestCompleted(log, startTimeMs, 500);
+    return attachRequestId(res, requestId);
   }
 }
