@@ -37,21 +37,24 @@ export function SendRequestDialog({
         <DialogHeader>
           <DialogTitle>Send Collaboration Request</DialogTitle>
           <DialogDescription>
-            You're about to send a collaboration request to{" "}
-            <span className="font-semibold text-foreground">{creatorName}</span>.
+            You&apos;re about to send a collaboration request to{" "}
+            <span className="font-semibold text-foreground">{creatorName}</span>
+            .
           </DialogDescription>
         </DialogHeader>
 
         {campaignTitle && (
           <div className="py-4 px-3 rounded-lg bg-muted/50">
             <p className="text-xs text-muted-foreground mb-1">Campaign:</p>
-            <p className="text-sm font-medium text-foreground">{campaignTitle}</p>
+            <p className="text-sm font-medium text-foreground">
+              {campaignTitle}
+            </p>
           </div>
         )}
 
         <p className="text-sm text-muted-foreground">
-          Once they accept your request, you'll be able to continue discussions on
-          WhatsApp. This helps ensure genuine collaborations.
+          Once they accept your request, you&apos;ll be able to continue
+          discussions on WhatsApp. This helps ensure genuine collaborations.
         </p>
 
         <DialogFooter>
