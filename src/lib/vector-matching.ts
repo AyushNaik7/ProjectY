@@ -14,13 +14,14 @@ import {
   buildCreatorEmbeddingText,
   buildCampaignEmbeddingText,
 } from "@/lib/embeddings";
-import { computeMatchScore, type CreatorData, type CampaignData } from "@/lib/server-matching";
+import {
+  computeMatchScore,
+  type CreatorData,
+  type CampaignData,
+} from "@/lib/server-matching";
 import { computeHybridScore } from "@/lib/scoring";
 import { semanticScoreFromSimilarity } from "@/lib/embedding-utils";
-import {
-  cacheKeys,
-  getOrSetJson,
-} from "@/lib/cache";
+import { cacheKeys, getOrSetJson } from "@/lib/cache";
 import { timedQuery } from "@/lib/db-timing";
 import { logger } from "@/lib/logger";
 
@@ -108,11 +109,7 @@ export async function getVectorMatchedCampaigns(
       log,
       "creators.select",
       () =>
-        supabaseAdmin
-          .from("creators")
-          .select("*")
-          .eq("id", creatorId)
-          .single(),
+        supabaseAdmin.from("creators").select("*").eq("id", creatorId).single(),
       { creatorId }
     );
 
@@ -350,32 +347,32 @@ export async function getVectorMatchedCreators(
       { campaignId }
     );
 
-  if (creatorsErr) throw new Error(creatorsErr.message);
+    if (creatorsErr) throw new Error(creatorsErr.message);
 
     const creators = (creatorsData || []) as CreatorRow[];
     const results: VectorMatchedCreator[] = creators.map((c) => {
-    const creatorData: CreatorData = {
-      niche: c.niche,
-      followers: c.instagram_followers || 0,
-      avgViews: c.avg_views || 0,
-      engagementRate: c.instagram_engagement || 0,
-      minRatePrivate: c.min_rate_private || 0,
-      verified: c.verified || false,
-    };
-    const match = computeMatchScore(creatorData, campaignData);
-    return {
-      uid: c.id,
-      name: c.name,
-      instagramHandle: c.instagram_handle || "",
-      niche: c.niche,
-      followers: c.instagram_followers || 0,
-      avgViews: c.avg_views || 0,
-      engagementRate: c.instagram_engagement || 0,
-      verified: c.verified || false,
-      matchScore: match.score,
-      semanticScore: 0,
-      matchReasons: match.reasons,
-    };
+      const creatorData: CreatorData = {
+        niche: c.niche,
+        followers: c.instagram_followers || 0,
+        avgViews: c.avg_views || 0,
+        engagementRate: c.instagram_engagement || 0,
+        minRatePrivate: c.min_rate_private || 0,
+        verified: c.verified || false,
+      };
+      const match = computeMatchScore(creatorData, campaignData);
+      return {
+        uid: c.id,
+        name: c.name,
+        instagramHandle: c.instagram_handle || "",
+        niche: c.niche,
+        followers: c.instagram_followers || 0,
+        avgViews: c.avg_views || 0,
+        engagementRate: c.instagram_engagement || 0,
+        verified: c.verified || false,
+        matchScore: match.score,
+        semanticScore: 0,
+        matchReasons: match.reasons,
+      };
     });
 
     return results

@@ -1,4 +1,8 @@
-import { NICHE_GROUPS, type CreatorData, type CampaignData } from "@/lib/server-matching";
+import {
+  NICHE_GROUPS,
+  type CreatorData,
+  type CampaignData,
+} from "@/lib/server-matching";
 import { semanticScoreFromSimilarity } from "@/lib/embedding-utils";
 
 export const HYBRID_WEIGHTS = {
