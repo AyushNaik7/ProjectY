@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Bookmark } from 'lucide-react';
 
 interface CampaignCardProps {
   id: string;
@@ -17,6 +17,8 @@ interface CampaignCardProps {
   matchScore: number;
   onApply: () => void;
   index: number;
+  isSaved?: boolean;
+  onToggleSave?: () => void;
 }
 
 export function CampaignCard({
@@ -30,6 +32,8 @@ export function CampaignCard({
   matchScore,
   onApply,
   index,
+  isSaved = false,
+  onToggleSave,
 }: CampaignCardProps) {
   return (
     <motion.div
@@ -50,8 +54,22 @@ export function CampaignCard({
               </div>
               <p className="text-sm text-muted-foreground">{deliverable}</p>
             </div>
-            <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-primary/10">
-              <span className="text-sm font-bold text-primary">{matchScore}%</span>
+            <div className="flex items-center gap-2">
+              {onToggleSave && (
+                <button
+                  onClick={onToggleSave}
+                  className={`p-2 rounded-lg transition-colors ${
+                    isSaved
+                      ? 'bg-primary text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
+                </button>
+              )}
+              <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-primary/10">
+                <span className="text-sm font-bold text-primary">{matchScore}%</span>
+              </div>
             </div>
           </div>
 
