@@ -15,19 +15,17 @@ import {
   Plus,
   User,
   Users,
+  Settings,
+  Bookmark,
 } from "lucide-react";
 
 interface DashboardShellProps {
   children: React.ReactNode;
-  role: "creator" | "brand";
 }
 
-export default function DashboardShell({
-  children,
-  role,
-}: DashboardShellProps) {
+export default function DashboardShell({ children }: DashboardShellProps) {
   const router = useRouter();
-  const { signOut } = useSupabaseAuth();
+  const { signOut, role } = useSupabaseAuth();
 
   const handleSignOut = async () => {
     await signOut();
@@ -46,6 +44,7 @@ export default function DashboardShell({
           { href: "/campaigns/new", label: "New Campaign", icon: Plus },
           { href: "/creators", label: "Find Creators", icon: Users },
           { href: "/requests", label: "Requests", icon: Send },
+          { href: "/saved/creators", label: "Saved", icon: Bookmark },
         ]
       : [
           {
@@ -55,6 +54,7 @@ export default function DashboardShell({
           },
           { href: "/campaigns", label: "Find Campaigns", icon: Megaphone },
           { href: "/requests", label: "My Requests", icon: Send },
+          { href: "/saved/campaigns", label: "Saved", icon: Bookmark },
         ];
 
   return (
@@ -88,6 +88,12 @@ export default function DashboardShell({
 
           <div className="flex items-center gap-3">
             <ThemeToggle />
+            <Link href="/settings">
+              <Button variant="ghost" size="sm" className="gap-2">
+                <Settings className="w-4 h-4" />
+                <span className="hidden sm:inline">Settings</span>
+              </Button>
+            </Link>
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary text-sm">
               <User className="w-3.5 h-3.5" />
               <span className="text-muted-foreground capitalize">{role}</span>
