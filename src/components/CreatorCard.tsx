@@ -48,72 +48,132 @@ export function CreatorCard({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.1, duration: 0.4 }}
-      whileHover={{ y: -4 }}
+      transition={{ 
+        delay: index * 0.1, 
+        duration: 0.4,
+        ease: [0.25, 0.1, 0.25, 1]
+      }}
+      whileHover={{ 
+        y: -8,
+        transition: { duration: 0.2, ease: "easeOut" }
+      }}
     >
-      <Card className="overflow-hidden border-0 shadow-sm hover:shadow-md transition-shadow">
-        <CardContent className="p-6">
-          <div className="mb-4">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="text-lg font-semibold text-foreground">{name}</h3>
-                  {verified && (
-                    <CheckCircle className="w-4 h-4 text-blue-600 fill-current" />
-                  )}
+      <Card className="overflow-hidden border-0 shadow-sm hover:shadow-xl transition-all duration-300 group">
+        <CardContent className="p-6 relative">
+          {/* Animated gradient overlay on hover */}
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          
+          <div className="relative z-10">
+            <div className="mb-4">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <motion.h3 
+                      className="text-lg font-semibold text-foreground"
+                      whileHover={{ x: 2 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {name}
+                    </motion.h3>
+                    {verified && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                      >
+                        <CheckCircle className="w-4 h-4 text-blue-600 fill-current" />
+                      </motion.div>
+                    )}
+                  </div>
+                  <Badge variant="secondary" className="text-xs mt-1">
+                    {niche}
+                  </Badge>
                 </div>
-                <Badge variant="secondary" className="text-xs mt-1">
-                  {niche}
-                </Badge>
+                {onToggleSave && (
+                  <motion.button
+                    onClick={onToggleSave}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    className={`p-2 rounded-lg transition-colors ${
+                      isSaved
+                        ? 'bg-primary text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    <motion.div
+                      animate={isSaved ? { scale: [1, 1.2, 1] } : {}}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
+                    </motion.div>
+                  </motion.button>
+                )}
               </div>
-              {onToggleSave && (
-                <button
-                  onClick={onToggleSave}
-                  className={`p-2 rounded-lg transition-colors ${
-                    isSaved
-                      ? 'bg-primary text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 mb-6 py-4 border-y border-border/50">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.2 }}
+              >
+                <p className="text-xs text-muted-foreground mb-1">Followers</p>
+                <p className="text-sm font-semibold text-foreground">
+                  {formatNumber(followers)}
+                </p>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.2 }}
+              >
+                <p className="text-xs text-muted-foreground mb-1">Engagement</p>
+                <p className="text-sm font-semibold text-primary">{engagement}%</p>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.2 }}
+              >
+                <p className="text-xs text-muted-foreground mb-1">Avg Views</p>
+                <p className="text-sm font-semibold text-foreground">
+                  {formatNumber(avgViews)}
+                </p>
+              </motion.div>
+            </div>
+
+            <div className="flex gap-2">
+              <Link href={profileUrl} className="flex-1">
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
-                </button>
-              )}
+                  <Button variant="outline" className="w-full gap-2 group/btn">
+                    View Profile
+                    <motion.div
+                      animate={{ x: [0, 4, 0] }}
+                      transition={{ 
+                        duration: 1.5, 
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    >
+                      <ArrowRight className="w-4 h-4" />
+                    </motion.div>
+                  </Button>
+                </motion.div>
+              </Link>
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="flex-1"
+              >
+                <Button
+                  onClick={onSendRequest}
+                  className="w-full gap-2 bg-primary hover:bg-primary/90"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  Request
+                </Button>
+              </motion.div>
             </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-3 mb-6 py-4 border-y border-border/50">
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">Followers</p>
-              <p className="text-sm font-semibold text-foreground">
-                {formatNumber(followers)}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">Engagement</p>
-              <p className="text-sm font-semibold text-primary">{engagement}%</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">Avg Views</p>
-              <p className="text-sm font-semibold text-foreground">
-                {formatNumber(avgViews)}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex gap-2">
-            <Link href={profileUrl} className="flex-1">
-              <Button variant="outline" className="w-full gap-2">
-                View Profile
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </Link>
-            <Button
-              onClick={onSendRequest}
-              className="flex-1 gap-2 bg-primary hover:bg-primary/90"
-            >
-              <MessageSquare className="w-4 h-4" />
-              Request
-            </Button>
           </div>
         </CardContent>
       </Card>
