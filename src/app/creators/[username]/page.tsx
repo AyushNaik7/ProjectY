@@ -244,8 +244,7 @@ export default function CreatorMediaKit() {
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:opacity-90 transition"
                   >
-                    <Instagram className="w-5 h-5" />
-                    @{creator.instagram_handle}
+                    <Instagram className="w-5 h-5" />@{creator.instagram_handle}
                   </a>
                 )}
                 {creator.youtube_handle && (
@@ -255,8 +254,7 @@ export default function CreatorMediaKit() {
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:opacity-90 transition"
                   >
-                    <Youtube className="w-5 h-5" />
-                    @{creator.youtube_handle}
+                    <Youtube className="w-5 h-5" />@{creator.youtube_handle}
                   </a>
                 )}
               </div>
@@ -265,34 +263,44 @@ export default function CreatorMediaKit() {
         </motion.div>
 
         {/* Past Collaborations */}
-        {creator.past_collaborations && creator.past_collaborations.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <Card>
-              <CardContent className="p-6">
-                <h2 className="text-xl font-bold mb-4">Past Collaborations</h2>
-                <div className="flex flex-wrap gap-2">
-                  {creator.past_collaborations.map((brand, index) => (
-                    <Badge key={index} variant="secondary" className="text-sm">
-                      {brand}
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
+        {creator.past_collaborations &&
+          creator.past_collaborations.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <Card>
+                <CardContent className="p-6">
+                  <h2 className="text-xl font-bold mb-4">
+                    Past Collaborations
+                  </h2>
+                  <div className="flex flex-wrap gap-2">
+                    {creator.past_collaborations.map((brand, index) => (
+                      <Badge
+                        key={index}
+                        variant="secondary"
+                        className="text-sm"
+                      >
+                        {brand}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
       </div>
 
       {/* Send Request Dialog */}
-      {showRequestDialog && creator && (
+      {creator && (
         <SendRequestDialog
-          creatorId={creator.id}
+          open={showRequestDialog}
+          onOpenChange={setShowRequestDialog}
           creatorName={creator.name}
-          onClose={() => setShowRequestDialog(false)}
+          onConfirm={async () => {
+            // TODO: implement actual request sending logic
+          }}
         />
       )}
     </div>

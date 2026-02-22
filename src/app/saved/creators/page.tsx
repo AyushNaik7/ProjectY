@@ -29,10 +29,12 @@ export default function SavedCreatorsPage() {
     try {
       const { data, error } = await supabase
         .from("saved_creators")
-        .select(`
+        .select(
+          `
           creator_id,
           creators (*)
-        `)
+        `
+        )
         .eq("brand_id", user?.id);
 
       if (error) throw error;
@@ -78,7 +80,7 @@ export default function SavedCreatorsPage() {
           <div>
             <h1 className="text-3xl font-bold">Saved Creators</h1>
             <p className="text-muted-foreground">
-              Creators you've bookmarked for collaboration
+              {"Creators you've bookmarked for collaboration"}
             </p>
           </div>
         </div>
@@ -98,18 +100,27 @@ export default function SavedCreatorsPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {creators.map((creator, index) => (
-              <motion.div
+              <CreatorCard
                 key={creator.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <CreatorCard
-                  creator={creator}
-                  isSaved={true}
-                  onToggleSave={() => handleUnsave(creator.id)}
-                />
-              </motion.div>
+                id={creator.id}
+                name={creator.name || "Unknown Creator"}
+                niche={creator.niche || "General"}
+                followers={
+                  creator.instagram_followers || creator.youtube_followers || 0
+                }
+                engagement={
+                  creator.instagram_engagement ||
+                  creator.youtube_engagement ||
+                  0
+                }
+                avgViews={creator.avg_views || 0}
+                verified={creator.verified || false}
+                username={creator.username}
+                onSendRequest={() => {}}
+                index={index}
+                isSaved={true}
+                onToggleSave={() => handleUnsave(creator.id)}
+              />
             ))}
           </div>
         )}

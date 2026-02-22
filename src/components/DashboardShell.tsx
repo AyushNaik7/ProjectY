@@ -21,6 +21,7 @@ import {
 
 interface DashboardShellProps {
   children: React.ReactNode;
+  role?: string;
 }
 
 export default function DashboardShell({ children }: DashboardShellProps) {

@@ -29,10 +29,12 @@ export default function SavedCampaignsPage() {
     try {
       const { data, error } = await supabase
         .from("saved_campaigns")
-        .select(`
+        .select(
+          `
           campaign_id,
           campaigns (*)
-        `)
+        `
+        )
         .eq("creator_id", user?.id);
 
       if (error) throw error;
@@ -78,7 +80,7 @@ export default function SavedCampaignsPage() {
           <div>
             <h1 className="text-3xl font-bold">Saved Campaigns</h1>
             <p className="text-muted-foreground">
-              Campaigns you've bookmarked for later
+              {"Campaigns you've bookmarked for later"}
             </p>
           </div>
         </div>
@@ -92,24 +94,29 @@ export default function SavedCampaignsPage() {
             <Bookmark className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
             <h2 className="text-xl font-semibold mb-2">No saved campaigns</h2>
             <p className="text-muted-foreground">
-              Start bookmarking campaigns you're interested in!
+              {"Start bookmarking campaigns you're interested in!"}
             </p>
           </motion.div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {campaigns.map((campaign, index) => (
-              <motion.div
+              <CampaignCard
                 key={campaign.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <CampaignCard
-                  campaign={campaign}
-                  isSaved={true}
-                  onToggleSave={() => handleUnsave(campaign.id)}
-                />
-              </motion.div>
+                id={campaign.id}
+                brandName={campaign.title || "Unknown Brand"}
+                category={campaign.niche || "General"}
+                deliverable={
+                  campaign.deliverable_type || campaign.description || ""
+                }
+                budgetMin={campaign.budget || 0}
+                budgetMax={campaign.budget || 0}
+                timeline={campaign.timeline || ""}
+                matchScore={0}
+                onApply={() => {}}
+                index={index}
+                isSaved={true}
+                onToggleSave={() => handleUnsave(campaign.id)}
+              />
             ))}
           </div>
         )}
