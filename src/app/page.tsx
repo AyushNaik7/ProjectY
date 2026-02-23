@@ -133,6 +133,17 @@ export default function HomePage() {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-purple-50" />
+        <motion.div
+          animate={{
+            background: [
+              "radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.05) 0%, transparent 50%)",
+              "radial-gradient(circle at 100% 100%, rgba(147, 51, 234, 0.05) 0%, transparent 50%)",
+              "radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.05) 0%, transparent 50%)",
+            ],
+          }}
+          transition={{ duration: 8, repeat: Infinity }}
+          className="absolute inset-0"
+        />
         <div className="relative max-w-7xl mx-auto px-6 pt-20 pb-28">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -140,41 +151,74 @@ export default function HomePage() {
             transition={{ duration: 0.6 }}
             className="text-center max-w-4xl mx-auto"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-sm font-medium mb-8">
-              <Sparkles className="w-4 h-4" />
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-sm font-medium mb-8"
+            >
+              <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity }}>
+                <Sparkles className="w-4 h-4" />
+              </motion.div>
               India&apos;s #1 Creator-Brand Matching Platform
-            </div>
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-slate-900 mb-6 leading-[1.1] tracking-tight">
+            </motion.div>
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.2 }}
+              className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-slate-900 mb-6 leading-[1.1] tracking-tight"
+            >
               Where Brands Meet{" "}
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <motion.span
+                initial={{ backgroundPosition: "0% 50%" }}
+                animate={{ backgroundPosition: "100% 50%" }}
+                transition={{ duration: 3, repeat: Infinity }}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent bg-[length:200%_auto]"
+              >
                 Creators
-              </span>
-            </h1>
-            <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed mb-10">
+              </motion.span>
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.3 }}
+              className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed mb-10"
+            >
               Connect with the perfect partners using AI-powered matching.
               Launch campaigns, collaborate authentically, and grow &mdash; all
               in one platform.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/signup">
-                <Button
-                  size="lg"
-                  className="gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-base font-semibold shadow-lg shadow-blue-600/20"
-                >
-                  Start Free Today
-                  <ArrowRight className="w-5 h-5" />
-                </Button>
-              </Link>
-              <Link href="/login">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="gap-2 border-slate-300 text-slate-700 px-8 py-3 text-base font-semibold"
-                >
-                  I Already Have an Account
-                </Button>
-              </Link>
-            </div>
+            </motion.p>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.4 }}
+              className="flex flex-col sm:flex-row items-center justify-center gap-4"
+            >
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Link href="/signup">
+                  <Button
+                    size="lg"
+                    className="gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-base font-semibold shadow-lg shadow-blue-600/20 transition-all duration-300"
+                  >
+                    Start Free Today
+                    <motion.div animate={{ x: [0, 5, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
+                      <ArrowRight className="w-5 h-5" />
+                    </motion.div>
+                  </Button>
+                </Link>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Link href="/login">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="gap-2 border-slate-300 text-slate-700 px-8 py-3 text-base font-semibold hover:bg-slate-50"
+                  >
+                    I Already Have an Account
+                  </Button>
+                </Link>
+              </motion.div>
+            </motion.div>
           </motion.div>
         </div>
       </section>
@@ -186,15 +230,21 @@ export default function HomePage() {
             {stats.map((stat, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
+                transition={{ delay: i * 0.1, duration: 0.5 }}
+                whileHover={{ scale: 1.05 }}
                 className="text-center"
               >
-                <p className="text-3xl font-extrabold text-slate-900">
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  transition={{ delay: i * 0.1 + 0.2 }}
+                  className="text-3xl font-extrabold text-slate-900"
+                >
                   {stat.value}
-                </p>
+                </motion.p>
                 <p className="text-sm text-slate-500 mt-1">{stat.label}</p>
               </motion.div>
             ))}
@@ -203,7 +253,7 @@ export default function HomePage() {
       </section>
 
       {/* How It Works */}
-      <section className="py-24">
+      <section className="py-24 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -211,10 +261,10 @@ export default function HomePage() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl font-bold text-slate-900 mb-4">
+            <h2 className="text-4xl font-bold text-white mb-4">
               How Collabo Works
             </h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            <p className="text-lg text-slate-300 max-w-2xl mx-auto">
               Three simple steps to start collaborating
             </p>
           </motion.div>
@@ -223,13 +273,21 @@ export default function HomePage() {
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              whileHover={{ scale: 1.02, y: -8 }}
             >
-              <Card className="border border-slate-200 shadow-sm h-full">
+              <Card className="border border-slate-700 bg-slate-800/50 backdrop-blur h-full hover:border-blue-500/50 transition-all duration-300">
                 <CardContent className="p-8">
-                  <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center mb-6">
-                    <Users className="w-7 h-7 text-blue-600" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-slate-900 mb-4">
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    whileInView={{ scale: 1, opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.1 }}
+                    className="w-14 h-14 rounded-2xl bg-blue-500/20 flex items-center justify-center mb-6 border border-blue-500/30"
+                  >
+                    <Users className="w-7 h-7 text-blue-400" />
+                  </motion.div>
+                  <h3 className="text-2xl font-bold text-white mb-4">
                     For Creators
                   </h3>
                   <div className="space-y-4">
@@ -238,18 +296,28 @@ export default function HomePage() {
                       "Get AI-matched campaigns",
                       "Apply & earn",
                     ].map((step, j) => (
-                      <div key={j} className="flex items-start gap-3">
-                        <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <span className="text-xs font-bold text-blue-600">
+                      <motion.div
+                        key={j}
+                        initial={{ opacity: 0, x: -20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.2 + j * 0.1 }}
+                        className="flex items-start gap-3"
+                      >
+                        <motion.div
+                          whileHover={{ scale: 1.15 }}
+                          className="w-7 h-7 rounded-full bg-blue-500/30 flex items-center justify-center flex-shrink-0 mt-0.5 border border-blue-400/50"
+                        >
+                          <span className="text-xs font-bold text-blue-300">
                             {j + 1}
                           </span>
-                        </div>
-                        <p className="font-medium text-slate-900">{step}</p>
-                      </div>
+                        </motion.div>
+                        <p className="font-medium text-slate-200">{step}</p>
+                      </motion.div>
                     ))}
                   </div>
                   <Link href="/signup" className="block mt-6">
-                    <Button className="w-full gap-2 bg-blue-600 hover:bg-blue-700">
+                    <Button className="w-full gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium transition-all duration-300 hover:shadow-lg hover:shadow-blue-600/50">
                       Join as Creator <ArrowRight className="w-4 h-4" />
                     </Button>
                   </Link>
@@ -260,13 +328,21 @@ export default function HomePage() {
               initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              whileHover={{ scale: 1.02, y: -8 }}
             >
-              <Card className="border border-slate-200 shadow-sm h-full">
+              <Card className="border border-slate-700 bg-slate-800/50 backdrop-blur h-full hover:border-purple-500/50 transition-all duration-300">
                 <CardContent className="p-8">
-                  <div className="w-14 h-14 rounded-2xl bg-purple-50 flex items-center justify-center mb-6">
-                    <Briefcase className="w-7 h-7 text-purple-600" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-slate-900 mb-4">
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    whileInView={{ scale: 1, opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.1 }}
+                    className="w-14 h-14 rounded-2xl bg-purple-500/20 flex items-center justify-center mb-6 border border-purple-500/30"
+                  >
+                    <Briefcase className="w-7 h-7 text-purple-400" />
+                  </motion.div>
+                  <h3 className="text-2xl font-bold text-white mb-4">
                     For Brands
                   </h3>
                   <div className="space-y-4">
@@ -275,18 +351,28 @@ export default function HomePage() {
                       "Discover matched creators",
                       "Collaborate & grow",
                     ].map((step, j) => (
-                      <div key={j} className="flex items-start gap-3">
-                        <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <span className="text-xs font-bold text-purple-600">
+                      <motion.div
+                        key={j}
+                        initial={{ opacity: 0, x: -20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.2 + j * 0.1 }}
+                        className="flex items-start gap-3"
+                      >
+                        <motion.div
+                          whileHover={{ scale: 1.15 }}
+                          className="w-7 h-7 rounded-full bg-purple-500/30 flex items-center justify-center flex-shrink-0 mt-0.5 border border-purple-400/50"
+                        >
+                          <span className="text-xs font-bold text-purple-300">
                             {j + 1}
                           </span>
-                        </div>
-                        <p className="font-medium text-slate-900">{step}</p>
-                      </div>
+                        </motion.div>
+                        <p className="font-medium text-slate-200">{step}</p>
+                      </motion.div>
                     ))}
                   </div>
                   <Link href="/signup" className="block mt-6">
-                    <Button className="w-full gap-2 bg-purple-600 hover:bg-purple-700 text-white">
+                    <Button className="w-full gap-2 bg-purple-600 hover:bg-purple-700 text-white font-medium transition-all duration-300 hover:shadow-lg hover:shadow-purple-600/50">
                       Join as Brand <ArrowRight className="w-4 h-4" />
                     </Button>
                   </Link>
@@ -323,14 +409,16 @@ export default function HomePage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1 }}
+                  whileHover={{ y: -8 }}
                 >
-                  <Card className="border border-slate-200 shadow-sm hover:shadow-md transition-shadow h-full">
+                  <Card className="border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 h-full hover:border-slate-300 bg-white">
                     <CardContent className="p-6">
-                      <div
+                      <motion.div
+                        whileHover={{ scale: 1.1, rotate: 5 }}
                         className={`w-12 h-12 rounded-xl ${feat.color} flex items-center justify-center mb-4`}
                       >
                         <Icon className="w-6 h-6" />
-                      </div>
+                      </motion.div>
                       <h3 className="font-semibold text-lg text-slate-900 mb-2">
                         {feat.title}
                       </h3>
@@ -367,17 +455,30 @@ export default function HomePage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
+                whileHover={{ scale: 1.02, y: -4 }}
               >
-                <Card className="border border-slate-200 shadow-sm h-full">
+                <Card className="border border-slate-200 shadow-sm h-full hover:shadow-lg transition-all duration-300 hover:border-slate-300 bg-white">
                   <CardContent className="p-6">
-                    <div className="flex gap-1 mb-4">
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
+                      transition={{ delay: i * 0.1 + 0.2 }}
+                      className="flex gap-1 mb-4"
+                    >
                       {Array.from({ length: t.rating }).map((_, j) => (
-                        <Star
+                        <motion.div
                           key={j}
-                          className="w-4 h-4 fill-amber-400 text-amber-400"
-                        />
+                          initial={{ scale: 0, rotate: -180 }}
+                          whileInView={{ scale: 1, rotate: 0 }}
+                          transition={{ delay: j * 0.05 + i * 0.1 }}
+                        >
+                          <Star
+                            key={j}
+                            className="w-4 h-4 fill-amber-400 text-amber-400"
+                          />
+                        </motion.div>
                       ))}
-                    </div>
+                    </motion.div>
                     <p className="text-slate-700 mb-6 leading-relaxed">
                       &ldquo;{t.text}&rdquo;
                     </p>
@@ -397,27 +498,58 @@ export default function HomePage() {
       <section className="py-24">
         <div className="max-w-4xl mx-auto px-6">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
             viewport={{ once: true }}
-            className="rounded-3xl bg-gradient-to-br from-blue-600 via-blue-700 to-purple-700 text-white p-12 md:p-16 text-center"
+            transition={{ duration: 0.6 }}
+            whileHover={{ scale: 1.01 }}
+            className="rounded-3xl bg-gradient-to-br from-blue-600 via-blue-700 to-purple-700 text-white p-12 md:p-16 text-center shadow-2xl shadow-blue-600/20 overflow-hidden relative"
           >
-            <Zap className="w-12 h-12 mx-auto mb-6 opacity-80" />
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Ready to Start Collaborating?
-            </h2>
-            <p className="text-blue-100 text-lg mb-8 max-w-2xl mx-auto">
-              Join thousands of creators and brands building amazing
-              partnerships.
-            </p>
-            <Link href="/signup">
-              <Button
-                size="lg"
-                className="gap-2 bg-white hover:bg-slate-100 text-blue-700 font-semibold px-8"
+            <motion.div
+              animate={{
+                background: [
+                  "radial-gradient(circle at 0% 0%, rgba(255,255,255,0.1) 0%, transparent 50%)",
+                  "radial-gradient(circle at 100% 100%, rgba(255,255,255,0.1) 0%, transparent 50%)",
+                  "radial-gradient(circle at 0% 0%, rgba(255,255,255,0.1) 0%, transparent 50%)",
+                ],
+              }}
+              transition={{ duration: 5, repeat: Infinity }}
+              className="absolute inset-0"
+            />
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              whileInView={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.1, duration: 0.5 }}
+              className="relative z-10"
+            >
+              <motion.div
+                animate={{ y: [0, -10, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
               >
-                Create Free Account <ArrowRight className="w-5 h-5" />
-              </Button>
-            </Link>
+                <Zap className="w-12 h-12 mx-auto mb-6 opacity-80" />
+              </motion.div>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                Ready to Start Collaborating?
+              </h2>
+              <p className="text-blue-100 text-lg mb-8 max-w-2xl mx-auto">
+                Join thousands of creators and brands building amazing
+                partnerships.
+              </p>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+                className="inline-block"
+              >
+                <Link href="/signup">
+                  <Button
+                    size="lg"
+                    className="gap-2 bg-white hover:bg-slate-100 text-blue-700 font-semibold px-8 shadow-lg transition-all duration-300"
+                  >
+                    Create Free Account <ArrowRight className="w-5 h-5" />
+                  </Button>
+                </Link>
+              </motion.div>
+            </motion.div>
           </motion.div>
         </div>
       </section>
