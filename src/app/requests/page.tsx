@@ -18,6 +18,7 @@ import {
   Clock,
   MessageSquare,
   ArrowRight,
+  ShieldCheck,
 } from "lucide-react";
 
 interface RequestRow {
@@ -25,7 +26,7 @@ interface RequestRow {
   brand_id: string;
   creator_id: string;
   campaign_id: string;
-  status: "pending" | "accepted" | "rejected";
+  status: "pending" | "brand_approved" | "accepted" | "rejected";
   message?: string;
   created_at: string;
   // Joined
@@ -38,11 +39,18 @@ interface RequestRow {
 
 const STATUS_CONFIG = {
   pending: {
-    label: "Pending",
+    label: "Pending Approval",
     icon: Clock,
     color:
       "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
     dot: "bg-yellow-500",
+  },
+  brand_approved: {
+    label: "Brand Approved",
+    icon: ShieldCheck,
+    color:
+      "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+    dot: "bg-blue-500",
   },
   accepted: {
     label: "Accepted",
@@ -59,7 +67,7 @@ const STATUS_CONFIG = {
   },
 };
 
-type TabFilter = "all" | "pending" | "accepted" | "rejected";
+type TabFilter = "all" | "pending" | "brand_approved" | "accepted" | "rejected";
 
 export default function RequestsPage() {
   const router = useRouter();
@@ -119,7 +127,7 @@ export default function RequestsPage() {
 
   const handleUpdateStatus = async (
     requestId: string,
-    status: "accepted" | "rejected"
+    status: "brand_approved" | "accepted" | "rejected"
   ) => {
     setUpdatingId(requestId);
     try {
@@ -141,6 +149,11 @@ export default function RequestsPage() {
       key: "pending",
       label: "Pending",
       count: requests.filter((r) => r.status === "pending").length,
+    },
+    {
+      key: "brand_approved",
+      label: "Approved",
+      count: requests.filter((r) => r.status === "brand_approved").length,
     },
     {
       key: "accepted",
@@ -324,7 +337,38 @@ export default function RequestsPage() {
 
                       {/* Actions */}
                       <div className="flex items-center gap-2 shrink-0">
+                        {/* Brand: Approve button on pending requests */}
+                        {role === "brand" && req.status === "pending" && (
+                          <Button
+                            size="sm"
+                            className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
+                            disabled={updatingId === req.id}
+                            onClick={() =>
+                              handleUpdateStatus(req.id, "brand_approved")
+                            }
+                          >
+                            {updatingId === req.id ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <ShieldCheck className="w-3.5 h-3.5" />
+                            )}
+                            Verify & Approve
+                          </Button>
+                        )}
+                        {/* Brand: show approved badge */}
+                        {role === "brand" && req.status === "brand_approved" && (
+                          <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                            <ShieldCheck className="w-3 h-3 mr-1" /> Approved — Awaiting Creator
+                          </Badge>
+                        )}
+                        {/* Creator: pending — show waiting for brand message */}
                         {role === "creator" && req.status === "pending" && (
+                          <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
+                            <Clock className="w-3 h-3 mr-1" /> Awaiting Brand Approval
+                          </Badge>
+                        )}
+                        {/* Creator: Accept/Reject only on brand_approved */}
+                        {role === "creator" && req.status === "brand_approved" && (
                           <>
                             <Button
                               size="sm"

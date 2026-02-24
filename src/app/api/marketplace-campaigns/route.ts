@@ -55,15 +55,7 @@ export async function POST(req: NextRequest) {
     // 2. Fetch full campaign data with brand info + marketplace fields
     const { data: fullCampaigns, error: campError } = await supabaseAdmin
       .from("campaigns")
-      .select(
-        `
-        *,
-        brands (
-          id, name, logo_url, rating, total_ratings, is_verified,
-          creators_worked_with, industry
-        )
-      `,
-      )
+      .select("*, brands(*)")
       .in("id", campaignIds);
 
     if (campError) {

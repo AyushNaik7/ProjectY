@@ -42,7 +42,7 @@ export interface CreateCampaignRequest {
 
 export interface UpdateRequestStatusPayload {
   requestId: string;
-  status: "accepted" | "rejected";
+  status: "brand_approved" | "accepted" | "rejected";
 }
 
 export interface SendCollaborationRequestPayload {

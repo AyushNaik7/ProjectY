@@ -69,38 +69,64 @@ export default function CampaignsPage() {
       else setLoading(true);
 
       try {
-        const currentPage = loadMore ? page + 1 : 0;
-        const from = currentPage * PAGE_SIZE;
-        const to = from + PAGE_SIZE - 1;
+        if (!isBrand) {
+          // ── Creator view: call AI marketplace API for enriched match data ──
+          const supabase = createClient();
+          const { data: sessionData } = await supabase.auth.getSession();
+          const accessToken = sessionData.session?.access_token;
+          if (!accessToken) throw new Error("Not authenticated");
 
-        const supabase = createClient();
-        let query = supabase
-          .from("campaigns")
-          .select("*, brands(*)")
-          .order("created_at", { ascending: false })
-          .range(from, to);
+          const res = await fetch("/api/marketplace-campaigns", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({}),
+          });
 
-        if (isBrand) {
-          query = query.eq("brand_id", user.id);
+          const json = await res.json();
+          if (!res.ok)
+            throw new Error(
+              json.error || "Failed to fetch marketplace campaigns",
+            );
+
+          const enrichedCampaigns: MarketplaceCampaign[] = (
+            json.campaigns || []
+          ).map((row: any) => mapRowToMarketplaceCampaign(row));
+
+          setAllCampaigns(enrichedCampaigns);
+          setPage(0);
+          setHasMore(false); // AI results are already ranked & limited
         } else {
-          query = query.eq("status", "active");
+          // ── Brand view: paginated fetch of own campaigns ──
+          const currentPage = loadMore ? page + 1 : 0;
+          const from = currentPage * PAGE_SIZE;
+          const to = from + PAGE_SIZE - 1;
+
+          const supabase = createClient();
+          const { data, error } = await supabase
+            .from("campaigns")
+            .select("*, brands(*)")
+            .eq("brand_id", user.id)
+            .order("created_at", { ascending: false })
+            .range(from, to);
+
+          if (error) throw error;
+
+          const newCampaigns: MarketplaceCampaign[] = (data || []).map(
+            (row: any) => mapRowToMarketplaceCampaign(row),
+          );
+
+          if (loadMore) {
+            setAllCampaigns((prev) => [...prev, ...newCampaigns]);
+          } else {
+            setAllCampaigns(newCampaigns);
+          }
+
+          setPage(currentPage);
+          setHasMore(newCampaigns.length === PAGE_SIZE);
         }
-
-        const { data, error } = await query;
-        if (error) throw error;
-
-        const newCampaigns: MarketplaceCampaign[] = (data || []).map(
-          (row: any) => mapRowToMarketplaceCampaign(row),
-        );
-
-        if (loadMore) {
-          setAllCampaigns((prev) => [...prev, ...newCampaigns]);
-        } else {
-          setAllCampaigns(newCampaigns);
-        }
-
-        setPage(currentPage);
-        setHasMore(newCampaigns.length === PAGE_SIZE);
       } catch (error) {
         console.error("Error fetching campaigns:", error);
       } finally {

@@ -2,7 +2,9 @@
  * API Route: Collaboration Requests
  *
  * POST   /api/requests — Create a new collaboration request (brand only)
- * PATCH  /api/requests — Accept or reject a request (creator only)
+ * PATCH  /api/requests — Update request status:
+ *          Brand: pending → brand_approved (verify/approve the request)
+ *          Creator: brand_approved → accepted | rejected
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -134,7 +136,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-/* ── PATCH: creator accepts/rejects a collaboration request ── */
+/* ── PATCH: update request status (brand approves, creator accepts/rejects) ── */
 export async function PATCH(req: NextRequest) {
   const { requestId, startTimeMs, log } = createRequestContext(req);
 
@@ -147,25 +149,17 @@ export async function PATCH(req: NextRequest) {
     const body = await req.json();
     const { requestId: bodyRequestId, status } = body;
 
-    // Verify creator role
     const role = (user.user_metadata as Record<string, unknown>)?.role;
-    if (role !== "creator") {
-      const res = NextResponse.json(
-        { error: "Only creators can respond to requests" },
-        { status: 403 }
-      );
-      return attachRequestId(res, requestId);
-    }
 
-    if (!bodyRequestId || !["accepted", "rejected"].includes(status)) {
+    if (!bodyRequestId || !status) {
       const res = NextResponse.json(
-        { error: "requestId and status (accepted/rejected) required" },
+        { error: "requestId and status are required" },
         { status: 400 }
       );
       return attachRequestId(res, requestId);
     }
 
-    // Fetch and validate the request
+    // Fetch the request
     const { data: requestData, error: fetchErr } = await timedQuery(
       log,
       "collaboration_requests.select_by_id",
@@ -175,7 +169,7 @@ export async function PATCH(req: NextRequest) {
           .select("*")
           .eq("id", bodyRequestId)
           .single(),
-      { creatorId: uid }
+      { userId: uid }
     );
 
     if (fetchErr || !requestData) {
@@ -186,16 +180,90 @@ export async function PATCH(req: NextRequest) {
       return attachRequestId(res, requestId);
     }
 
+    // ── Brand flow: approve a pending request ──
+    if (role === "brand") {
+      if (status !== "brand_approved") {
+        const res = NextResponse.json(
+          { error: "Brands can only set status to brand_approved" },
+          { status: 400 }
+        );
+        return attachRequestId(res, requestId);
+      }
+
+      // Verify this brand owns the request
+      if (requestData.brand_id !== uid) {
+        const res = NextResponse.json(
+          { error: "Unauthorized" },
+          { status: 403 }
+        );
+        return attachRequestId(res, requestId);
+      }
+
+      // Only pending requests can be approved
+      if (requestData.status !== "pending") {
+        const res = NextResponse.json(
+          { error: `Request is already ${requestData.status}` },
+          { status: 400 }
+        );
+        return attachRequestId(res, requestId);
+      }
+
+      const { error: updateErr } = await timedQuery(
+        log,
+        "collaboration_requests.brand_approve",
+        () =>
+          supabaseAdmin
+            .from("collaboration_requests")
+            .update({ status: "brand_approved", updated_at: new Date().toISOString() })
+            .eq("id", bodyRequestId),
+        { brandId: uid }
+      );
+
+      if (updateErr) {
+        const res = NextResponse.json(
+          { error: updateErr.message },
+          { status: 500 }
+        );
+        return attachRequestId(res, requestId);
+      }
+
+      const res = NextResponse.json({ success: true });
+      logRequestCompleted(log, startTimeMs, 200);
+      return attachRequestId(res, requestId);
+    }
+
+    // ── Creator flow: accept/reject a brand_approved request ──
+    if (role !== "creator") {
+      const res = NextResponse.json(
+        { error: "Only brands or creators can update requests" },
+        { status: 403 }
+      );
+      return attachRequestId(res, requestId);
+    }
+
+    if (!["accepted", "rejected"].includes(status)) {
+      const res = NextResponse.json(
+        { error: "Creators can only set status to accepted or rejected" },
+        { status: 400 }
+      );
+      return attachRequestId(res, requestId);
+    }
+
     // Verify this creator owns the request
     if (requestData.creator_id !== uid) {
       const res = NextResponse.json({ error: "Unauthorized" }, { status: 403 });
       return attachRequestId(res, requestId);
     }
 
-    // Only pending requests can be updated
-    if (requestData.status !== "pending") {
+    // Only brand_approved requests can be accepted/rejected by creators
+    if (requestData.status !== "brand_approved") {
       const res = NextResponse.json(
-        { error: `Request is already ${requestData.status}` },
+        {
+          error:
+            requestData.status === "pending"
+              ? "This request is still pending brand approval. You can accept only after the brand verifies it."
+              : `Request is already ${requestData.status}`,
+        },
         { status: 400 }
       );
       return attachRequestId(res, requestId);
