@@ -13,9 +13,8 @@ export default function TermsOfServicePage() {
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
-          <Link href="/" className="flex items-center gap-2">
-            <img src="/logo.png" alt="Collabo" className="w-8 h-8 rounded-lg" />
-            <span className="text-lg font-bold tracking-tight">Collabo</span>
+          <Link href="/" className="flex items-center">
+            <img src="/logo.png" alt="Collabo" className="h-12 w-auto rounded-lg hover:opacity-80 transition-opacity" />
           </Link>
           <Link href="/">
             <Button variant="ghost" size="sm" className="gap-2">

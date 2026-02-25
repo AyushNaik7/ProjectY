@@ -64,15 +64,12 @@ export default function DashboardShell({ children }: DashboardShellProps) {
       <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-3">
           <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center gap-2">
+            <Link href="/" className="flex items-center">
               <img
                 src="/logo.png"
                 alt="Collabo"
-                className="w-8 h-8 rounded-lg"
+                className="h-10 w-auto rounded-lg hover:opacity-80 transition-opacity"
               />
-              <span className="text-lg font-bold tracking-tight hidden sm:block">
-                Collabo
-              </span>
             </Link>
 
             <nav className="hidden md:flex items-center gap-1">

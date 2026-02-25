@@ -113,9 +113,8 @@ export default function SignupPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <Link href="/" className="flex items-center gap-3 mb-12">
-            <img src="/logo.png" alt="Collabo" className="w-10 h-10 rounded-lg" />
-            <span className="text-xl font-bold">Collabo</span>
+          <Link href="/" className="flex items-center mb-12">
+            <img src="/logo.png" alt="Collabo" className="h-16 w-auto rounded-lg hover:opacity-80 transition-opacity" />
           </Link>
         </motion.div>
 
