@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
+import { useAuth } from "@/context/ClerkAuthContext";
 import { callCompleteCreatorOnboarding } from "@/lib/functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,14 +56,19 @@ export default function CreatorOnboardingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
-  const { user, role, loading: authLoading } = useSupabaseAuth();
+  const { user, role, loading: authLoading } = useAuth();
 
   useEffect(() => {
+    // Wait for Clerk to finish loading before any checks
     if (authLoading) return;
+    
+    // Only redirect if definitely not authenticated after loading completes
     if (!user) {
-      router.push("/auth?role=creator");
+      router.push("/login");
       return;
     }
+    
+    // If user has wrong role, redirect to correct onboarding
     if (role === "brand") {
       router.push("/onboarding/brand");
     }
@@ -77,7 +82,13 @@ export default function CreatorOnboardingPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    
+    // Guard: Don't submit if still loading or no user
+    if (authLoading || !user) {
+      setError("Please wait for authentication to complete");
+      return;
+    }
+    
     setError("");
     setLoading(true);
     try {

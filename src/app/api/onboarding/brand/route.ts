@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { requireUser } from "@/lib/request-auth";
+import { clerkClient } from "@clerk/nextjs/server";
 import {
   attachRequestId,
   createRequestContext,
@@ -24,11 +25,12 @@ export async function POST(req: NextRequest) {
 
     const user = auth.user;
     const uid = user.id;
-    const body = await req.json();
-    const { brandName, category, budgetMin, budgetMax, website, description } =
-      body;
-
-    const role = (user.user_metadata as Record<string, unknown>)?.role;
+    
+    // Get role from Clerk
+    const client = await clerkClient();
+    const clerkUser = await client.users.getUser(uid);
+    const role = clerkUser.publicMetadata?.role;
+    
     if (role !== "brand") {
       const res = NextResponse.json(
         { error: "Only brands can complete brand onboarding" },
@@ -36,6 +38,10 @@ export async function POST(req: NextRequest) {
       );
       return attachRequestId(res, requestId);
     }
+
+    const body = await req.json();
+    const { brandName, category, budgetMin, budgetMax, website, description } =
+      body;
 
     // Validation
     if (
@@ -82,7 +88,7 @@ export async function POST(req: NextRequest) {
     const { error: brandError } = await supabaseAdmin.from("brands").upsert({
       id: uid,
       name: brandName.trim(),
-      email: user.email || "",
+      email: clerkUser.emailAddresses[0]?.emailAddress || "",
       industry: category,
       website: typeof website === "string" ? website.trim() : "",
       description: typeof description === "string" ? description.trim() : "",
@@ -96,13 +102,11 @@ export async function POST(req: NextRequest) {
       return attachRequestId(res, requestId);
     }
 
-    // Mark onboarding complete in user metadata
-    await supabaseAdmin.auth.admin.updateUserById(uid, {
-      user_metadata: {
+    // Mark onboarding complete in Clerk metadata
+    await client.users.updateUserMetadata(uid, {
+      publicMetadata: {
         role: "brand",
         onboarding_complete: true,
-        brandName: brandName.trim(),
-        name: brandName.trim(),
       },
     });
 

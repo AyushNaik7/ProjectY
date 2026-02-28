@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
+import { useAuth } from "@/context/ClerkAuthContext";
 import { createClient } from "@/lib/supabase-browser";
 import { callUpdateRequestStatus } from "@/lib/functions";
 import DashboardShell from "@/components/DashboardShell";

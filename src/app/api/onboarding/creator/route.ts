@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { generateCreatorEmbedding } from "@/lib/embeddings";
 import { requireUser } from "@/lib/request-auth";
+import { clerkClient } from "@clerk/nextjs/server";
 import {
   attachRequestId,
   createRequestContext,
@@ -29,6 +30,20 @@ export async function POST(req: NextRequest) {
 
     const user = auth.user;
     const uid = user.id;
+    
+    // Get role from Clerk
+    const client = await clerkClient();
+    const clerkUser = await client.users.getUser(uid);
+    const role = clerkUser.publicMetadata?.role;
+    
+    if (role !== "creator") {
+      const res = NextResponse.json(
+        { error: "Only creators can complete creator onboarding" },
+        { status: 403 }
+      );
+      return attachRequestId(res, requestId);
+    }
+
     const body = await req.json();
     const {
       name,
@@ -41,7 +56,6 @@ export async function POST(req: NextRequest) {
     } = body;
 
     // Verify role
-    const role = (user.user_metadata as Record<string, unknown>)?.role;
     if (role !== "creator") {
       const res = NextResponse.json(
         { error: "Only creators can complete creator onboarding" },
@@ -106,12 +120,22 @@ export async function POST(req: NextRequest) {
     }
 
     // Upsert creator profile
+    // Generate username from Instagram handle or name
+    const username = instagramHandle.trim().replace("@", "").toLowerCase() || 
+                     name.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+    
+    console.log('=== Creating creator profile ===');
+    console.log('User ID (Clerk):', uid);
+    console.log('Username:', username);
+    console.log('Email:', clerkUser.emailAddresses[0]?.emailAddress);
+    
     const { error: creatorError } = await supabaseAdmin
       .from("creators")
       .upsert({
         id: uid,
         name: name.trim(),
-        email: user.email || "",
+        email: clerkUser.emailAddresses[0]?.emailAddress || "",
+        username,
         niche,
         instagram_handle: instagramHandle.trim().replace("@", ""),
         instagram_followers: followers,
@@ -122,19 +146,21 @@ export async function POST(req: NextRequest) {
       });
 
     if (creatorError) {
+      console.error('Supabase error creating creator:', creatorError);
       const res = NextResponse.json(
         { error: creatorError.message },
         { status: 500 }
       );
       return attachRequestId(res, requestId);
     }
+    
+    console.log('Creator profile created successfully');
 
-    // Mark onboarding complete in user metadata
-    await supabaseAdmin.auth.admin.updateUserById(uid, {
-      user_metadata: {
+    // Mark onboarding complete in Clerk metadata
+    await client.users.updateUserMetadata(uid, {
+      publicMetadata: {
         role: "creator",
         onboarding_complete: true,
-        name: name.trim(),
       },
     });
 

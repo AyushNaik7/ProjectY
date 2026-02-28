@@ -2,11 +2,11 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
+import { useAuth } from "@/context/ClerkAuthContext";
 
 export default function SignOutPage() {
   const router = useRouter();
-  const { signOut } = useSupabaseAuth();
+  const { signOut } = useAuth();
 
   useEffect(() => {
     const handleSignOut = async () => {

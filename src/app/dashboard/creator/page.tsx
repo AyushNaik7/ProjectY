@@ -18,14 +18,14 @@ import {
   BarChart3,
   Brain,
 } from "lucide-react";
-import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
+import { useAuth } from "@/context/ClerkAuthContext";
 import { createClient } from "@/lib/supabase-browser";
 import { callGetMatchedCampaigns, type MatchedCampaign } from "@/lib/functions";
 import { formatMatchScore, getMatchColor } from "@/lib/matching";
 
 export default function CreatorDashboard() {
   const router = useRouter();
-  const { user, role, loading } = useSupabaseAuth();
+  const { user, role, loading } = useAuth();
   const [creatorProfile, setCreatorProfile] = useState<Record<
     string,
     unknown
@@ -54,23 +54,31 @@ export default function CreatorDashboard() {
 
   // Fetch creator profile
   useEffect(() => {
-    if (!user) return;
+    // Wait for auth to load AND user to be available
+    if (loading || !user) return;
+    
     (async () => {
       try {
+        console.log('Fetching creator profile for user:', user.id);
         const supabase = createClient();
         const { data, error } = await supabase
           .from("creators")
           .select("*")
           .eq("id", user.id)
-          .single();
+          .maybeSingle();
 
-        if (error || !data) {
+        if (error) {
+          console.error("Error fetching creator profile:", error);
+        }
+
+        if (!data) {
           // No profile found - redirect to onboarding
           console.log("No creator profile found, redirecting to onboarding");
           router.push("/onboarding/creator");
           return;
         }
 
+        console.log('Creator profile loaded:', data);
         setCreatorProfile(data);
       } catch (err) {
         console.error("Failed to load profile:", err);
@@ -79,7 +87,7 @@ export default function CreatorDashboard() {
         setProfileLoading(false);
       }
     })();
-  }, [user, router]);
+  }, [user, router, loading]);
 
   // Fetch AI-matched campaigns — only when user triggers
   const handleFindCampaigns = async () => {

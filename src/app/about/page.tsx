@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Info, ArrowLeft, Target, Users, Zap, Heart } from "lucide-react";
@@ -41,7 +42,7 @@ export default function AboutPage() {
       <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center">
-            <img src="/logo.png" alt="Collabo" className="h-12 w-auto rounded-lg hover:opacity-80 transition-opacity" />
+            <Image src="/logo.png" alt="Collabo" width={144} height={48} className="h-12 w-auto rounded-lg hover:opacity-80 transition-opacity" priority />
           </Link>
           <Link href="/">
             <Button variant="ghost" size="sm" className="gap-2">

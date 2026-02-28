@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
+import { useAuth } from "@/context/ClerkAuthContext";
 import { createClient } from "@/lib/supabase-browser";
 import { callSendCollaborationRequest } from "@/lib/functions";
 import DashboardShell from "@/components/DashboardShell";
@@ -31,7 +31,7 @@ interface CreatorItem {
 
 export default function FindCreatorsPage() {
   const router = useRouter();
-  const { user, role, loading: authLoading } = useSupabaseAuth();
+  const { user, role, loading: authLoading } = useAuth();
   const [creators, setCreators] = useState<CreatorItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");

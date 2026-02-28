@@ -4,7 +4,8 @@ import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
+import Image from "next/image";
+import { useAuth } from "@/context/ClerkAuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -12,7 +13,7 @@ import { Users, Briefcase, ArrowRight } from "lucide-react";
 
 export default function RoleSelectPage() {
   const router = useRouter();
-  const { user, setRole, loading } = useSupabaseAuth();
+  const { user, setRole, loading, role } = useAuth();
 
   useEffect(() => {
     // Wait for auth to finish loading before checking
@@ -24,25 +25,18 @@ export default function RoleSelectPage() {
       return;
     }
 
-    // If user already has a role in metadata or localStorage, redirect to the appropriate page
-    const metaRole = (user.user_metadata as any)?.role as
-      | "creator"
-      | "brand"
-      | undefined;
-    const onboardingComplete = (user.user_metadata as any)?.onboarding_complete;
-    const savedRole =
-      (metaRole as "creator" | "brand") ||
-      (localStorage.getItem("userRole") as "creator" | "brand" | null);
-    if (savedRole === "creator") {
+    // If user already has a role, redirect to the appropriate page
+    const onboardingComplete = user.publicMetadata?.onboarding_complete;
+    if (role === "creator") {
       router.push(
         onboardingComplete ? "/dashboard/creator" : "/onboarding/creator"
       );
-    } else if (savedRole === "brand") {
+    } else if (role === "brand") {
       router.push(
         onboardingComplete ? "/dashboard/brand" : "/onboarding/brand"
       );
     }
-  }, [user, router, loading]);
+  }, [user, router, loading, role]);
 
   const handleSelectRole = async (selectedRole: "creator" | "brand") => {
     await setRole(selectedRole);
@@ -72,7 +66,7 @@ export default function RoleSelectPage() {
       <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center">
-            <img src="/logo.png" alt="Collabo" className="h-12 w-auto rounded-lg hover:opacity-80 transition-opacity" />
+            <Image src="/logo.png" alt="Collabo" width={144} height={48} className="h-12 w-auto rounded-lg hover:opacity-80 transition-opacity" priority />
           </Link>
           <ThemeToggle />
         </div>

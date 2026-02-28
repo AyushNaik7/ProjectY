@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/select";
 import { ArrowLeft, Loader2, Megaphone, CheckCircle } from "lucide-react";
 import Link from "next/link";
-import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
+import { useAuth } from "@/context/ClerkAuthContext";
 import { callCreateCampaign } from "@/lib/functions";
 
 const NICHE_OPTIONS = [
@@ -46,7 +46,7 @@ const NICHE_OPTIONS = [
 
 export default function PostCampaignPage() {
   const router = useRouter();
-  const { user, role, loading: authLoading } = useSupabaseAuth();
+  const { user, role, loading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);

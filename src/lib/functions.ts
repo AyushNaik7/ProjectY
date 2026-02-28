@@ -81,41 +81,35 @@ export interface MatchedCreator {
 }
 
 // --------------------------------------------------
-// Helper: Get current user's Supabase access token
+// Helper: Make authenticated API calls
 // --------------------------------------------------
-
-async function getAccessToken(): Promise<string> {
-  const supabase = createClient();
-  const { data } = await supabase.auth.getSession();
-  const token = data.session?.access_token;
-  if (!token) throw new Error("Not authenticated");
-  return token;
-}
 
 async function apiCall<T>(
   url: string,
   body: Record<string, unknown>,
   method = "POST"
 ): Promise<T> {
-  const accessToken = await getAccessToken();
-  const res = await fetch(url, {
+  // Clerk handles authentication via cookies automatically
+  // No need to manually pass tokens
+  const response = await fetch(url, {
     method,
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify(body),
+    credentials: "include", // Include cookies for Clerk auth
   });
 
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.error || `API error: ${res.status}`);
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || `API call failed: ${response.statusText}`);
   }
-  return data as T;
+
+  return response.json();
 }
 
 // --------------------------------------------------
-// API function wrappers
+// API Functions
 // --------------------------------------------------
 
 /**

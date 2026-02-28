@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
+import { useAuth } from "@/context/ClerkAuthContext";
 import { createClient } from "@/lib/supabase-browser";
 import DashboardShell from "@/components/DashboardShell";
 import { Card, CardContent } from "@/components/ui/card";
@@ -52,7 +52,7 @@ export default function CampaignDetailPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { user, role, loading: authLoading } = useSupabaseAuth();
+  const { user, role, loading: authLoading } = useAuth();
 
   const campaignId = params.id as string;
   const actionParam = searchParams.get("action"); // "proposal" | "apply" | null

@@ -1,45 +1,48 @@
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
 
-export function middleware(request: NextRequest) {
+// Define public routes that don't require authentication
+const isPublicRoute = createRouteMatcher([
+  '/',
+  '/login(.*)',
+  '/signup(.*)',
+  '/about',
+  '/contact',
+  '/faq',
+  '/privacy',
+  '/terms',
+  '/api/webhooks(.*)',
+]);
+
+export default clerkMiddleware(async (auth, request) => {
+  // Don't protect routes by default - let pages handle their own auth
+  // Only protect specific routes if needed
+  
   const response = NextResponse.next();
 
   // Security Headers
   const securityHeaders = {
-    // Prevent clickjacking
-    'X-Frame-Options': 'DENY',
-    
-    // Content Security Policy
+    'X-Frame-Options': 'SAMEORIGIN', // Changed from DENY to allow Clerk iframes
     'Content-Security-Policy': [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live",
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://*.clerk.accounts.dev https://challenges.cloudflare.com",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.clerk.accounts.dev",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: https: blob:",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://vercel.live",
-      "frame-ancestors 'none'",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://vercel.live https://*.clerk.accounts.dev https://clerk.happy-akita-7.lcl.dev https://clerk-telemetry.com",
+      "frame-src 'self' https://*.clerk.accounts.dev https://challenges.cloudflare.com",
+      "worker-src 'self' blob:",
+      "frame-ancestors 'self'",
       "base-uri 'self'",
-      "form-action 'self'",
+      "form-action 'self' https://*.clerk.accounts.dev",
     ].join('; '),
-    
-    // Prevent MIME type sniffing
     'X-Content-Type-Options': 'nosniff',
-    
-    // Enable XSS protection
     'X-XSS-Protection': '1; mode=block',
-    
-    // Enforce HTTPS (only in production)
     ...(process.env.NODE_ENV === 'production' && {
       'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
     }),
-    
-    // Referrer policy
     'Referrer-Policy': 'strict-origin-when-cross-origin',
-    
-    // Permissions policy
     'Permissions-Policy': 'geolocation=(), microphone=(), camera=(), payment=()',
-    
-    // Remove server header
     'X-Powered-By': '',
   };
 
@@ -50,16 +53,7 @@ export function middleware(request: NextRequest) {
     }
   });
 
-  // Rate limiting check (basic implementation)
-  const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
   const pathname = request.nextUrl.pathname;
-
-  // Protect sensitive endpoints
-  const sensitiveEndpoints = ['/api/auth', '/api/login', '/api/signup'];
-  if (sensitiveEndpoints.some(endpoint => pathname.startsWith(endpoint))) {
-    // Add rate limiting header
-    response.headers.set('X-RateLimit-Limit', '10');
-  }
 
   // Prevent access to sensitive files
   const blockedPaths = [
@@ -79,7 +73,6 @@ export function middleware(request: NextRequest) {
   if (pathname.startsWith('/api/')) {
     const allowedOrigins = [
       process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-      'https://your-domain.vercel.app', // Add your production domain
     ];
 
     const origin = request.headers.get('origin');
@@ -97,16 +90,13 @@ export function middleware(request: NextRequest) {
   }
 
   return response;
-}
+});
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    // Skip Next.js internals and all static files, unless found in search params
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Always run for API routes
+    '/(api|trpc)(.*)',
   ],
 };

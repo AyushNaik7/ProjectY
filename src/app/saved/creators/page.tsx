@@ -5,25 +5,15 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import DashboardShell from "@/components/DashboardShell";
 import { CreatorCard } from "@/components/CreatorCard";
-import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
+import { useAuth } from "@/context/ClerkAuthContext";
 import { supabase } from "@/lib/supabase";
 import { Bookmark, Loader2 } from "lucide-react";
 
 export default function SavedCreatorsPage() {
   const router = useRouter();
-  const { user, role, loading: authLoading } = useSupabaseAuth();
+  const { user, role, loading: authLoading } = useAuth();
   const [creators, setCreators] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!authLoading) {
-      if (!user || role !== "brand") {
-        router.push("/login");
-        return;
-      }
-      fetchSavedCreators();
-    }
-  }, [user, role, authLoading]);
 
   const fetchSavedCreators = async () => {
     try {
@@ -47,6 +37,17 @@ export default function SavedCreatorsPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!authLoading) {
+      if (!user || role !== "brand") {
+        router.push("/login");
+        return;
+      }
+      fetchSavedCreators();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, role, authLoading]);
 
   const handleUnsave = async (creatorId: string) => {
     try {

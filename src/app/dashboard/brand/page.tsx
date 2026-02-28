@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
+import { useAuth } from "@/context/ClerkAuthContext";
 import {
   Card,
   CardContent,
@@ -43,7 +43,7 @@ interface CampaignRow {
 
 export default function BrandDashboard() {
   const router = useRouter();
-  const { user, role, loading, signOut } = useSupabaseAuth();
+  const { user, role, loading, signOut } = useAuth();
   const [campaigns, setCampaigns] = useState<CampaignRow[]>([]);
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(
     null

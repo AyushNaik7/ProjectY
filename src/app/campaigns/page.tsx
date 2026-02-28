@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
+import { useAuth } from "@/context/ClerkAuthContext";
 import { createClient } from "@/lib/supabase-browser";
 import DashboardShell from "@/components/DashboardShell";
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,7 @@ const fadeInUp = {
 };
 
 export default function CampaignsPage() {
-  const { user, role, loading: authLoading } = useSupabaseAuth();
+  const { user, role, loading: authLoading } = useAuth();
   const router = useRouter();
 
   // ─── Data state ─────────────────────────────────────────────────────────

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Star, ShieldCheck, Users } from "lucide-react";
 import type { BrandInfo } from "@/lib/marketplace-types";
@@ -20,15 +21,17 @@ export function BrandInfoCard({
       {/* Avatar */}
       <div
         className={cn(
-          "flex items-center justify-center rounded-full bg-primary/10 text-primary font-bold shrink-0",
+          "flex items-center justify-center rounded-full bg-primary/10 text-primary font-bold shrink-0 overflow-hidden",
           compact ? "w-7 h-7 text-xs" : "w-9 h-9 text-sm",
         )}
       >
         {brand.logoUrl ? (
-          <img
+          <Image
             src={brand.logoUrl}
             alt={brand.name}
-            className="w-full h-full rounded-full object-cover"
+            width={compact ? 28 : 36}
+            height={compact ? 28 : 36}
+            className="w-full h-full object-cover"
           />
         ) : (
           brand.name.charAt(0).toUpperCase()

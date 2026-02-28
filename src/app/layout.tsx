@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import { ClerkProvider } from '@clerk/nextjs';
 import "./globals.css";
 import { ThemeProvider } from "@/context/ThemeContext";
-import { SupabaseAuthProvider } from "@/context/SupabaseAuthContext";
+import { ClerkAuthProvider } from "@/context/ClerkAuthContext";
 
 export const metadata: Metadata = {
   title: "Collabo — Where Brands Meet Creators",
@@ -28,12 +29,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className="min-h-screen bg-background antialiased">
-        <ThemeProvider>
-          <SupabaseAuthProvider>{children}</SupabaseAuthProvider>
-        </ThemeProvider>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" suppressHydrationWarning>
+        <body className="min-h-screen bg-background antialiased">
+          <ThemeProvider>
+            <ClerkAuthProvider>{children}</ClerkAuthProvider>
+          </ThemeProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

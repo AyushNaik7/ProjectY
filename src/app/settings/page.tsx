@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
+import { useAuth } from "@/context/ClerkAuthContext";
 import { createClient } from "@/lib/supabase-browser";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -130,7 +130,7 @@ export default function SettingsPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const router = useRouter();
-  const { user, role, loading: authLoading, signOut } = useSupabaseAuth();
+  const { user, role, loading: authLoading, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
   // Redirect guards

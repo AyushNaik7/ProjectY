@@ -5,25 +5,15 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import DashboardShell from "@/components/DashboardShell";
 import { CampaignCard } from "@/components/CampaignCard";
-import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
+import { useAuth } from "@/context/ClerkAuthContext";
 import { supabase } from "@/lib/supabase";
 import { Bookmark, Loader2 } from "lucide-react";
 
 export default function SavedCampaignsPage() {
   const router = useRouter();
-  const { user, role, loading: authLoading } = useSupabaseAuth();
+  const { user, role, loading: authLoading } = useAuth();
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!authLoading) {
-      if (!user || role !== "creator") {
-        router.push("/login");
-        return;
-      }
-      fetchSavedCampaigns();
-    }
-  }, [user, role, authLoading]);
 
   const fetchSavedCampaigns = async () => {
     try {
@@ -47,6 +37,17 @@ export default function SavedCampaignsPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!authLoading) {
+      if (!user || role !== "creator") {
+        router.push("/login");
+        return;
+      }
+      fetchSavedCampaigns();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, role, authLoading]);
 
   const handleUnsave = async (campaignId: string) => {
     try {

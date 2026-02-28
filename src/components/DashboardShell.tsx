@@ -2,8 +2,9 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
+import { useAuth } from "@/context/ClerkAuthContext";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
@@ -26,7 +27,7 @@ interface DashboardShellProps {
 
 export default function DashboardShell({ children }: DashboardShellProps) {
   const router = useRouter();
-  const { signOut, role } = useSupabaseAuth();
+  const { signOut, role } = useAuth();
 
   const handleSignOut = async () => {
     await signOut();
@@ -65,10 +66,13 @@ export default function DashboardShell({ children }: DashboardShellProps) {
         <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-3">
           <div className="flex items-center gap-6">
             <Link href="/" className="flex items-center">
-              <img
+              <Image
                 src="/logo.png"
                 alt="Collabo"
+                width={120}
+                height={40}
                 className="h-10 w-auto rounded-lg hover:opacity-80 transition-opacity"
+                priority
               />
             </Link>
 

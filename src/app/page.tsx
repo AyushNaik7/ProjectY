@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
+import { useAuth } from "@/context/ClerkAuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -79,7 +79,7 @@ const testimonials = [
 
 export default function HomePage() {
   const router = useRouter();
-  const { user, role, loading } = useSupabaseAuth();
+  const { user, role, loading } = useAuth();
 
   useEffect(() => {
     if (!loading && user && role) {

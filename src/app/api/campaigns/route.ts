@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { generateCampaignEmbedding } from "@/lib/embeddings";
 import { requireUser } from "@/lib/request-auth";
+import { clerkClient } from "@clerk/nextjs/server";
 import {
   attachRequestId,
   createRequestContext,
@@ -30,12 +31,12 @@ export async function POST(req: NextRequest) {
 
     const user = auth.user;
     const uid = user.id;
-    const body = await req.json();
-    const { title, description, deliverableType, budget, timeline, niche } =
-      body;
-
-    // Verify brand role from user metadata
-    const role = (user.user_metadata as Record<string, unknown>)?.role;
+    
+    // Get role from Clerk user metadata
+    const client = await clerkClient();
+    const clerkUser = await client.users.getUser(uid);
+    const role = clerkUser.publicMetadata?.role;
+    
     if (role !== "brand") {
       const res = NextResponse.json(
         { error: "Only brands can create campaigns" },
@@ -43,6 +44,10 @@ export async function POST(req: NextRequest) {
       );
       return attachRequestId(res, requestId);
     }
+
+    const body = await req.json();
+    const { title, description, deliverableType, budget, timeline, niche } =
+      body;
 
     // Validation
     if (!title || typeof title !== "string" || title.trim().length < 3) {

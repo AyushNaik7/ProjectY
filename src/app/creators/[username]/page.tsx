@@ -17,7 +17,7 @@ import {
   Share2,
   Briefcase,
 } from "lucide-react";
-import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
+import { useAuth } from "@/context/ClerkAuthContext";
 import { SendRequestDialog } from "@/components/SendRequestDialog";
 
 interface CreatorProfile {
@@ -38,16 +38,12 @@ interface CreatorProfile {
 export default function CreatorMediaKit() {
   const params = useParams();
   const router = useRouter();
-  const { user, role } = useSupabaseAuth();
+  const { user, role } = useAuth();
   const username = params.username as string;
 
   const [creator, setCreator] = useState<CreatorProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [showRequestDialog, setShowRequestDialog] = useState(false);
-
-  useEffect(() => {
-    fetchCreatorProfile();
-  }, [username]);
 
   const fetchCreatorProfile = async () => {
     try {
@@ -65,6 +61,11 @@ export default function CreatorMediaKit() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchCreatorProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [username]);
 
   const handleShare = async () => {
     const url = window.location.href;
