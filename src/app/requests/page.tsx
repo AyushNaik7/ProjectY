@@ -71,7 +71,7 @@ type TabFilter = "all" | "pending" | "brand_approved" | "accepted" | "rejected";
 
 export default function RequestsPage() {
   const router = useRouter();
-  const { user, role, loading: authLoading } = useSupabaseAuth();
+  const { user, role, loading: authLoading } = useAuth();
   const [requests, setRequests] = useState<RequestRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabFilter>("all");
