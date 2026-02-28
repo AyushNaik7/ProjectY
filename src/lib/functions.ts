@@ -184,18 +184,7 @@ export async function callSendCollaborationRequest(
  * Match scoring uses minRatePrivate server-side, never exposed to frontend.
  */
 export async function callGetMatchedCampaigns() {
-  const accessToken = await getAccessToken();
-  const res = await fetch("/api/matched-campaigns", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify({}),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || "Failed to fetch matches");
-  return data as { campaigns: MatchedCampaign[] };
+  return apiCall<{ campaigns: MatchedCampaign[] }>("/api/matched-campaigns", {});
 }
 
 /**
@@ -203,18 +192,7 @@ export async function callGetMatchedCampaigns() {
  * Returns sanitized profiles (minRatePrivate is stripped server-side).
  */
 export async function callGetCreatorsForCampaign(campaignId: string) {
-  const accessToken = await getAccessToken();
-  const res = await fetch("/api/creators-for-campaign", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify({ campaignId }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || "Failed to fetch creators");
-  return data as { creators: MatchedCreator[] };
+  return apiCall<{ creators: MatchedCreator[] }>("/api/creators-for-campaign", { campaignId });
 }
 
 // --------------------------------------------------
@@ -273,34 +251,12 @@ export async function callBatchGenerateCampaignEmbeddings() {
  * Semantic search across creators using natural language.
  */
 export async function callSearchCreators(query: string, limit?: number) {
-  const accessToken = await getAccessToken();
-  const res = await fetch("/api/search", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify({ target: "creators", query, limit }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || "Search failed");
-  return data as { creators: MatchedCreator[] };
+  return apiCall<{ creators: MatchedCreator[] }>("/api/search", { target: "creators", query, limit });
 }
 
 /**
  * Semantic search across campaigns using natural language.
  */
 export async function callSearchCampaigns(query: string, limit?: number) {
-  const accessToken = await getAccessToken();
-  const res = await fetch("/api/search", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify({ target: "campaigns", query, limit }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || "Search failed");
-  return data as { campaigns: MatchedCampaign[] };
+  return apiCall<{ campaigns: MatchedCampaign[] }>("/api/search", { target: "campaigns", query, limit });
 }
