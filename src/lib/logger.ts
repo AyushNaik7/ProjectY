@@ -1,32 +1,44 @@
-import pino from "pino";
+/**
+ * Production-safe logger
+ * Only logs in development, silent in production
+ */
 
-const isProd = process.env.NODE_ENV === "production";
+const isDevelopment = process.env.NODE_ENV === 'development';
 
-export const logger = pino({
-  level: process.env.LOG_LEVEL || (isProd ? "info" : "debug"),
-  base: {
-    service: "creatordeal-api",
+export const logger = {
+  log: (...args: unknown[]) => {
+    if (isDevelopment) {
+      console.log(...args);
+    }
   },
-  redact: {
-    paths: [
-      "req.headers.authorization",
-      "req.headers.cookie",
-      "authorization",
-      "*.password",
-      "*.token",
-      "*.access_token",
-      "*.refresh_token",
-    ],
-    remove: true,
+  
+  error: (...args: unknown[]) => {
+    if (isDevelopment) {
+      console.error(...args);
+    } else {
+      // In production, send to error tracking service
+      // TODO: Integrate with Sentry, LogRocket, etc.
+    }
   },
-  timestamp: pino.stdTimeFunctions.isoTime,
-});
+  
+  warn: (...args: unknown[]) => {
+    if (isDevelopment) {
+      console.warn(...args);
+    }
+  },
+  
+  info: (...args: unknown[]) => {
+    if (isDevelopment) {
+      console.info(...args);
+    }
+  },
+  
+  debug: (...args: unknown[]) => {
+    if (isDevelopment) {
+      console.debug(...args);
+    }
+  },
+};
 
-export function getRequestLogger(meta: {
-  requestId: string;
-  path: string;
-  method: string;
-  userId?: string;
-}) {
-  return logger.child(meta);
-}
+// Export for backward compatibility
+export default logger;

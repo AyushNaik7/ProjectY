@@ -16,29 +16,35 @@ const isPublicRoute = createRouteMatcher([
 
 export default clerkMiddleware(async (auth, request) => {
   // Don't protect routes by default - let pages handle their own auth
-  // Only protect specific routes if needed
   
   const response = NextResponse.next();
+  const isProduction = process.env.NODE_ENV === 'production';
 
   // Security Headers
   const securityHeaders = {
-    'X-Frame-Options': 'SAMEORIGIN', // Changed from DENY to allow Clerk iframes
+    'X-Frame-Options': 'SAMEORIGIN',
     'Content-Security-Policy': [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://*.clerk.accounts.dev https://challenges.cloudflare.com",
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.clerk.accounts.dev",
+      // In production, remove unsafe-eval and unsafe-inline
+      isProduction 
+        ? "script-src 'self' https://vercel.live https://*.clerk.accounts.dev https://challenges.cloudflare.com"
+        : "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://*.clerk.accounts.dev https://challenges.cloudflare.com",
+      isProduction
+        ? "style-src 'self' https://fonts.googleapis.com https://*.clerk.accounts.dev"
+        : "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.clerk.accounts.dev",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: https: blob:",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://vercel.live https://*.clerk.accounts.dev https://clerk.happy-akita-7.lcl.dev https://clerk-telemetry.com",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://vercel.live https://*.clerk.accounts.dev https://clerk-telemetry.com",
       "frame-src 'self' https://*.clerk.accounts.dev https://challenges.cloudflare.com",
       "worker-src 'self' blob:",
       "frame-ancestors 'self'",
       "base-uri 'self'",
       "form-action 'self' https://*.clerk.accounts.dev",
+      "upgrade-insecure-requests",
     ].join('; '),
     'X-Content-Type-Options': 'nosniff',
     'X-XSS-Protection': '1; mode=block',
-    ...(process.env.NODE_ENV === 'production' && {
+    ...(isProduction && {
       'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
     }),
     'Referrer-Policy': 'strict-origin-when-cross-origin',
