@@ -1,7 +1,7 @@
-import type { Logger } from "pino";
+import { logger } from "@/lib/logger";
 
 export async function timedQuery<T>(
-  log: Logger,
+  log: typeof logger,
   label: string,
   fn: () => PromiseLike<T>,
   meta: Record<string, unknown> = {}
@@ -10,11 +10,11 @@ export async function timedQuery<T>(
   try {
     const result = await fn();
     const durationMs = Date.now() - startTimeMs;
-    log.info({ durationMs, label, ...meta }, "db.query");
+    log.info(`DB query ${label} completed in ${durationMs}ms`, meta);
     return result;
   } catch (err) {
     const durationMs = Date.now() - startTimeMs;
-    log.error({ durationMs, label, err }, "db.query_failed");
+    log.error(`DB query ${label} failed after ${durationMs}ms`, err);
     throw err;
   }
 }

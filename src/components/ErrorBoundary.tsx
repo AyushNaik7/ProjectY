@@ -40,7 +40,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
             <div className="text-6xl">⚠️</div>
             <h1 className="text-2xl font-bold">Something went wrong</h1>
             <p className="text-muted-foreground">
-              We're sorry, but something unexpected happened. Please try refreshing the page.
+              We&apos;re sorry, but something unexpected happened. Please try refreshing the page.
             </p>
             {process.env.NODE_ENV === 'development' && this.state.error && (
               <pre className="text-left text-xs bg-muted p-4 rounded overflow-auto max-h-40">
