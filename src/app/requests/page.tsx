@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/ClerkAuthContext";
@@ -81,7 +81,7 @@ export default function RequestsPage() {
     if (!authLoading && !user) router.push("/login");
   }, [user, authLoading, router]);
 
-  const fetchRequests = async () => {
+  const fetchRequests = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
@@ -117,13 +117,12 @@ export default function RequestsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, role]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!user || !role) return;
     fetchRequests();
-  }, [user, role]);
+  }, [user, role, fetchRequests]);
 
   const handleUpdateStatus = async (
     requestId: string,

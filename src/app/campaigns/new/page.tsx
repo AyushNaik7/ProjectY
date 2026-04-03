@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import DashboardShell from "@/components/DashboardShell";
@@ -59,6 +59,12 @@ export default function PostCampaignPage() {
     niche: "",
   });
 
+  useEffect(() => {
+    if (!authLoading && (!user || role !== "brand")) {
+      router.push("/login");
+    }
+  }, [authLoading, user, role, router]);
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -68,7 +74,6 @@ export default function PostCampaignPage() {
   }
 
   if (!user || role !== "brand") {
-    router.push("/login");
     return null;
   }
 

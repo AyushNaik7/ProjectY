@@ -13,7 +13,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function ClerkAuthProvider({
+function ClerkAuthProviderWithClerk({
   children,
 }: {
   children: React.ReactNode;
@@ -81,6 +81,32 @@ export function ClerkAuthProvider({
       {children}
     </AuthContext.Provider>
   );
+}
+
+export function ClerkAuthProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
+  if (!clerkPublishableKey) {
+    return (
+      <AuthContext.Provider
+        value={{
+          user: null,
+          role: null,
+          loading: false,
+          signOut: async () => {},
+          setRole: async () => {},
+        }}
+      >
+        {children}
+      </AuthContext.Provider>
+    );
+  }
+
+  return <ClerkAuthProviderWithClerk>{children}</ClerkAuthProviderWithClerk>;
 }
 
 export function useAuth() {

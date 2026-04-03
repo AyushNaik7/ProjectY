@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Exclude clerk-nextjs test folder from build
-  pageExtensions: ['tsx', 'ts', 'jsx', 'js'],
-  
   // Ignore clerk-nextjs folder during build
   webpack: (config, { isServer }) => {
     config.watchOptions = {

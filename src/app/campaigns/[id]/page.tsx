@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/ClerkAuthContext";
 import { createClient } from "@/lib/supabase-browser";
@@ -49,13 +50,13 @@ const deliverableIcons: Record<string, React.ReactNode> = {
 };
 
 export default function CampaignDetailPage() {
-  const params = useParams();
+  const params = useParams<{ id?: string }>();
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user, role, loading: authLoading } = useAuth();
 
-  const campaignId = params.id as string;
-  const actionParam = searchParams.get("action"); // "proposal" | "apply" | null
+  const campaignId = params?.id;
+  const actionParam = searchParams?.get("action"); // "proposal" | "apply" | null
 
   const [campaign, setCampaign] = useState<MarketplaceCampaign | null>(null);
   const [loading, setLoading] = useState(true);
@@ -249,6 +250,19 @@ export default function CampaignDetailPage() {
     );
   }
 
+  if (!campaignId) {
+    return (
+      <DashboardShell role={role || "creator"}>
+        <div className="text-center py-20 text-muted-foreground">
+          <p className="text-lg mb-4">Campaign not found.</p>
+          <Button variant="outline" onClick={() => router.push("/campaigns") }>
+            <ArrowLeft className="w-4 h-4 mr-2" /> Back to Campaigns
+          </Button>
+        </div>
+      </DashboardShell>
+    );
+  }
+
   if (!campaign) {
     return (
       <DashboardShell role={role || "creator"}>
@@ -329,7 +343,13 @@ export default function CampaignDetailPage() {
               <div className="flex items-center gap-3 mb-6 p-4 rounded-xl bg-muted/30">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg shrink-0">
                   {campaign.brand.logoUrl ? (
-                    <img src={campaign.brand.logoUrl} alt={campaign.brand.name} className="w-full h-full rounded-full object-cover" />
+                    <Image
+                      src={campaign.brand.logoUrl}
+                      alt={campaign.brand.name}
+                      width={48}
+                      height={48}
+                      className="w-full h-full rounded-full object-cover"
+                    />
                   ) : (
                     campaign.brand.name.charAt(0).toUpperCase()
                   )}

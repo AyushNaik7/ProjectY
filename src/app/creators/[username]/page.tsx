@@ -36,10 +36,10 @@ interface CreatorProfile {
 }
 
 export default function CreatorMediaKit() {
-  const params = useParams();
+  const params = useParams<{ username?: string }>();
   const router = useRouter();
   const { user, role } = useAuth();
-  const username = params.username as string;
+  const username = params?.username;
 
   const [creator, setCreator] = useState<CreatorProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,7 +63,11 @@ export default function CreatorMediaKit() {
   };
 
   useEffect(() => {
-    fetchCreatorProfile();
+    if (username) {
+      fetchCreatorProfile();
+    } else {
+      setLoading(false);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [username]);
 

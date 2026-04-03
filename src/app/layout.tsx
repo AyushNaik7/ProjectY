@@ -28,15 +28,23 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
   return (
-    <ClerkProvider>
-      <html lang="en" suppressHydrationWarning>
-        <body className="min-h-screen bg-background antialiased">
+    <html lang="en" suppressHydrationWarning>
+      <body className="min-h-screen bg-background antialiased">
+        {clerkPublishableKey ? (
+          <ClerkProvider publishableKey={clerkPublishableKey}>
+            <ThemeProvider>
+              <ClerkAuthProvider>{children}</ClerkAuthProvider>
+            </ThemeProvider>
+          </ClerkProvider>
+        ) : (
           <ThemeProvider>
             <ClerkAuthProvider>{children}</ClerkAuthProvider>
           </ThemeProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+        )}
+      </body>
+    </html>
   );
 }
