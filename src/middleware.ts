@@ -25,13 +25,8 @@ export default clerkMiddleware(async (auth, request) => {
     'X-Frame-Options': 'SAMEORIGIN',
     'Content-Security-Policy': [
       "default-src 'self'",
-      // In production, remove unsafe-eval and unsafe-inline
-      isProduction 
-        ? "script-src 'self' https://vercel.live https://*.clerk.accounts.dev https://challenges.cloudflare.com"
-        : "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://*.clerk.accounts.dev https://challenges.cloudflare.com",
-      isProduction
-        ? "style-src 'self' https://fonts.googleapis.com https://*.clerk.accounts.dev"
-        : "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.clerk.accounts.dev",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://*.clerk.accounts.dev https://challenges.cloudflare.com",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.clerk.accounts.dev",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: https: blob:",
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://vercel.live https://*.clerk.accounts.dev https://clerk-telemetry.com",
