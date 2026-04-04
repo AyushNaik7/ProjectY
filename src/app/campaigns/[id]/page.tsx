@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -71,6 +71,7 @@ export default function CampaignDetailPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const autoAppliedRef = useRef(false);
 
   const isBrand = role === "brand";
 
@@ -120,6 +121,20 @@ export default function CampaignDetailPage() {
   useEffect(() => {
     if (user) fetchCampaign();
   }, [user, fetchCampaign]);
+
+  useEffect(() => {
+    if (
+      actionParam === "apply" &&
+      campaign &&
+      !isBrand &&
+      !submitting &&
+      !submitSuccess &&
+      !autoAppliedRef.current
+    ) {
+      autoAppliedRef.current = true;
+      handleQuickApply();
+    }
+  }, [actionParam, campaign, isBrand, submitting, submitSuccess]);
 
   // ─── Toggle save ─────────────────────────────────────────────────
   const handleToggleSave = async () => {
@@ -389,22 +404,22 @@ export default function CampaignDetailPage() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div className="p-4 rounded-xl bg-muted/30 text-center">
                   <IndianRupee className="w-5 h-5 mx-auto mb-1 text-primary" />
-                  <p className="text-xs text-muted-foreground mb-0.5">Budget</p>
+                  <p className="text-xs text-foreground/70 mb-0.5">Budget</p>
                   <p className="font-semibold text-sm">{budgetDisplay}</p>
                 </div>
                 <div className="p-4 rounded-xl bg-muted/30 text-center">
                   <Calendar className="w-5 h-5 mx-auto mb-1 text-primary" />
-                  <p className="text-xs text-muted-foreground mb-0.5">Timeline</p>
+                  <p className="text-xs text-foreground/70 mb-0.5">Timeline</p>
                   <p className="font-semibold text-sm">{campaign.timeline || "Flexible"}</p>
                 </div>
                 <div className="p-4 rounded-xl bg-muted/30 text-center">
                   {deliverableIcons[campaign.deliverableType] || <Film className="w-5 h-5 mx-auto mb-1 text-primary" />}
-                  <p className="text-xs text-muted-foreground mb-0.5 mt-1">Deliverable</p>
+                  <p className="text-xs text-foreground/70 mb-0.5 mt-1">Deliverable</p>
                   <p className="font-semibold text-sm">{campaign.deliverableType}</p>
                 </div>
                 <div className="p-4 rounded-xl bg-muted/30 text-center">
                   <MapPin className="w-5 h-5 mx-auto mb-1 text-primary" />
-                  <p className="text-xs text-muted-foreground mb-0.5">Niche</p>
+                  <p className="text-xs text-foreground/70 mb-0.5">Niche</p>
                   <p className="font-semibold text-sm">{campaign.niche || "General"}</p>
                 </div>
               </div>
@@ -442,14 +457,14 @@ export default function CampaignDetailPage() {
               {/* Why Recommended — creator only */}
               {!isBrand && campaign.matchReasons.length > 0 && (
                 <div className="mb-6 p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
-                  <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-2">
+                  <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider mb-2">
                     Why this is recommended for you
                   </p>
                   <div className="space-y-1.5">
                     {campaign.matchReasons.map((reason, i) => (
                       <div key={i} className="flex items-start gap-2">
                         <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
-                        <span className="text-sm text-emerald-700 dark:text-emerald-300">{reason}</span>
+                        <span className="text-sm font-medium text-emerald-800 dark:text-emerald-200">{reason}</span>
                       </div>
                     ))}
                   </div>
@@ -508,7 +523,7 @@ export default function CampaignDetailPage() {
                   <>
                     <Button className="gap-2" onClick={handleQuickApply} disabled={submitting || !!submitSuccess}>
                       {submitting && showApplyForm ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
-                      Quick Apply
+                      Apply Now
                     </Button>
                     <Button variant="outline" className="gap-2" onClick={() => setShowProposalForm(true)} disabled={!!submitSuccess}>
                       <Send className="w-4 h-4" /> Send Proposal

@@ -32,7 +32,11 @@ export default function SavedCampaignsPage() {
       const campaignsList = data?.map((item: any) => item.campaigns) || [];
       setCampaigns(campaignsList);
     } catch (error) {
-      console.error("Error fetching saved campaigns:", error);
+      const message = error instanceof Error ? error.message : String(error);
+      if (!message.includes("saved_campaigns")) {
+        console.error("Error fetching saved campaigns:", error);
+      }
+      setCampaigns([]);
     } finally {
       setLoading(false);
     }
@@ -59,7 +63,10 @@ export default function SavedCampaignsPage() {
 
       setCampaigns(campaigns.filter((c) => c.id !== campaignId));
     } catch (error) {
-      console.error("Error unsaving campaign:", error);
+      const message = error instanceof Error ? error.message : String(error);
+      if (!message.includes("saved_campaigns")) {
+        console.error("Error unsaving campaign:", error);
+      }
     }
   };
 
@@ -113,7 +120,7 @@ export default function SavedCampaignsPage() {
                 budgetMax={campaign.budget || 0}
                 timeline={campaign.timeline || ""}
                 matchScore={0}
-                onApply={() => {}}
+                onApply={() => router.push(`/campaigns/${campaign.id}?action=apply`)}
                 index={index}
                 isSaved={true}
                 onToggleSave={() => handleUnsave(campaign.id)}

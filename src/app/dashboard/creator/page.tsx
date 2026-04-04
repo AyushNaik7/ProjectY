@@ -421,7 +421,7 @@ export default function CreatorDashboard() {
                         <span className="text-sm font-bold text-primary">
                           {campaign.matchScore}%
                         </span>
-                        <span className="text-[10px] text-muted-foreground">
+                        <span className="text-[10px] font-medium text-foreground/70">
                           match
                         </span>
                       </div>
@@ -433,7 +433,7 @@ export default function CreatorDashboard() {
 
                     <div className="grid grid-cols-2 gap-3 mb-3 py-3 border-y border-border/50">
                       <div>
-                        <p className="text-[10px] text-muted-foreground mb-0.5">
+                        <p className="text-[10px] text-foreground/70 mb-0.5">
                           Budget
                         </p>
                         <p className="text-sm font-semibold text-foreground">
@@ -441,7 +441,7 @@ export default function CreatorDashboard() {
                         </p>
                       </div>
                       <div>
-                        <p className="text-[10px] text-muted-foreground mb-0.5">
+                        <p className="text-[10px] text-foreground/70 mb-0.5">
                           Timeline
                         </p>
                         <p className="text-sm font-semibold text-foreground">
@@ -463,7 +463,7 @@ export default function CreatorDashboard() {
                         {campaign.matchReasons.slice(0, 3).map((reason, i) => (
                           <span
                             key={i}
-                            className="text-[10px] px-1.5 py-0.5 rounded bg-secondary text-muted-foreground"
+                            className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary"
                           >
                             {reason}
                           </span>
@@ -480,6 +480,7 @@ export default function CreatorDashboard() {
                     <Button
                       size="sm"
                       className="w-full mt-auto bg-primary hover:bg-primary/90"
+                      onClick={() => router.push(`/campaigns/${campaign.id}?action=apply`)}
                     >
                       Apply Now
                     </Button>

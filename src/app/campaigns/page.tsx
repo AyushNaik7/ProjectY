@@ -82,6 +82,7 @@ export default function CampaignsPage() {
               "Content-Type": "application/json",
               Authorization: `Bearer ${accessToken}`,
             },
+            credentials: "include",
             body: JSON.stringify({}),
           });
 
@@ -150,7 +151,11 @@ export default function CampaignsPage() {
         setSavedIds(new Set(data.map((r: any) => r.campaign_id)));
       }
     } catch (err) {
-      console.error("Error loading saved campaigns:", err);
+        const message = err instanceof Error ? err.message : String(err);
+        if (!message.includes("saved_campaigns")) {
+          console.error("Error loading saved campaigns:", err);
+        }
+        setSavedIds(new Set());
     }
   }, [user, isBrand]);
 

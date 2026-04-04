@@ -116,7 +116,7 @@ export function CreatorCard({
                 whileHover={{ scale: 1.05 }}
                 transition={{ duration: 0.2 }}
               >
-                <p className="text-xs text-muted-foreground mb-1">Followers</p>
+                <p className="text-xs text-foreground/70 mb-1">Followers</p>
                 <p className="text-sm font-semibold text-foreground">
                   {formatNumber(followers)}
                 </p>
@@ -125,14 +125,14 @@ export function CreatorCard({
                 whileHover={{ scale: 1.05 }}
                 transition={{ duration: 0.2 }}
               >
-                <p className="text-xs text-muted-foreground mb-1">Engagement</p>
+                <p className="text-xs text-foreground/70 mb-1">Engagement</p>
                 <p className="text-sm font-semibold text-primary">{engagement}%</p>
               </motion.div>
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 transition={{ duration: 0.2 }}
               >
-                <p className="text-xs text-muted-foreground mb-1">Avg Views</p>
+                <p className="text-xs text-foreground/70 mb-1">Avg Views</p>
                 <p className="text-sm font-semibold text-foreground">
                   {formatNumber(avgViews)}
                 </p>

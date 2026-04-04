@@ -104,6 +104,7 @@ export async function POST(req: NextRequest) {
         supabaseAdmin
           .from("campaigns")
           .insert({
+            id: globalThis.crypto.randomUUID(),
             brand_id: uid,
             title: title.trim(),
             description: description.trim(),

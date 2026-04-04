@@ -46,6 +46,7 @@ export interface VectorMatchedCampaign {
 
 export interface VectorMatchedCreator {
   uid: string;
+  username?: string;
   name: string;
   instagramHandle: string;
   niche: string;
@@ -73,6 +74,7 @@ interface CampaignRow {
 
 interface CreatorRow {
   id: string;
+  username?: string | null;
   name: string;
   instagram_handle?: string | null;
   niche: string;
@@ -288,14 +290,16 @@ export async function getVectorMatchedCreators(
             () =>
               supabaseAdmin
                 .from("creators")
-                .select("id, min_rate_private")
+                .select("id, username, min_rate_private")
                 .in("id", creatorIds),
             { campaignId }
           );
 
           const rateMap = new Map<string, number>();
+          const usernameMap = new Map<string, string>();
           for (const r of rateData || []) {
             rateMap.set(r.id, r.min_rate_private || 0);
+            if (r.username) usernameMap.set(r.id, r.username);
           }
 
           const results: VectorMatchedCreator[] = matches.map(
@@ -317,6 +321,7 @@ export async function getVectorMatchedCreators(
 
               return {
                 uid: m.id as string,
+                username: usernameMap.get(m.id as string) || undefined,
                 name: m.name as string,
                 instagramHandle: (m.instagram_handle as string) || "",
                 niche: m.niche as string,
@@ -362,6 +367,7 @@ export async function getVectorMatchedCreators(
       const match = computeMatchScore(creatorData, campaignData);
       return {
         uid: c.id,
+        username: c.username || undefined,
         name: c.name,
         instagramHandle: c.instagram_handle || "",
         niche: c.niche,
@@ -405,6 +411,7 @@ export async function searchCreatorsByQuery(
 
   return (matches || []).map((m: Record<string, unknown>) => ({
     uid: m.id as string,
+    username: (m.username as string) || undefined,
     name: m.name as string,
     instagramHandle: (m.instagram_handle as string) || "",
     niche: m.niche as string,

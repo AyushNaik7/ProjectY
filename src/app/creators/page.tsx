@@ -22,6 +22,7 @@ import { Search, Users, Loader2 } from "lucide-react";
 
 interface CreatorItem {
   id: string;
+  username?: string;
   name: string;
   niche: string;
   followers: number;
@@ -53,7 +54,7 @@ export default function FindCreatorsPage() {
         const { data, error } = await supabase
           .from("creators")
           .select(
-            "id, name, niche, instagram_followers, instagram_engagement, avg_views"
+            "id, username, name, niche, instagram_followers, instagram_engagement, avg_views"
           )
           .order("instagram_followers", { ascending: false });
 
@@ -61,6 +62,7 @@ export default function FindCreatorsPage() {
 
         const mapped: CreatorItem[] = (data || []).map((c: any) => ({
           id: c.id,
+          username: c.username || undefined,
           name: c.name || "Unknown Creator",
           niche: c.niche || "General",
           followers: c.instagram_followers || 0,

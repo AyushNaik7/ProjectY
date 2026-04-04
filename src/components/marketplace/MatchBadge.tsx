@@ -113,7 +113,7 @@ export function MatchBadge({
         </div>
       </div>
       {showLabel && (
-        <span className={cn("text-[10px] font-medium", colors.text)}>
+        <span className="text-[10px] font-medium text-foreground/80">
           {getScoreLabel(score)} Match
         </span>
       )}

@@ -122,7 +122,7 @@ export function MarketplaceCampaignCard({
                     {campaign.matchReasons.slice(0, 3).map((reason, i) => (
                       <span
                         key={i}
-                        className="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400"
+                        className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-300"
                       >
                         <CheckCircle2 className="w-3 h-3 shrink-0" />
                         {reason}

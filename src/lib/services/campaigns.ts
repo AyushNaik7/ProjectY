@@ -62,9 +62,11 @@ export async function getActiveCampaigns() {
 
 // Create campaign
 export async function createCampaign(campaign: Omit<Campaign, 'id' | 'created_at' | 'updated_at'>) {
+  const id = globalThis.crypto.randomUUID();
+
   const { data, error } = await supabase
     .from('campaigns')
-    .insert([campaign])
+    .insert([{ id, ...campaign }])
     .select()
     .single();
 

@@ -484,7 +484,7 @@ export default function BrandDashboard() {
                         <span className="text-sm font-bold text-primary">
                           {creator.matchScore}%
                         </span>
-                        <span className="text-[10px] text-muted-foreground">
+                        <span className="text-[10px] font-medium text-foreground/70">
                           match
                         </span>
                       </div>
@@ -538,7 +538,7 @@ export default function BrandDashboard() {
                         {creator.matchReasons.slice(0, 3).map((reason, i) => (
                           <span
                             key={i}
-                            className="text-[10px] px-1.5 py-0.5 rounded bg-secondary text-muted-foreground"
+                            className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary"
                           >
                             {reason}
                           </span>
@@ -554,7 +554,7 @@ export default function BrandDashboard() {
 
                     <div className="flex gap-2">
                       <Link
-                        href={`/creators/${creator.uid}`}
+                        href={`/creators/${creator.username || creator.uid}`}
                         className="flex-1"
                       >
                         <Button

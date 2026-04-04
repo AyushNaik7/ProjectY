@@ -68,6 +68,7 @@ export interface MatchedCampaign {
 
 export interface MatchedCreator {
   uid: string;
+  username?: string;
   name: string;
   instagramHandle: string;
   niche: string;
