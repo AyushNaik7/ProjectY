@@ -3,12 +3,14 @@ import { ClerkProvider } from '@clerk/nextjs';
 import "./globals.css";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { ClerkAuthProvider } from "@/context/ClerkAuthContext";
+import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: "Collabo — Where Brands Meet Creators",
+  title: "InstaCollab — Where Brands Meet Instagram Creators",
   description:
-    "India's premium creator-brand collaboration platform. Connect with top creators, launch campaigns, and grow your brand with data-driven matching.",
+    "India's premium Instagram creator-brand collaboration platform. Connect with top Instagram influencers, launch campaigns, and grow your brand with AI-powered matching.",
   keywords: [
+    "instagram influencer",
     "creator platform",
     "brand deals",
     "influencer marketing",
@@ -17,8 +19,8 @@ export const metadata: Metadata = {
     "creator economy",
   ],
   openGraph: {
-    title: "Collabo — Where Brands Meet Creators",
-    description: "India's premium creator-brand collaboration platform.",
+    title: "InstaCollab — Where Brands Meet Instagram Creators",
+    description: "India's premium Instagram creator-brand collaboration platform.",
     type: "website",
   },
 };
@@ -36,12 +38,18 @@ export default function RootLayout({
         {clerkPublishableKey ? (
           <ClerkProvider publishableKey={clerkPublishableKey}>
             <ThemeProvider>
-              <ClerkAuthProvider>{children}</ClerkAuthProvider>
+              <ClerkAuthProvider>
+                {children}
+                <Toaster />
+              </ClerkAuthProvider>
             </ThemeProvider>
           </ClerkProvider>
         ) : (
           <ThemeProvider>
-            <ClerkAuthProvider>{children}</ClerkAuthProvider>
+            <ClerkAuthProvider>
+              {children}
+              <Toaster />
+            </ClerkAuthProvider>
           </ThemeProvider>
         )}
       </body>

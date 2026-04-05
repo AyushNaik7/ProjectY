@@ -16,6 +16,7 @@ import {
   logRequestCompleted,
 } from "@/lib/request-context";
 import { timedQuery } from "@/lib/db-timing";
+import { randomUUID } from "crypto";
 
 /* ── POST: brand sends a collaboration request ── */
 export async function POST(req: NextRequest) {
@@ -97,6 +98,7 @@ export async function POST(req: NextRequest) {
 
     // Build insert payload — campaignId may be null for a general request
     const insertPayload: Record<string, unknown> = {
+      id: randomUUID(), // Explicitly generate UUID
       brand_id: uid,
       creator_id: creatorId,
       status: "pending",
@@ -110,7 +112,7 @@ export async function POST(req: NextRequest) {
       () =>
         supabaseAdmin
           .from("collaboration_requests")
-          .insert(insertPayload)
+          .insert([insertPayload])
           .select("id")
           .single(),
       { brandId: uid }

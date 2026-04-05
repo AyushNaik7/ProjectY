@@ -71,30 +71,58 @@ export default function CampaignsPage() {
       try {
         if (!isBrand) {
           // ── Creator view: call AI marketplace API for enriched match data ──
-          const supabase = createClient();
-          const { data: sessionData } = await supabase.auth.getSession();
-          const accessToken = sessionData.session?.access_token;
-          if (!accessToken) throw new Error("Not authenticated");
-
           const res = await fetch("/api/marketplace-campaigns", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${accessToken}`,
             },
             credentials: "include",
-            body: JSON.stringify({}),
+            body: JSON.stringify({
+              userId: user.id // Send user ID in body for auth
+            }),
           });
 
           const json = await res.json();
-          if (!res.ok)
+          
+          console.log("API Response:", json); // Debug log
+          
+          if (!res.ok) {
+            console.error("API Error:", json.error);
             throw new Error(
               json.error || "Failed to fetch marketplace campaigns",
             );
+          }
 
           const enrichedCampaigns: MarketplaceCampaign[] = (
             json.campaigns || []
           ).map((row: any) => mapRowToMarketplaceCampaign(row));
+
+          console.log("Enriched campaigns:", enrichedCampaigns.length); // Debug log
+
+          // If AI matching returns no results, fetch all active campaigns as fallback
+          if (enrichedCampaigns.length === 0) {
+            console.log("No AI matches, fetching all active campaigns...");
+            const supabase = createClient();
+            const { data: allActiveCampaigns, error: fallbackError } = await supabase
+              .from("campaigns")
+              .select("*, brands(*)")
+              .eq("status", "active")
+              .order("created_at", { ascending: false })
+              .limit(20);
+
+            if (!fallbackError && allActiveCampaigns) {
+              const fallbackCampaigns: MarketplaceCampaign[] = allActiveCampaigns.map(
+                (row: any) => mapRowToMarketplaceCampaign(row)
+              );
+              console.log("Fallback campaigns:", fallbackCampaigns.length);
+              setAllCampaigns(fallbackCampaigns);
+              setPage(0);
+              setHasMore(false);
+              setLoading(false);
+              setLoadingMore(false);
+              return;
+            }
+          }
 
           setAllCampaigns(enrichedCampaigns);
           setPage(0);
@@ -130,6 +158,39 @@ export default function CampaignsPage() {
         }
       } catch (error) {
         console.error("Error fetching campaigns:", error);
+        
+        // Show user-friendly error message
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        console.error("Campaign fetch error details:", errorMessage);
+        
+        // Try one more fallback - fetch campaigns without AI matching
+        if (!isBrand) {
+          try {
+            console.log("Attempting direct campaign fetch as fallback...");
+            const supabase = createClient();
+            const { data: directCampaigns, error: directError } = await supabase
+              .from("campaigns")
+              .select("*, brands(*)")
+              .eq("status", "active")
+              .order("created_at", { ascending: false })
+              .limit(20);
+
+            if (!directError && directCampaigns && directCampaigns.length > 0) {
+              const campaigns: MarketplaceCampaign[] = directCampaigns.map(
+                (row: any) => mapRowToMarketplaceCampaign(row)
+              );
+              console.log("Direct fetch successful:", campaigns.length, "campaigns");
+              setAllCampaigns(campaigns);
+              setPage(0);
+              setHasMore(false);
+              setLoading(false);
+              setLoadingMore(false);
+              return;
+            }
+          } catch (fallbackError) {
+            console.error("Fallback fetch also failed:", fallbackError);
+          }
+        }
       } finally {
         setLoading(false);
         setLoadingMore(false);

@@ -30,6 +30,7 @@ import {
   type MatchedCreator,
 } from "@/lib/functions";
 import { formatMatchScore, getMatchColor } from "@/lib/matching";
+import { useToast } from "@/hooks/use-toast";
 
 interface CampaignRow {
   id: string;
@@ -44,6 +45,7 @@ interface CampaignRow {
 export default function BrandDashboard() {
   const router = useRouter();
   const { user, role, loading, signOut } = useAuth();
+  const { toast } = useToast();
   const [campaigns, setCampaigns] = useState<CampaignRow[]>([]);
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(
     null
@@ -52,6 +54,7 @@ export default function BrandDashboard() {
   const [creatorsLoading, setCreatorsLoading] = useState(false);
   const [campaignsLoading, setCampaignsLoading] = useState(true);
   const [brandName, setBrandName] = useState("");
+  const [sendingRequestTo, setSendingRequestTo] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && (!user || role !== "brand")) {
@@ -134,9 +137,51 @@ export default function BrandDashboard() {
 
   if (!user || role !== "brand") return null;
 
-  const handleSendRequest = (creatorId: string) => {
-    console.log("Send request to creator:", creatorId);
+  const handleSendRequest = async (creatorId: string) => {
+    if (!selectedCampaignId) {
+      toast({
+        variant: "destructive",
+        title: "Campaign Required",
+        description: "Please select a campaign first",
+      });
+      return;
+    }
+
+    setSendingRequestTo(creatorId);
+    try {
+      const response = await fetch("/api/requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          creatorId,
+          campaignId: selectedCampaignId,
+          message: "Hi! We'd love to collaborate with you on this campaign.",
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to send request");
+      }
+
+      toast({
+        variant: "success",
+        title: "Request Sent!",
+        description: "The creator will be notified about your collaboration request.",
+      });
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Failed to Send Request",
+        description: err.message || "Something went wrong. Please try again.",
+      });
+    } finally {
+      setSendingRequestTo(null);
+    }
   };
+
   const activeCampaigns = campaigns.filter((c) => c.status === "active");
   const totalBudget = activeCampaigns.reduce((sum, c) => sum + c.budget, 0);
 
@@ -569,8 +614,16 @@ export default function BrandDashboard() {
                         size="sm"
                         className="flex-1 text-xs bg-primary hover:bg-primary/90"
                         onClick={() => handleSendRequest(creator.uid)}
+                        disabled={sendingRequestTo === creator.uid}
                       >
-                        Send Request
+                        {sendingRequestTo === creator.uid ? (
+                          <>
+                            <div className="w-3 h-3 rounded-full border-2 border-white border-t-transparent animate-spin mr-1" />
+                            Sending...
+                          </>
+                        ) : (
+                          "Send Request"
+                        )}
                       </Button>
                     </div>
                   </CardContent>

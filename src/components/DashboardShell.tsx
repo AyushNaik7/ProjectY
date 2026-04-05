@@ -1,12 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/ClerkAuthContext";
 import { Button } from "@/components/ui/button";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   Sparkles,
   LayoutDashboard,
@@ -14,11 +12,13 @@ import {
   Send,
   LogOut,
   Plus,
-  User,
   Users,
   Settings,
   Bookmark,
+  Menu,
+  X,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface DashboardShellProps {
   children: React.ReactNode;
@@ -27,7 +27,9 @@ interface DashboardShellProps {
 
 export default function DashboardShell({ children }: DashboardShellProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { signOut, role } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -59,78 +61,139 @@ export default function DashboardShell({ children }: DashboardShellProps) {
           { href: "/saved/campaigns", label: "Saved", icon: Bookmark },
         ];
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Top Navigation */}
-      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-3">
-          <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center">
-              <Image
-                src="/logo.png"
-                alt="Collabo"
-                width={120}
-                height={40}
-                className="h-10 w-auto rounded-lg hover:opacity-80 transition-opacity"
-                priority
-              />
-            </Link>
+  const isActive = (href: string) => {
+    if (href === "/dashboard/brand" || href === "/dashboard/creator") {
+      return pathname === href;
+    }
+    return pathname?.startsWith(href);
+  };
 
-            <nav className="hidden md:flex items-center gap-1">
-              {navItems.map((item) => (
+  return (
+    <div className="min-h-screen">
+      {/* Navigation */}
+      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-16 items-center justify-between">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+              <Sparkles className="h-4 w-4 text-primary-foreground" />
+            </div>
+            <span className="text-lg font-semibold">InstaCollab</span>
+          </Link>
+
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center gap-1">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.href);
+              return (
                 <Link key={item.href} href={item.href}>
-                  <Button variant="ghost" size="sm" className="gap-2">
-                    <item.icon className="w-4 h-4" />
+                  <Button
+                    variant={active ? "secondary" : "ghost"}
+                    size="sm"
+                    className="gap-2"
+                  >
+                    <Icon className="h-4 w-4" />
                     {item.label}
                   </Button>
                 </Link>
-              ))}
-            </nav>
-          </div>
+              );
+            })}
+          </nav>
 
-          <div className="flex items-center gap-3">
-            <ThemeToggle />
+          {/* Desktop Actions */}
+          <div className="hidden md:flex items-center gap-2">
             <Link href="/settings">
-              <Button variant="ghost" size="sm" className="gap-2">
-                <Settings className="w-4 h-4" />
-                <span className="hidden sm:inline">Settings</span>
+              <Button variant="ghost" size="sm">
+                <Settings className="h-4 w-4" />
               </Button>
             </Link>
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary text-sm">
-              <User className="w-3.5 h-3.5" />
-              <span className="text-muted-foreground capitalize">{role}</span>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleSignOut}
-              className="gap-2"
-            >
-              <LogOut className="w-4 h-4" />
-              <span className="hidden sm:inline">Sign Out</span>
+            <Button variant="ghost" size="sm" onClick={handleSignOut}>
+              <LogOut className="h-4 w-4" />
             </Button>
           </div>
+
+          {/* Mobile Menu Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="md:hidden"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
+          </Button>
         </div>
 
-        {/* Mobile nav */}
-        <div className="md:hidden border-t border-border/50 px-4 py-2 flex items-center gap-1 overflow-x-auto">
-          {navItems.map((item) => (
-            <Link key={item.href} href={item.href}>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1.5 text-xs whitespace-nowrap"
-              >
-                <item.icon className="w-3.5 h-3.5" />
-                {item.label}
-              </Button>
-            </Link>
-          ))}
-        </div>
+        {/* Mobile Navigation */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="md:hidden border-t"
+            >
+              <nav className="container py-4 space-y-1">
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  const active = isActive(item.href);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Button
+                        variant={active ? "secondary" : "ghost"}
+                        size="sm"
+                        className="w-full justify-start gap-2"
+                      >
+                        <Icon className="h-4 w-4" />
+                        {item.label}
+                      </Button>
+                    </Link>
+                  );
+                })}
+                <div className="pt-2 border-t space-y-1">
+                  <Link
+                    href="/settings"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start gap-2"
+                    >
+                      <Settings className="h-4 w-4" />
+                      Settings
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start gap-2"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      handleSignOut();
+                    }}
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Sign Out
+                  </Button>
+                </div>
+              </nav>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 py-8">{children}</main>
+      <main className="container py-8">{children}</main>
     </div>
   );
 }
