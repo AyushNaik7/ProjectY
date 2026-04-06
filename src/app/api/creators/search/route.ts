@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase-admin';
+import { supabaseAdmin } from '@/lib/supabase-server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
         query = query.order('engagement_rate', { ascending: false });
         break;
       case 'rating':
-        query = query.order('rating', { ascending: false, nullsLast: true });
+        query = query.order('rating', { ascending: false, nullsFirst: false });
         break;
       case 'match_score':
       default:

@@ -126,7 +126,7 @@ export default function HomePage() {
           >
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border bg-muted px-3 py-1 text-sm">
               <Sparkles className="h-3.5 w-3.5 text-primary" />
-              <span className="font-medium">India's Instagram Creator Platform</span>
+              <span className="font-medium">India&apos;s Instagram Creator Platform</span>
             </div>
             <h1 className="mb-6 text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
               Where Brands Meet Instagram Creators
@@ -291,7 +291,7 @@ export default function HomePage() {
             >
               <Card className="h-full p-6">
                 <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
-                  "{testimonial.text}"
+                  "                  &ldquo;{testimonial.text}&rdquo;"
                 </p>
                 <div>
                   <div className="font-semibold">{testimonial.name}</div>
@@ -340,7 +340,7 @@ export default function HomePage() {
                 <span className="font-semibold">InstaCollab</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                India's Instagram creator-brand platform
+                India&apos;s Instagram creator-brand platform
               </p>
             </div>
             <div>

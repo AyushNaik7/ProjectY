@@ -14,10 +14,10 @@ export const supabase = createClient(
   supabaseAnonKey || "placeholder",
   {
     auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: true,
-      flowType: 'pkce',
+      autoRefreshToken: false,
+      persistSession: false,
+      detectSessionInUrl: false,
+      storage: undefined,
     },
   }
 );

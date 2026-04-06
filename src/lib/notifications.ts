@@ -1,4 +1,4 @@
-import { supabaseAdmin } from './supabase-admin';
+import { supabaseAdmin } from './supabase-server';
 
 export type NotificationType =
   | 'new_request'
