@@ -291,7 +291,7 @@ export default function HomePage() {
             >
               <Card className="h-full p-6">
                 <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
-                  "                  &ldquo;{testimonial.text}&rdquo;"
+                  &ldquo;{testimonial.text}&rdquo;
                 </p>
                 <div>
                   <div className="font-semibold">{testimonial.name}</div>
