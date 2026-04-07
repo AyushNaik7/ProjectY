@@ -1,84 +1,83 @@
 /**
- * API Route: Semantic Search
- * POST /api/search
+ * API Route: Universal Search
  *
- * Performs vector similarity search across creators or campaigns.
- *
- * Body:
- *   { target: "creators", query: "fashion influencer with high engagement" }
- *   { target: "campaigns", query: "tech product launch for YouTube" }
- *
- * Headers: Authorization: Bearer <access_token>
+ * GET /api/search?q=[query]&type=[creators|campaigns|all] — Search across platform
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { supabaseAdmin } from "@/lib/supabase-server";
 import { requireUser } from "@/lib/request-auth";
-import {
-  searchCreatorsByQuery,
-  searchCampaignsByQuery,
-} from "@/lib/vector-matching";
 import {
   attachRequestId,
   createRequestContext,
-  logRequestCompleted,
 } from "@/lib/request-context";
+import { timedQuery } from "@/lib/db-timing";
 
-export async function POST(req: NextRequest) {
-  const { requestId, startTimeMs, log } = createRequestContext(req);
+export async function GET(req: NextRequest) {
+  const { requestId, log } = createRequestContext(req);
 
   try {
     const auth = await requireUser(req);
     if (auth.error) return attachRequestId(auth.error, requestId);
 
-    const body = await req.json();
-    const { target, query, limit } = body;
+    const { searchParams } = new URL(req.url);
+    const query = searchParams.get("q");
+    const type = searchParams.get("type") || "all";
+    const limit = parseInt(searchParams.get("limit") || "20");
 
-    if (!target || !query) {
+    if (!query) {
       const res = NextResponse.json(
-        { error: 'Missing "target" or "query" field' },
+        { error: "Query parameter 'q' is required" },
         { status: 400 }
       );
       return attachRequestId(res, requestId);
     }
 
-    if (typeof query !== "string" || query.trim().length < 3) {
-      const res = NextResponse.json(
-        { error: "Query must be at least 3 characters" },
-        { status: 400 }
+    let results: any = {
+      creators: [],
+      campaigns: [],
+    };
+
+    // Search creators
+    if (type === "all" || type === "creators") {
+      const { data: creators } = await timedQuery(
+        log,
+        "search_creators",
+        () =>
+          supabaseAdmin.rpc("search_creators", {
+            p_query: query,
+            p_limit: limit,
+            p_offset: 0,
+          })
       );
-      return attachRequestId(res, requestId);
+
+      results.creators = creators || [];
     }
 
-    const resultLimit = Math.min(Math.max(limit || 10, 1), 50);
+    // Search campaigns
+    if (type === "all" || type === "campaigns") {
+      const { data: campaigns } = await timedQuery(
+        log,
+        "search_campaigns",
+        () =>
+          supabaseAdmin.rpc("search_campaigns", {
+            p_query: query,
+            p_limit: limit,
+            p_offset: 0,
+          })
+      );
 
-    switch (target) {
-      case "creators": {
-        const results = await searchCreatorsByQuery(query.trim(), resultLimit);
-        const res = NextResponse.json({ creators: results });
-        logRequestCompleted(log, startTimeMs, 200);
-        return attachRequestId(res, requestId);
-      }
-      case "campaigns": {
-        const results = await searchCampaignsByQuery(query.trim(), resultLimit);
-        const res = NextResponse.json({ campaigns: results });
-        logRequestCompleted(log, startTimeMs, 200);
-        return attachRequestId(res, requestId);
-      }
-      default:
-        const res = NextResponse.json(
-          { error: `Invalid target: ${target}. Use "creators" or "campaigns"` },
-          { status: 400 }
-        );
-        return attachRequestId(res, requestId);
+      results.campaigns = campaigns || [];
     }
-  } catch (error: unknown) {
-    const err = error as { message?: string };
-    log.error({ err }, "search.failed");
+
+    const res = NextResponse.json(results);
+    return attachRequestId(res, requestId);
+  } catch (error: any) {
+    log.error({ err: error }, "search_failed");
     const res = NextResponse.json(
-      { error: err.message || "Internal server error" },
+      { error: error.message || "Search failed" },
       { status: 500 }
     );
-    logRequestCompleted(log, startTimeMs, 500);
     return attachRequestId(res, requestId);
   }
 }
