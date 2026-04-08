@@ -203,7 +203,7 @@ export default function AboutPage() {
           </Card>
 
           {/* CTA Section */}
-          <Card className="border-0 shadow-sm bg-gradient-to-r from-primary/10 to-blue-500/10">
+          <Card className="border-0 shadow-sm bg-slate-50">
             <CardContent className="p-8 text-center">
               <h2 className="text-2xl font-bold mb-4">Ready to Start Collaborating?</h2>
               <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
@@ -253,3 +253,4 @@ export default function AboutPage() {
     </div>
   );
 }
+

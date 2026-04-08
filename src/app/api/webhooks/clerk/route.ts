@@ -21,7 +21,12 @@ export async function POST(req: Request) {
     return new Response('Error: Missing svix headers', { status: 400 });
   }
 
-  const payload = await req.json();
+  let payload: unknown;
+  try {
+    payload = await req.json();
+  } catch {
+    return new Response('Error: Invalid JSON payload', { status: 400 });
+  }
   const body = JSON.stringify(payload);
 
   // Verify webhook signature
@@ -54,13 +59,31 @@ export async function POST(req: Request) {
       const tableName = role === 'creator' ? 'creators' : 'brands';
       
       try {
-        const { error } = await supabaseAdmin
+        const { data: existing } = await supabaseAdmin
           .from(tableName)
-          .insert({
-            id: userId,
-            email,
-            name: evt.data.first_name || evt.data.username || 'User',
-          });
+          .select('id')
+          .eq('clerk_user_id', userId)
+          .maybeSingle();
+
+        const profilePayload = {
+          clerk_user_id: userId,
+          email,
+          name: evt.data.first_name || evt.data.username || 'User',
+          updated_at: new Date().toISOString(),
+        };
+
+        const { error } = existing?.id
+          ? await supabaseAdmin
+              .from(tableName)
+              .update(profilePayload)
+              .eq('id', existing.id)
+          : await supabaseAdmin
+              .from(tableName)
+              .insert({
+                id: crypto.randomUUID(),
+                ...profilePayload,
+                created_at: new Date().toISOString(),
+              });
 
         if (error) {
           console.error(`Error creating ${role} profile:`, error);
@@ -82,14 +105,31 @@ export async function POST(req: Request) {
       const tableName = role === 'creator' ? 'creators' : 'brands';
       
       try {
-        // Upsert to handle cases where profile doesn't exist yet
-        const { error } = await supabaseAdmin
+        const { data: existing } = await supabaseAdmin
           .from(tableName)
-          .upsert({
-            id: userId,
-            email,
-            name: evt.data.first_name || evt.data.username || 'User',
-          });
+          .select('id')
+          .eq('clerk_user_id', userId)
+          .maybeSingle();
+
+        const profilePayload = {
+          clerk_user_id: userId,
+          email,
+          name: evt.data.first_name || evt.data.username || 'User',
+          updated_at: new Date().toISOString(),
+        };
+
+        const { error } = existing?.id
+          ? await supabaseAdmin
+              .from(tableName)
+              .update(profilePayload)
+              .eq('id', existing.id)
+          : await supabaseAdmin
+              .from(tableName)
+              .insert({
+                id: crypto.randomUUID(),
+                ...profilePayload,
+                created_at: new Date().toISOString(),
+              });
 
         if (error) {
           console.error(`Error updating ${role} profile:`, error);
@@ -104,8 +144,8 @@ export async function POST(req: Request) {
   if (eventType === 'user.deleted') {
     try {
       // Delete from both tables (one will succeed, one will fail - that's ok)
-      await supabaseAdmin.from('creators').delete().eq('id', userId);
-      await supabaseAdmin.from('brands').delete().eq('id', userId);
+      await supabaseAdmin.from('creators').delete().eq('clerk_user_id', userId);
+      await supabaseAdmin.from('brands').delete().eq('clerk_user_id', userId);
       console.log(`Deleted user ${userId} from database`);
     } catch (err) {
       console.error('Error deleting user:', err);

@@ -47,7 +47,7 @@ export default function AuthPage() {
             whileHover={{ y: -8 }}
           >
             <Link href="/">
-              <Card className="border-0 shadow-sm hover:shadow-lg transition-all cursor-pointer h-full bg-gradient-to-br from-primary/5 to-primary/10">
+              <Card className="border-0 shadow-sm hover:shadow-lg transition-all cursor-pointer h-full bg-slate-50">
                 <CardContent className="p-8 flex flex-col items-center text-center h-full justify-between">
                   <div className="mb-6">
                     <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto mb-6">
@@ -84,7 +84,7 @@ export default function AuthPage() {
             whileHover={{ y: -8 }}
           >
             <Link href="/dashboard/brand">
-              <Card className="border-0 shadow-sm hover:shadow-lg transition-all cursor-pointer h-full bg-gradient-to-br from-blue-500/5 to-blue-600/10">
+              <Card className="border-0 shadow-sm hover:shadow-lg transition-all cursor-pointer h-full bg-slate-50">
                 <CardContent className="p-8 flex flex-col items-center text-center h-full justify-between">
                   <div className="mb-6">
                     <div className="w-16 h-16 rounded-2xl bg-blue-600/20 flex items-center justify-center mx-auto mb-6">
@@ -167,3 +167,4 @@ export default function AuthPage() {
     </div>
   );
 }
+

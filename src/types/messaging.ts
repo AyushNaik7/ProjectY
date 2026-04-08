@@ -36,6 +36,7 @@ export interface ConversationWithDetails extends Conversation {
   campaign_title?: string;
   other_party_name: string;
   other_party_avatar?: string;
+  other_party_handle?: string;
   unread_count: number;
 }
 

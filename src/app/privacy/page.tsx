@@ -1365,7 +1365,7 @@ export default function PrivacyPolicyPage() {
               </section>
 
               {/* 13. Contact Us */}
-              <section className="bg-gradient-to-br from-primary/10 to-primary/5 border-2 border-primary/30 rounded-lg p-6">
+              <section className="bg-slate-50 border border-slate-200 rounded-lg p-6">
                 <h2 className="text-2xl font-bold mb-4 text-foreground">
                   13. Contact Information
                 </h2>
@@ -1510,3 +1510,4 @@ export default function PrivacyPolicyPage() {
     </div>
   );
 }
+

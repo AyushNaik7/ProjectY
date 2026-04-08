@@ -1,268 +1,210 @@
 "use client";
 
-import React, { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "@/context/ClerkAuthContext";
 import { callCompleteBrandOnboarding } from "@/lib/functions";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Building2, ArrowRight, Loader2, IndianRupee } from "lucide-react";
 
-const CATEGORY_OPTIONS = [
+const industries = [
   "D2C / E-commerce",
-  "Fashion & Apparel",
-  "Food & Beverages",
-  "Health & Wellness",
-  "Tech & SaaS",
-  "Education & EdTech",
-  "Finance & FinTech",
-  "Beauty & Personal Care",
-  "Travel & Hospitality",
-  "Real Estate",
-  "Automotive",
-  "Entertainment & Media",
-  "Gaming",
-  "Non-Profit / NGO",
+  "Fashion",
+  "Beauty",
+  "Tech",
+  "EdTech",
+  "FinTech",
+  "Travel",
+  "Food",
   "Other",
 ];
 
 export default function BrandOnboardingPage() {
-  const [formData, setFormData] = useState({
-    brandName: "",
-    category: "",
-    budgetMin: "",
-    budgetMax: "",
-    website: "",
-    description: "",
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const router = useRouter();
-  const { user, role, loading: authLoading } = useAuth();
+  const { user, role, loading } = useAuth();
+  const [step, setStep] = useState(1);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
-  // Redirect guards
-  React.useEffect(() => {
-    if (authLoading) return;
+  const [companyName, setCompanyName] = useState("");
+  const [industry, setIndustry] = useState("");
+  const [website, setWebsite] = useState("");
+  const [description, setDescription] = useState("");
+  const [budgetMin, setBudgetMin] = useState("");
+  const [budgetMax, setBudgetMax] = useState("");
+
+  useEffect(() => {
+    if (loading) return;
     if (!user) {
-      router.push("/auth?role=brand");
+      router.push("/login");
       return;
     }
     if (role === "creator") {
       router.push("/onboarding/creator");
     }
-  }, [user, role, authLoading, router]);
+  }, [loading, user, role, router]);
 
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  };
+  const canContinue = useMemo(() => {
+    if (step === 1) return companyName.trim().length >= 2 && industry !== "";
+    if (step === 2) return description.trim().length >= 20;
+    if (step === 3)
+      return (
+        budgetMin !== "" &&
+        budgetMax !== "" &&
+        Number(budgetMin) >= 0 &&
+        Number(budgetMax) >= Number(budgetMin)
+      );
+    return true;
+  }, [step, companyName, industry, description, budgetMin, budgetMax]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
+  const submit = async () => {
+    setSaving(true);
     setError("");
-    setLoading(true);
-
-    const budgetMin = parseInt(formData.budgetMin);
-    const budgetMax = parseInt(formData.budgetMax);
-
-    if (budgetMax < budgetMin) {
-      setError("Maximum budget must be greater than minimum budget.");
-      setLoading(false);
-      return;
-    }
-
     try {
       await callCompleteBrandOnboarding({
-        brandName: formData.brandName.trim(),
-        category: formData.category,
-        budgetMin,
-        budgetMax,
-        website: formData.website.trim() || undefined,
-        description: formData.description.trim() || undefined,
+        brandName: companyName,
+        category: industry,
+        budgetMin: Number(budgetMin),
+        budgetMax: Number(budgetMax),
+        website: website || undefined,
+        description: description || undefined,
       });
-
       router.push("/dashboard/brand");
-    } catch (err: unknown) {
-      const fnError = err as { message?: string };
-      console.error("Brand onboarding error:", err);
-      setError(fnError.message || "Failed to save profile. Please try again.");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Failed to complete onboarding";
+      setError(msg);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-      </div>
-    );
-  }
+  const labels = ["Company", "Profile", "Budget", "Launch"];
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 relative">
-      <div className="fixed inset-0 gradient-mesh pointer-events-none" />
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-2xl relative z-10"
-      >
-        <Card className="border-border/50 bg-card/80 backdrop-blur-xl">
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                <Building2 className="w-7 h-7 text-white" />
+    <div className="min-h-screen bg-slate-50 px-4 py-6 md:py-10">
+      <div className="mx-auto max-w-[760px] rounded-xl border border-slate-200 bg-white p-4 md:p-6">
+        <div className="mb-6">
+          <div className="mb-2 flex items-center justify-between text-[12px] text-slate-500">
+            <span>Step {Math.min(step, 4)} of 4</span>
+            <span>{labels[Math.min(step, 4) - 1]}</span>
+          </div>
+          <div className="grid grid-cols-4 gap-2">
+            {labels.map((l, i) => (
+              <div key={l} className="text-center">
+                <div className="mx-auto h-2 rounded-full" style={{ backgroundColor: i + 1 <= step ? "var(--ic-blue)" : "#e2e8f0" }} />
+                <p className="mt-1 text-[10px] text-slate-400">{l}</p>
               </div>
-            </div>
-            <CardTitle className="text-2xl">
-              Set up your Brand profile
-            </CardTitle>
-            <CardDescription>
-              Tell us about your brand to start posting campaigns and finding
-              creators.
-            </CardDescription>
-          </CardHeader>
+            ))}
+          </div>
+        </div>
 
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="brandName">Brand Name</Label>
-                <Input
-                  id="brandName"
-                  name="brandName"
-                  placeholder="Your brand or company name"
-                  value={formData.brandName}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="category">Industry Category</Label>
-                <select
-                  id="category"
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                  required
-                  className="flex h-11 w-full rounded-lg border border-input bg-background px-4 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-all duration-200"
-                >
-                  <option value="">Select your industry</option>
-                  {CATEGORY_OPTIONS.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="website">Website (optional)</Label>
-                <Input
-                  id="website"
-                  name="website"
-                  type="url"
-                  placeholder="https://yourbrand.com"
-                  value={formData.website}
-                  onChange={handleChange}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="budgetMin"
-                    className="flex items-center gap-1.5"
-                  >
-                    <IndianRupee className="w-3.5 h-3.5" /> Min Budget (₹)
-                  </Label>
-                  <Input
-                    id="budgetMin"
-                    name="budgetMin"
-                    type="number"
-                    placeholder="5000"
-                    value={formData.budgetMin}
-                    onChange={handleChange}
-                    required
-                    min={0}
-                  />
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={step}
+            initial={{ opacity: 0, x: 24 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -24 }}
+            transition={{ duration: 0.2 }}
+          >
+            {step === 1 ? (
+              <section>
+                <h1 className="text-[22px]" style={{ fontWeight: 500 }}>Company name and industry</h1>
+                <div className="mt-4 space-y-3">
+                  <div>
+                    <label className="mb-1 block text-[12px] text-slate-500">Company name</label>
+                    <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-[14px]" />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-[12px] text-slate-500">Industry</label>
+                    <select value={industry} onChange={(e) => setIndustry(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-[14px]">
+                      <option value="">Select industry</option>
+                      {industries.map((x) => (
+                        <option key={x} value={x}>{x}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
+              </section>
+            ) : null}
 
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="budgetMax"
-                    className="flex items-center gap-1.5"
-                  >
-                    <IndianRupee className="w-3.5 h-3.5" /> Max Budget (₹)
-                  </Label>
-                  <Input
-                    id="budgetMax"
-                    name="budgetMax"
-                    type="number"
-                    placeholder="50000"
-                    value={formData.budgetMax}
-                    onChange={handleChange}
-                    required
-                    min={0}
-                  />
+            {step === 2 ? (
+              <section>
+                <h1 className="text-[22px]" style={{ fontWeight: 500 }}>Logo, website and description</h1>
+                <div className="mt-4 space-y-3">
+                  <div>
+                    <label className="mb-1 block text-[12px] text-slate-500">Website</label>
+                    <input value={website} onChange={(e) => setWebsite(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-[14px]" placeholder="https://" />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-[12px] text-slate-500">Description</label>
+                    <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} className="w-full rounded-md border border-slate-300 px-3 py-2 text-[14px]" />
+                  </div>
                 </div>
-              </div>
+              </section>
+            ) : null}
 
-              <div className="space-y-2">
-                <Label htmlFor="description">
-                  Brand Description (optional)
-                </Label>
-                <textarea
-                  id="description"
-                  name="description"
-                  placeholder="Brief description of your brand and what you do..."
-                  value={formData.description}
-                  onChange={handleChange}
-                  rows={3}
-                  className="flex w-full rounded-lg border border-input bg-background px-4 py-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-all duration-200 resize-none"
-                />
-              </div>
+            {step === 3 ? (
+              <section>
+                <h1 className="text-[22px]" style={{ fontWeight: 500 }}>Typical budget range</h1>
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-[12px] text-slate-500">Min budget (₹)</label>
+                    <input type="number" value={budgetMin} onChange={(e) => setBudgetMin(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-[14px]" />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-[12px] text-slate-500">Max budget (₹)</label>
+                    <input type="number" value={budgetMax} onChange={(e) => setBudgetMax(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-[14px]" />
+                  </div>
+                </div>
+              </section>
+            ) : null}
 
-              {error && (
-                <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-lg">
-                  {error}
-                </p>
-              )}
+            {step === 4 ? (
+              <section>
+                <h1 className="text-[22px]" style={{ fontWeight: 500 }}>Create your first campaign now?</h1>
+                <p className="mt-2 text-[13px] text-slate-500">You can publish immediately or skip and do it from dashboard.</p>
+                <div className="mt-4 grid gap-2 md:grid-cols-2">
+                  <button
+                    onClick={submit}
+                    disabled={saving}
+                    className="rounded-md px-4 py-2 text-[14px] text-white"
+                    style={{ backgroundColor: "var(--ic-blue)" }}
+                  >
+                    {saving ? "Saving..." : "Create profile + go dashboard"}
+                  </button>
+                  <button
+                    onClick={() => router.push("/dashboard/brand")}
+                    className="rounded-md border border-slate-300 px-4 py-2 text-[14px]"
+                  >
+                    Skip for now
+                  </button>
+                </div>
+              </section>
+            ) : null}
 
-              <Button
-                type="submit"
-                className="w-full"
-                size="lg"
-                disabled={loading}
+            {error ? <p className="mt-3 text-[12px] text-red-700">{error}</p> : null}
+
+            <div className="mt-6 flex gap-2">
+              <button
+                onClick={() => setStep((s) => Math.max(1, s - 1))}
+                disabled={step === 1}
+                className="w-full rounded-md border border-slate-300 px-4 py-2 text-[14px] disabled:opacity-40"
               >
-                {loading ? (
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                ) : null}
-                Complete Profile
-                <ArrowRight className="ml-2 w-4 h-4" />
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </motion.div>
+                Back
+              </button>
+              {step < 4 ? (
+                <button
+                  onClick={() => setStep((s) => Math.min(4, s + 1))}
+                  disabled={!canContinue}
+                  className="w-full rounded-md px-4 py-2 text-[14px] text-white disabled:opacity-50"
+                  style={{ backgroundColor: "var(--ic-blue)" }}
+                >
+                  Continue
+                </button>
+              ) : null}
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

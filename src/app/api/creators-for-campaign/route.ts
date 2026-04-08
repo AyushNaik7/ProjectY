@@ -21,6 +21,7 @@ import {
   createRequestContext,
   logRequestCompleted,
 } from "@/lib/request-context";
+import { getBrandIdByClerkId, parseJsonBody } from "@/lib/api-utils";
 
 export async function POST(req: NextRequest) {
   const { requestId, startTimeMs, log } = createRequestContext(req);
@@ -31,7 +32,9 @@ export async function POST(req: NextRequest) {
 
     const user = auth.user;
     const uid = user.id;
-    const { campaignId } = await req.json();
+    const parsed = await parseJsonBody<{ campaignId: string }>(req);
+    if (!parsed.ok) return attachRequestId(parsed.response, requestId);
+    const { campaignId } = parsed.data;
 
     if (!campaignId) {
       const res = NextResponse.json(
@@ -51,6 +54,15 @@ export async function POST(req: NextRequest) {
       return attachRequestId(res, requestId);
     }
 
+    const brandId = await getBrandIdByClerkId(uid);
+    if (!brandId) {
+      const res = NextResponse.json(
+        { error: "Brand profile not found. Complete onboarding first." },
+        { status: 404 }
+      );
+      return attachRequestId(res, requestId);
+    }
+
     // Ensure brand owns the campaign
     const { data: campaign, error: campErr } = await supabaseAdmin
       .from("campaigns")
@@ -66,7 +78,7 @@ export async function POST(req: NextRequest) {
       return attachRequestId(res, requestId);
     }
 
-    if (campaign.brand_id !== uid) {
+    if (campaign.brand_id !== brandId) {
       const res = NextResponse.json(
         { error: "Unauthorized access to campaign" },
         { status: 403 }

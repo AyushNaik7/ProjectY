@@ -14,6 +14,7 @@ import {
   createRequestContext,
 } from "@/lib/request-context";
 import { timedQuery } from "@/lib/db-timing";
+import { parseJsonBody } from "@/lib/api-utils";
 
 export async function PATCH(
   req: NextRequest,
@@ -72,7 +73,9 @@ export async function PATCH(
       return attachRequestId(res, requestId);
     }
 
-    const body = await req.json();
+    const parsed = await parseJsonBody<Record<string, unknown>>(req);
+    if (!parsed.ok) return attachRequestId(parsed.response, requestId);
+    const body = parsed.data;
 
     // Update item
     const { data: updated, error } = await timedQuery(

@@ -197,7 +197,7 @@ export function MarketplaceCampaignCard({
       >
 
         {/* Hover overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+        <div className="absolute inset-0 bg-slate-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
         <CardContent className="p-5 flex-1 flex flex-col relative z-[1]">
           {/* Top row: Status + Match score */}
@@ -325,3 +325,4 @@ export function MarketplaceCampaignCard({
     </motion.div>
   );
 }
+

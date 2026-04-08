@@ -37,6 +37,7 @@ export default function CampaignsPage() {
   const [allCampaigns, setAllCampaigns] = useState<MarketplaceCampaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
 
@@ -44,6 +45,8 @@ export default function CampaignsPage() {
   const [filters, setFilters] = useState<MarketplaceFilters>(DEFAULT_FILTERS);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [creatorProfileId, setCreatorProfileId] = useState<string | null>(null);
+  const [brandProfileId, setBrandProfileId] = useState<string | null>(null);
 
   const isBrand = role === "brand";
 
@@ -60,6 +63,28 @@ export default function CampaignsPage() {
     }
   }, [user, authLoading, router]);
 
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const supabase = createClient();
+      if (role === "brand") {
+        const { data } = await supabase
+          .from("brands")
+          .select("id")
+          .eq("clerk_user_id", user.id)
+          .maybeSingle();
+        setBrandProfileId(data?.id || null);
+      } else {
+        const { data } = await supabase
+          .from("creators")
+          .select("id")
+          .eq("clerk_user_id", user.id)
+          .maybeSingle();
+        setCreatorProfileId(data?.id || null);
+      }
+    })();
+  }, [user, role]);
+
   // ─── Fetch campaigns ───────────────────────────────────────────────────
   const fetchCampaigns = useCallback(
     async (loadMore = false) => {
@@ -67,6 +92,7 @@ export default function CampaignsPage() {
 
       if (loadMore) setLoadingMore(true);
       else setLoading(true);
+      setFetchError(null);
 
       try {
         if (!isBrand) {
@@ -77,17 +103,12 @@ export default function CampaignsPage() {
               "Content-Type": "application/json",
             },
             credentials: "include",
-            body: JSON.stringify({
-              userId: user.id // Send user ID in body for auth
-            }),
+            body: JSON.stringify({}),
           });
 
           const json = await res.json();
-          
-          console.log("API Response:", json); // Debug log
-          
+
           if (!res.ok) {
-            console.error("API Error:", json.error);
             throw new Error(
               json.error || "Failed to fetch marketplace campaigns",
             );
@@ -97,11 +118,8 @@ export default function CampaignsPage() {
             json.campaigns || []
           ).map((row: any) => mapRowToMarketplaceCampaign(row));
 
-          console.log("Enriched campaigns:", enrichedCampaigns.length); // Debug log
-
           // If AI matching returns no results, fetch all active campaigns as fallback
           if (enrichedCampaigns.length === 0) {
-            console.log("No AI matches, fetching all active campaigns...");
             const supabase = createClient();
             const { data: allActiveCampaigns, error: fallbackError } = await supabase
               .from("campaigns")
@@ -114,10 +132,10 @@ export default function CampaignsPage() {
               const fallbackCampaigns: MarketplaceCampaign[] = allActiveCampaigns.map(
                 (row: any) => mapRowToMarketplaceCampaign(row)
               );
-              console.log("Fallback campaigns:", fallbackCampaigns.length);
               setAllCampaigns(fallbackCampaigns);
               setPage(0);
               setHasMore(false);
+              setFetchError(null);
               setLoading(false);
               setLoadingMore(false);
               return;
@@ -137,7 +155,7 @@ export default function CampaignsPage() {
           const { data, error } = await supabase
             .from("campaigns")
             .select("*, brands(*)")
-            .eq("brand_id", user.id)
+            .eq("brand_id", brandProfileId || "")
             .order("created_at", { ascending: false })
             .range(from, to);
 
@@ -162,11 +180,11 @@ export default function CampaignsPage() {
         // Show user-friendly error message
         const errorMessage = error instanceof Error ? error.message : "Unknown error";
         console.error("Campaign fetch error details:", errorMessage);
+        setFetchError(errorMessage);
         
         // Try one more fallback - fetch campaigns without AI matching
         if (!isBrand) {
           try {
-            console.log("Attempting direct campaign fetch as fallback...");
             const supabase = createClient();
             const { data: directCampaigns, error: directError } = await supabase
               .from("campaigns")
@@ -179,10 +197,10 @@ export default function CampaignsPage() {
               const campaigns: MarketplaceCampaign[] = directCampaigns.map(
                 (row: any) => mapRowToMarketplaceCampaign(row)
               );
-              console.log("Direct fetch successful:", campaigns.length, "campaigns");
               setAllCampaigns(campaigns);
               setPage(0);
               setHasMore(false);
+              setFetchError(null);
               setLoading(false);
               setLoadingMore(false);
               return;
@@ -196,7 +214,7 @@ export default function CampaignsPage() {
         setLoadingMore(false);
       }
     },
-    [user, isBrand, page],
+    [user, isBrand, page, brandProfileId],
   );
 
   // ─── Load saved IDs from Supabase (creator only) ──────────────────────
@@ -207,7 +225,7 @@ export default function CampaignsPage() {
       const { data } = await supabase
         .from("saved_campaigns")
         .select("campaign_id")
-        .eq("creator_id", user.id);
+        .eq("creator_id", creatorProfileId || "");
       if (data) {
         setSavedIds(new Set(data.map((r: any) => r.campaign_id)));
       }
@@ -218,7 +236,7 @@ export default function CampaignsPage() {
         }
         setSavedIds(new Set());
     }
-  }, [user, isBrand]);
+  }, [user, isBrand, creatorProfileId]);
 
   useEffect(() => {
     if (!user) return;
@@ -265,12 +283,12 @@ export default function CampaignsPage() {
           await supabase
             .from("saved_campaigns")
             .delete()
-            .eq("creator_id", user.id)
+            .eq("creator_id", creatorProfileId || "")
             .eq("campaign_id", id);
         } else {
           await supabase
             .from("saved_campaigns")
-            .insert({ creator_id: user.id, campaign_id: id });
+            .insert({ creator_id: creatorProfileId || "", campaign_id: id });
         }
       } catch (err) {
         console.error("Save toggle error:", err);
@@ -283,7 +301,7 @@ export default function CampaignsPage() {
         });
       }
     },
-    [user, isBrand, savedIds],
+    [user, isBrand, savedIds, creatorProfileId],
   );
 
   const handleQuickApply = useCallback(
@@ -358,6 +376,15 @@ export default function CampaignsPage() {
                 className="h-80 bg-muted/30 rounded-2xl animate-pulse"
               />
             ))}
+          </div>
+        ) : fetchError && allCampaigns.length === 0 ? (
+          <div className="text-center py-20 text-muted-foreground">
+            <Megaphone className="w-12 h-12 mx-auto mb-4 opacity-40" />
+            <p className="text-lg text-foreground mb-1">Unable to load campaigns</p>
+            <p className="text-sm mb-4">{fetchError}</p>
+            <Button variant="outline" onClick={() => fetchCampaigns(false)}>
+              Retry
+            </Button>
           </div>
         ) : filteredCampaigns.length === 0 ? (
           <div className="text-center py-20 text-muted-foreground">

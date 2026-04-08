@@ -13,13 +13,15 @@ import {
   createRequestContext,
 } from "@/lib/request-context";
 import { timedQuery } from "@/lib/db-timing";
+import { parseJsonBody } from "@/lib/api-utils";
 
 export async function POST(req: NextRequest) {
   const { requestId, log } = createRequestContext(req);
 
   try {
-    const body = await req.json();
-    const { creator_id } = body;
+    const parsed = await parseJsonBody<{ creator_id: string }>(req);
+    if (!parsed.ok) return attachRequestId(parsed.response, requestId);
+    const { creator_id } = parsed.data;
 
     if (!creator_id) {
       const res = NextResponse.json(

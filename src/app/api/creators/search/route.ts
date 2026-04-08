@@ -1,9 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-server';
+import { requireUser } from '@/lib/request-auth';
+import { parseJsonBody } from '@/lib/api-utils';
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const auth = await requireUser(request);
+    if (auth.error) return auth.error;
+
+    const parsed = await parseJsonBody<{
+      search?: string;
+      niche?: string;
+      minFollowers?: number;
+      maxFollowers?: number;
+      minEngagement?: number;
+      verified?: boolean | null;
+      location?: string;
+      sortBy?: string;
+      limit?: number;
+    }>(request);
+    if (!parsed.ok) return parsed.response;
+
+    const body = parsed.data;
     const {
       search = '',
       niche = '',

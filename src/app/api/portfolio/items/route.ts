@@ -13,6 +13,7 @@ import {
   createRequestContext,
 } from "@/lib/request-context";
 import { timedQuery } from "@/lib/db-timing";
+import { parseJsonBody } from "@/lib/api-utils";
 
 export async function POST(req: NextRequest) {
   const { requestId, log } = createRequestContext(req);
@@ -52,7 +53,19 @@ export async function POST(req: NextRequest) {
       return attachRequestId(res, requestId);
     }
 
-    const body = await req.json();
+    const parsed = await parseJsonBody<{
+      title: string;
+      description?: string;
+      brand_worked_with?: string;
+      campaign_type?: string;
+      result_metric?: string;
+      thumbnail_url?: string;
+      content_url?: string;
+      platform?: string;
+      collab_month?: string;
+    }>(req);
+    if (!parsed.ok) return attachRequestId(parsed.response, requestId);
+
     const {
       title,
       description,
@@ -63,7 +76,7 @@ export async function POST(req: NextRequest) {
       content_url,
       platform,
       collab_month,
-    } = body;
+    } = parsed.data;
 
     if (!title || title.trim().length === 0) {
       const res = NextResponse.json(

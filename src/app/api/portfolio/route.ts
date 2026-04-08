@@ -14,6 +14,7 @@ import {
   createRequestContext,
 } from "@/lib/request-context";
 import { timedQuery } from "@/lib/db-timing";
+import { parseJsonBody } from "@/lib/api-utils";
 
 export async function POST(req: NextRequest) {
   const { requestId, log } = createRequestContext(req);
@@ -53,7 +54,18 @@ export async function POST(req: NextRequest) {
       return attachRequestId(res, requestId);
     }
 
-    const body = await req.json();
+    const parsed = await parseJsonBody<{
+      portfolio_headline?: string;
+      portfolio_tagline?: string;
+      audience_age_range?: string;
+      audience_gender_split?: Record<string, unknown>;
+      audience_top_cities?: string[];
+      past_brands?: string[];
+      content_themes?: string[];
+      awards?: string[];
+    }>(req);
+    if (!parsed.ok) return attachRequestId(parsed.response, requestId);
+
     const {
       portfolio_headline,
       portfolio_tagline,
@@ -63,7 +75,7 @@ export async function POST(req: NextRequest) {
       past_brands,
       content_themes,
       awards,
-    } = body;
+    } = parsed.data;
 
     // Update creator portfolio metadata
     const { data: updated, error } = await timedQuery(

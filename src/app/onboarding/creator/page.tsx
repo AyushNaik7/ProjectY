@@ -1,393 +1,277 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import confetti from "canvas-confetti";
 import { useAuth } from "@/context/ClerkAuthContext";
 import { callCompleteCreatorOnboarding } from "@/lib/functions";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  User,
-  Instagram,
-  ArrowRight,
-  Loader2,
-  IndianRupee,
-  TrendingUp,
-  Eye,
-  BarChart3,
-} from "lucide-react";
 
-const NICHE_OPTIONS = [
-  "Fashion & Lifestyle",
-  "Tech & Gadgets",
-  "Food & Cooking",
-  "Travel & Adventure",
-  "Beauty & Skincare",
-  "Fitness & Health",
-  "Education & Learning",
+type Platform = "instagram" | "youtube" | "tiktok";
+
+const niches = [
+  "Fashion",
+  "Beauty",
+  "Tech",
+  "Education",
+  "Fitness",
+  "Travel",
+  "Food",
   "Gaming",
-  "Finance & Business",
-  "Entertainment & Comedy",
-  "Photography & Art",
-  "Music & Dance",
-  "Parenting & Family",
 ];
 
 export default function CreatorOnboardingPage() {
-  const [formData, setFormData] = useState({
-    name: "",
-    instagramHandle: "",
-    niche: "",
-    followers: "",
-    avgViews: "",
-    engagementRate: "",
-    minRatePrivate: "",
-  });
-  const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const router = useRouter();
-  const { user, role, loading: authLoading } = useAuth();
+  const { user, role, loading } = useAuth();
+  const [step, setStep] = useState(1);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [done, setDone] = useState(false);
+
+  const [name, setName] = useState("");
+  const [handle, setHandle] = useState("");
+  const [selectedNiches, setSelectedNiches] = useState<string[]>([]);
+  const [followers, setFollowers] = useState("");
+  const [avgViews, setAvgViews] = useState("");
+  const [engagement, setEngagement] = useState("");
+  const [platforms, setPlatforms] = useState<Platform[]>(["instagram"]);
+  const [minRate, setMinRate] = useState("");
+  const [bio, setBio] = useState("");
 
   useEffect(() => {
-    // Wait for Clerk to finish loading before any checks
-    if (authLoading) return;
-    
-    // Only redirect if definitely not authenticated after loading completes
+    if (loading) return;
     if (!user) {
       router.push("/login");
       return;
     }
-    
-    // If user has wrong role, redirect to correct onboarding
     if (role === "brand") {
       router.push("/onboarding/brand");
     }
-  }, [user, role, authLoading, router]);
+  }, [loading, user, role, router]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  const canContinue = useMemo(() => {
+    if (step === 1) return name.trim().length >= 2 && handle.trim().length >= 2;
+    if (step === 2) return selectedNiches.length > 0 && selectedNiches.length <= 3;
+    if (step === 3) return Number(followers) >= 0 && Number(avgViews) >= 0 && followers !== "" && avgViews !== "";
+    if (step === 4) return Number(engagement) >= 0 && Number(engagement) <= 100 && platforms.length > 0;
+    if (step === 5) return Number(minRate) >= 0 && bio.trim().length >= 20;
+    return true;
+  }, [step, name, handle, selectedNiches, followers, avgViews, engagement, platforms, minRate, bio]);
+
+  const toggleNiche = (n: string) => {
+    setSelectedNiches((prev) => {
+      if (prev.includes(n)) return prev.filter((x) => x !== n);
+      if (prev.length >= 3) return prev;
+      return [...prev, n];
+    });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Guard: Don't submit if still loading or no user
-    if (authLoading || !user) {
-      setError("Please wait for authentication to complete");
-      return;
-    }
-    
+  const togglePlatform = (p: Platform) => {
+    setPlatforms((prev) => (prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p]));
+  };
+
+  const submit = async () => {
+    if (!user) return;
     setError("");
-    setLoading(true);
+    setSaving(true);
     try {
       await callCompleteCreatorOnboarding({
-        name: formData.name.trim(),
-        instagramHandle: formData.instagramHandle.trim(),
-        niche: formData.niche,
-        followers: parseInt(formData.followers) || 0,
-        avgViews: parseInt(formData.avgViews) || 0,
-        engagementRate: parseFloat(formData.engagementRate) || 0,
-        minRatePrivate: parseInt(formData.minRatePrivate) || 0,
+        name: name.trim(),
+        instagramHandle: handle.replace(/^@/, ""),
+        niche: selectedNiches.join(", "),
+        followers: Number(followers || 0),
+        avgViews: Number(avgViews || 0),
+        engagementRate: Number(engagement || 0),
+        minRatePrivate: Number(minRate || 0),
       });
-      router.push("/dashboard/creator");
-    } catch (err: unknown) {
-      const e = err as { message?: string };
-      setError(e.message || "Failed to complete onboarding");
+      setDone(true);
+      confetti({ particleCount: 120, spread: 80, origin: { y: 0.7 } });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Failed to complete onboarding";
+      setError(msg);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
-  const isStep1Valid =
-    formData.name.length >= 2 &&
-    formData.instagramHandle.length >= 2 &&
-    formData.niche !== "";
-  const isStep2Valid =
-    formData.followers !== "" &&
-    formData.avgViews !== "" &&
-    formData.engagementRate !== "" &&
-    formData.minRatePrivate !== "";
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-      </div>
-    );
-  }
+  const labels = ["Basic", "Niche", "Audience", "Engagement", "Rate"];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="w-full max-w-lg"
-      >
-        {/* Progress indicator */}
-        <div className="flex items-center gap-2 mb-6 px-1">
-          <div
-            className={`h-1.5 flex-1 rounded-full transition-colors ${
-              step >= 1 ? "bg-primary" : "bg-secondary"
-            }`}
-          />
-          <div
-            className={`h-1.5 flex-1 rounded-full transition-colors ${
-              step >= 2 ? "bg-primary" : "bg-secondary"
-            }`}
-          />
+    <div className="min-h-screen bg-slate-50 px-4 py-6 md:py-10">
+      <div className="mx-auto max-w-[760px] rounded-xl border border-slate-200 bg-white p-4 md:p-6">
+        <div className="mb-6">
+          <div className="mb-2 flex items-center justify-between text-[12px] text-slate-500">
+            <span>Step {Math.min(step, 5)} of 5</span>
+            <span>{labels[Math.min(step, 5) - 1]}</span>
+          </div>
+          <div className="grid grid-cols-5 gap-2">
+            {labels.map((l, i) => (
+              <div key={l} className="text-center">
+                <div className="mx-auto h-2 rounded-full" style={{ backgroundColor: i + 1 <= step ? "var(--ic-blue)" : "#e2e8f0" }} />
+                <p className="mt-1 text-[10px] text-slate-400">{l}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <Card className="border-0 shadow-lg">
-          <CardHeader className="text-center pb-2">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center mx-auto mb-3">
-              <User className="w-7 h-7 text-primary" />
-            </div>
-            <CardTitle className="text-2xl">
-              {step === 1 ? "Tell us about yourself" : "Your social stats"}
-            </CardTitle>
-            <CardDescription>
-              {step === 1
-                ? "Set up your creator profile to get matched with brands"
-                : "Help us match you with the right campaigns"}
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent>
-            <form onSubmit={handleSubmit}>
-              {step === 1 && (
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="space-y-5"
-                >
-                  <div>
-                    <Label
-                      htmlFor="name"
-                      className="text-sm font-medium mb-1.5 block"
-                    >
-                      Display Name
-                    </Label>
-                    <Input
-                      id="name"
-                      name="name"
-                      placeholder="Your name or brand name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      required
-                      className="h-11"
-                    />
-                  </div>
-
-                  <div>
-                    <Label
-                      htmlFor="instagramHandle"
-                      className="text-sm font-medium mb-1.5 block"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Instagram className="w-4 h-4 text-pink-600" />
-                        Instagram Handle
+        <AnimatePresence mode="wait">
+          {!done ? (
+            <motion.div
+              key={step}
+              initial={{ opacity: 0, x: 24 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -24 }}
+              transition={{ duration: 0.2 }}
+            >
+              {step === 1 ? (
+                <section>
+                  <h1 className="text-[22px]" style={{ fontWeight: 500 }}>Your name and Instagram handle</h1>
+                  <div className="mt-4 space-y-3">
+                    <div>
+                      <label className="mb-1 block text-[12px] text-slate-500">Name</label>
+                      <input value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-[14px]" />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-[12px] text-slate-500">Instagram handle</label>
+                      <div className="flex items-center rounded-md border border-slate-300 px-3">
+                        <span className="text-slate-400">@</span>
+                        <input value={handle} onChange={(e) => setHandle(e.target.value.replace(/^@/, ""))} className="w-full px-1 py-2 text-[14px] outline-none" />
                       </div>
-                    </Label>
-                    <Input
-                      id="instagramHandle"
-                      name="instagramHandle"
-                      placeholder="@yourhandle"
-                      value={formData.instagramHandle}
-                      onChange={handleChange}
-                      required
-                      className="h-11"
-                    />
+                    </div>
                   </div>
+                </section>
+              ) : null}
 
-                  <div>
-                    <Label
-                      htmlFor="niche"
-                      className="text-sm font-medium mb-1.5 block"
-                    >
-                      Content Niche
-                    </Label>
-                    <select
-                      id="niche"
-                      name="niche"
-                      value={formData.niche}
-                      onChange={handleChange}
-                      required
-                      className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    >
-                      <option value="" disabled>
-                        Select your niche
-                      </option>
-                      {NICHE_OPTIONS.map((n) => (
-                        <option key={n} value={n}>
-                          {n}
-                        </option>
-                      ))}
-                    </select>
+              {step === 2 ? (
+                <section>
+                  <h1 className="text-[22px]" style={{ fontWeight: 500 }}>Pick your niche (up to 3)</h1>
+                  <div className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-4">
+                    {niches.map((n) => (
+                      <button
+                        key={n}
+                        onClick={() => toggleNiche(n)}
+                        className="rounded-md border px-3 py-2 text-[13px]"
+                        style={{
+                          borderColor: selectedNiches.includes(n) ? "var(--ic-blue)" : "#e2e8f0",
+                          backgroundColor: selectedNiches.includes(n) ? "var(--ic-blue-light)" : "#fff",
+                          color: selectedNiches.includes(n) ? "var(--ic-blue)" : "#334155",
+                        }}
+                      >
+                        {n}
+                      </button>
+                    ))}
                   </div>
+                </section>
+              ) : null}
 
-                  <Button
-                    type="button"
-                    className="w-full h-11 gap-2"
-                    disabled={!isStep1Valid}
-                    onClick={() => setStep(2)}
-                  >
-                    Continue <ArrowRight className="w-4 h-4" />
-                  </Button>
-                </motion.div>
-              )}
+              {step === 3 ? (
+                <section>
+                  <h1 className="text-[22px]" style={{ fontWeight: 500 }}>Your audience size</h1>
+                  <p className="mt-1 text-[12px] text-slate-500">Where to find this: Instagram Insights</p>
+                  <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+                    <div>
+                      <label className="mb-1 block text-[12px] text-slate-500">Followers</label>
+                      <input type="number" value={followers} onChange={(e) => setFollowers(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-[14px]" />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-[12px] text-slate-500">Average views</label>
+                      <input type="number" value={avgViews} onChange={(e) => setAvgViews(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-[14px]" />
+                    </div>
+                  </div>
+                </section>
+              ) : null}
 
-              {step === 2 && (
-                <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="space-y-5"
+              {step === 4 ? (
+                <section>
+                  <h1 className="text-[22px]" style={{ fontWeight: 500 }}>Your engagement</h1>
+                  <div className="mt-4">
+                    <label className="mb-1 block text-[12px] text-slate-500">Engagement %</label>
+                    <input type="number" step="0.1" min={0} max={100} value={engagement} onChange={(e) => setEngagement(e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2 text-[14px]" />
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {(["instagram", "youtube", "tiktok"] as Platform[]).map((p) => (
+                      <button
+                        key={p}
+                        onClick={() => togglePlatform(p)}
+                        className="rounded-full border px-3 py-1.5 text-[12px]"
+                        style={{
+                          borderColor: platforms.includes(p) ? "var(--ic-blue)" : "#e2e8f0",
+                          backgroundColor: platforms.includes(p) ? "var(--ic-blue-light)" : "#fff",
+                          color: platforms.includes(p) ? "var(--ic-blue)" : "#64748b",
+                        }}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              ) : null}
+
+              {step === 5 ? (
+                <section>
+                  <h1 className="text-[22px]" style={{ fontWeight: 500 }}>Your rate and bio</h1>
+                  <div className="mt-4 space-y-3">
+                    <div>
+                      <label className="mb-1 block text-[12px] text-slate-500">Min rate (private)</label>
+                      <div className="flex items-center rounded-md border border-slate-300 px-3">
+                        <span className="text-slate-400">₹</span>
+                        <input type="number" value={minRate} onChange={(e) => setMinRate(e.target.value)} className="w-full px-1 py-2 text-[14px] outline-none" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-[12px] text-slate-500">Bio</label>
+                      <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={4} className="w-full rounded-md border border-slate-300 px-3 py-2 text-[14px]" />
+                    </div>
+                  </div>
+                </section>
+              ) : null}
+
+              {error ? <p className="mt-3 text-[12px] text-red-700">{error}</p> : null}
+
+              <div className="mt-6 flex gap-2">
+                <button
+                  onClick={() => setStep((s) => Math.max(1, s - 1))}
+                  disabled={step === 1}
+                  className="w-full rounded-md border border-slate-300 px-4 py-2 text-[14px] disabled:opacity-40"
                 >
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label
-                        htmlFor="followers"
-                        className="text-sm font-medium mb-1.5 flex items-center gap-1.5"
-                      >
-                        <TrendingUp className="w-3.5 h-3.5 text-muted-foreground" />{" "}
-                        Followers
-                      </Label>
-                      <Input
-                        id="followers"
-                        name="followers"
-                        type="number"
-                        min="0"
-                        placeholder="e.g. 50000"
-                        value={formData.followers}
-                        onChange={handleChange}
-                        required
-                        className="h-11"
-                      />
-                    </div>
-                    <div>
-                      <Label
-                        htmlFor="avgViews"
-                        className="text-sm font-medium mb-1.5 flex items-center gap-1.5"
-                      >
-                        <Eye className="w-3.5 h-3.5 text-muted-foreground" />{" "}
-                        Avg Views
-                      </Label>
-                      <Input
-                        id="avgViews"
-                        name="avgViews"
-                        type="number"
-                        min="0"
-                        placeholder="e.g. 10000"
-                        value={formData.avgViews}
-                        onChange={handleChange}
-                        required
-                        className="h-11"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label
-                      htmlFor="engagementRate"
-                      className="text-sm font-medium mb-1.5 flex items-center gap-1.5"
-                    >
-                      <BarChart3 className="w-3.5 h-3.5 text-muted-foreground" />{" "}
-                      Engagement Rate (%)
-                    </Label>
-                    <Input
-                      id="engagementRate"
-                      name="engagementRate"
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="0.1"
-                      placeholder="e.g. 5.2"
-                      value={formData.engagementRate}
-                      onChange={handleChange}
-                      required
-                      className="h-11"
-                    />
-                  </div>
-
-                  <div>
-                    <Label
-                      htmlFor="minRatePrivate"
-                      className="text-sm font-medium mb-1.5 flex items-center gap-1.5"
-                    >
-                      <IndianRupee className="w-3.5 h-3.5 text-muted-foreground" />{" "}
-                      Minimum Rate (₹) — kept private
-                    </Label>
-                    <Input
-                      id="minRatePrivate"
-                      name="minRatePrivate"
-                      type="number"
-                      min="0"
-                      placeholder="e.g. 5000"
-                      value={formData.minRatePrivate}
-                      onChange={handleChange}
-                      required
-                      className="h-11"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      This is private and only used internally for AI matching.
-                      Brands will not see this.
-                    </p>
-                  </div>
-
-                  {error && (
-                    <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
-                      <p className="text-sm text-destructive">{error}</p>
-                    </div>
-                  )}
-
-                  <div className="flex gap-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="flex-1 h-11"
-                      onClick={() => setStep(1)}
-                    >
-                      Back
-                    </Button>
-                    <Button
-                      type="submit"
-                      className="flex-1 h-11 gap-2"
-                      disabled={loading || !isStep2Valid}
-                    >
-                      {loading ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Setting up...
-                        </>
-                      ) : (
-                        <>
-                          Complete Setup <ArrowRight className="w-4 h-4" />
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </motion.div>
-              )}
-            </form>
-          </CardContent>
-        </Card>
-
-        <p className="text-center text-xs text-muted-foreground mt-4">
-          You can update your profile anytime from your dashboard
-        </p>
-      </motion.div>
+                  Back
+                </button>
+                {step < 5 ? (
+                  <button
+                    onClick={() => setStep((s) => Math.min(5, s + 1))}
+                    disabled={!canContinue}
+                    className="w-full rounded-md px-4 py-2 text-[14px] text-white disabled:opacity-50"
+                    style={{ backgroundColor: "var(--ic-blue)" }}
+                  >
+                    Continue
+                  </button>
+                ) : (
+                  <button
+                    onClick={submit}
+                    disabled={!canContinue || saving}
+                    className="w-full rounded-md px-4 py-2 text-[14px] text-white disabled:opacity-50"
+                    style={{ backgroundColor: "var(--ic-blue)" }}
+                  >
+                    {saving ? "Saving..." : "Finish"}
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div key="done" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+              <h1 className="text-center text-[24px]" style={{ fontWeight: 500 }}>You&apos;re all set</h1>
+              <p className="mt-2 text-center text-[14px] text-slate-500">Let&apos;s find your first campaign.</p>
+              <button
+                onClick={() => router.push("/dashboard/creator")}
+                className="mt-6 w-full rounded-md px-4 py-2 text-[14px] text-white"
+                style={{ backgroundColor: "var(--ic-blue)" }}
+              >
+                Go to dashboard
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

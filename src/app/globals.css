@@ -2,10 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@600;700&display=swap');
 
 @layer base {
   :root {
+    --ic-blue: #185FA5;
+    --ic-blue-light: #E6F1FB;
+    --ic-blue-mid: #378ADD;
+    --ic-teal: #1D9E75;
+    --ic-teal-light: #E1F5EE;
+    --ic-amber: #BA7517;
+    --ic-amber-light: #FAEEDA;
+    --ic-red: #A32D2D;
+    --ic-red-light: #FCEBEB;
+    --ic-green: #3B6D11;
+    --ic-green-light: #EAF3DE;
+    --ic-radius-sm: 6px;
+    --ic-radius-md: 8px;
+    --ic-radius-lg: 12px;
+    --ic-radius-full: 999px;
+    --ic-transition: 150ms ease;
+    --ic-sidebar-width: 220px;
+
     --background: 0 0% 100%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
@@ -58,7 +76,7 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   }
 
   /* Smooth transitions for all interactive elements */
@@ -67,7 +85,13 @@
   input,
   textarea,
   select {
-    @apply transition-all duration-200 ease-in-out;
+    transition: var(--ic-transition);
+  }
+
+  @media (max-width: 767px) {
+    body {
+      padding-bottom: 64px;
+    }
   }
 
   /* Smooth page transitions */
@@ -86,12 +110,15 @@
   }
 
   .gradient-text {
-    @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(220, 100%, 30%), hsl(200, 100%, 50%), hsl(220, 100%, 40%));
+    color: hsl(220, 100%, 35%);
+  }
+
+  .font-brand {
+    font-family: 'Sora', 'Plus Jakarta Sans', system-ui, sans-serif;
   }
 
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(220, 100%, 25%), hsl(220, 100%, 35%));
+    background: hsl(220, 100%, 35%);
   }
 
   .gradient-mesh {
@@ -134,15 +161,7 @@
 
   /* Animated gradient background */
   .animated-gradient {
-    background: linear-gradient(
-      -45deg,
-      hsl(220, 100%, 30%),
-      hsl(220, 100%, 40%),
-      hsl(200, 100%, 50%),
-      hsl(220, 100%, 35%)
-    );
-    background-size: 400% 400%;
-    animation: gradient 15s ease infinite;
+    background: hsl(220, 100%, 35%);
   }
 
   @keyframes gradient {
@@ -159,12 +178,7 @@
 
   /* Shimmer effect */
   .shimmer {
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.1),
-      transparent
-    );
+    background: rgba(255, 255, 255, 0.1);
     background-size: 200% 100%;
     animation: shimmer 2s infinite;
   }

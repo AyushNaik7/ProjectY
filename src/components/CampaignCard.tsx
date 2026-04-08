@@ -52,7 +52,7 @@ export function CampaignCard({
       <Card className="overflow-hidden border-0 shadow-sm hover:shadow-xl transition-all duration-300 group">
         <CardContent className="p-6 relative">
           {/* Animated gradient overlay on hover */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <div className="absolute inset-0 bg-slate-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           
           <div className="relative z-10">
             <div className="flex items-start justify-between mb-4">
@@ -147,3 +147,4 @@ export function CampaignCard({
     </motion.div>
   );
 }
+

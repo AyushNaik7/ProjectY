@@ -12,6 +12,7 @@ import {
   createRequestContext,
 } from "@/lib/request-context";
 import { timedQuery } from "@/lib/db-timing";
+import { parseJsonBody } from "@/lib/api-utils";
 
 export async function PATCH(
   req: NextRequest,
@@ -24,8 +25,9 @@ export async function PATCH(
     if (auth.error) return attachRequestId(auth.error, requestId);
 
     const deliverableId = params.id;
-    const body = await req.json();
-    const { revision_notes } = body;
+    const parsed = await parseJsonBody<{ revision_notes: string }>(req);
+    if (!parsed.ok) return attachRequestId(parsed.response, requestId);
+    const { revision_notes } = parsed.data;
 
     if (!revision_notes) {
       const res = NextResponse.json(
@@ -88,7 +90,13 @@ export async function PATCH(
           .single()
     );
 
-    if (error) throw error;
+    if (error) {
+      const res = NextResponse.json(
+        { error: error.message || "Failed to request revision" },
+        { status: 500 }
+      );
+      return attachRequestId(res, requestId);
+    }
 
     // Create notification for creator
     await supabaseAdmin.from("notifications").insert({

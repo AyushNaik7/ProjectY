@@ -13,6 +13,7 @@ import {
   createRequestContext,
 } from "@/lib/request-context";
 import { timedQuery } from "@/lib/db-timing";
+import { parseJsonBody } from "@/lib/api-utils";
 
 /* ── GET: List deliverables for a collaboration ── */
 export async function GET(req: NextRequest) {
@@ -78,7 +79,13 @@ export async function GET(req: NextRequest) {
           .order("submission_number", { ascending: false })
     );
 
-    if (error) throw error;
+    if (error) {
+      const res = NextResponse.json(
+        { error: error.message || "Failed to fetch deliverables" },
+        { status: 500 }
+      );
+      return attachRequestId(res, requestId);
+    }
 
     const res = NextResponse.json({ deliverables: deliverables || [] });
     return attachRequestId(res, requestId);
@@ -100,7 +107,16 @@ export async function POST(req: NextRequest) {
     const auth = await requireUser(req);
     if (auth.error) return attachRequestId(auth.error, requestId);
 
-    const body = await req.json();
+    const parsed = await parseJsonBody<{
+      collaboration_request_id: string;
+      content_url: string;
+      content_type: string;
+      caption?: string;
+      hashtags?: string[];
+      submission_notes?: string;
+    }>(req);
+    if (!parsed.ok) return attachRequestId(parsed.response, requestId);
+
     const {
       collaboration_request_id,
       content_url,
@@ -108,7 +124,7 @@ export async function POST(req: NextRequest) {
       caption,
       hashtags,
       submission_notes,
-    } = body;
+    } = parsed.data;
 
     if (!collaboration_request_id || !content_url || !content_type) {
       const res = NextResponse.json(
@@ -166,7 +182,13 @@ export async function POST(req: NextRequest) {
           .single()
     );
 
-    if (error) throw error;
+    if (error) {
+      const res = NextResponse.json(
+        { error: error.message || "Failed to submit deliverable" },
+        { status: 500 }
+      );
+      return attachRequestId(res, requestId);
+    }
 
     // Create notification for brand
     await supabaseAdmin.from("notifications").insert({

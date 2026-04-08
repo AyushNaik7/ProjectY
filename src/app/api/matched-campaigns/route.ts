@@ -19,6 +19,7 @@ import {
   createRequestContext,
   logRequestCompleted,
 } from "@/lib/request-context";
+import { getCreatorIdByClerkId } from "@/lib/api-utils";
 
 export async function POST(req: NextRequest) {
   const { requestId, startTimeMs, log } = createRequestContext(req);
@@ -40,8 +41,17 @@ export async function POST(req: NextRequest) {
       return attachRequestId(res, requestId);
     }
 
+    const creatorId = await getCreatorIdByClerkId(uid);
+    if (!creatorId) {
+      const res = NextResponse.json(
+        { error: "Creator profile not found. Complete onboarding first." },
+        { status: 404 }
+      );
+      return attachRequestId(res, requestId);
+    }
+
     // Use vector matching with hybrid scoring (falls back to rule-based)
-    const campaigns = await getVectorMatchedCampaigns(uid, log);
+    const campaigns = await getVectorMatchedCampaigns(creatorId, log);
 
     const res = NextResponse.json({ campaigns });
     logRequestCompleted(log, startTimeMs, 200);

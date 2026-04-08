@@ -8,7 +8,7 @@ export default function SignupPage() {
 
   if (!hasClerk) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 px-6">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-6">
         <div className="max-w-md w-full rounded-xl border border-slate-200 bg-white p-6 text-center shadow-sm">
           <h1 className="text-xl font-semibold text-slate-900 mb-2">Signup is temporarily unavailable</h1>
           <p className="text-sm text-slate-600 mb-4">
@@ -23,7 +23,7 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50">
       <SignUp 
         appearance={{
           elements: {
@@ -35,3 +35,4 @@ export default function SignupPage() {
     </div>
   );
 }
+

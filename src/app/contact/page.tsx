@@ -223,7 +223,7 @@ export default function ContactPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-0 shadow-sm bg-gradient-to-br from-primary/10 to-blue-500/10">
+              <Card className="border-0 shadow-sm bg-slate-50">
                 <CardContent className="p-6">
                   <h3 className="text-lg font-bold mb-2">Quick Response</h3>
                   <p className="text-sm text-muted-foreground">
@@ -327,3 +327,4 @@ export default function ContactPage() {
     </div>
   );
 }
+

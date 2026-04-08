@@ -21,6 +21,7 @@ import {
   invalidateAllCreatorMatches,
 } from "@/lib/cache";
 import { timedQuery } from "@/lib/db-timing";
+import { getBrandIdByClerkId, parseJsonBody } from "@/lib/api-utils";
 
 export async function POST(req: NextRequest) {
   const { requestId, startTimeMs, log } = createRequestContext(req);
@@ -45,9 +46,26 @@ export async function POST(req: NextRequest) {
       return attachRequestId(res, requestId);
     }
 
-    const body = await req.json();
+    const parsed = await parseJsonBody<{
+      title: string;
+      description: string;
+      deliverableType: string;
+      budget: number;
+      timeline: string;
+      niche: string;
+    }>(req);
+    if (!parsed.ok) return attachRequestId(parsed.response, requestId);
     const { title, description, deliverableType, budget, timeline, niche } =
-      body;
+      parsed.data;
+
+    const brandId = await getBrandIdByClerkId(uid);
+    if (!brandId) {
+      const res = NextResponse.json(
+        { error: "Brand profile not found. Complete onboarding first." },
+        { status: 404 }
+      );
+      return attachRequestId(res, requestId);
+    }
 
     // Validation
     if (!title || typeof title !== "string" || title.trim().length < 3) {
@@ -105,7 +123,7 @@ export async function POST(req: NextRequest) {
           .from("campaigns")
           .insert({
             id: globalThis.crypto.randomUUID(),
-            brand_id: uid,
+            brand_id: brandId,
             title: title.trim(),
             description: description.trim(),
             deliverable_type: deliverableType,
@@ -116,7 +134,7 @@ export async function POST(req: NextRequest) {
           })
           .select("id")
           .single(),
-      { brandId: uid }
+      { brandId }
     );
 
     if (error) {

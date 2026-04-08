@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { ClerkAuthProvider } from "@/context/ClerkAuthContext";
 import { Toaster } from "@/components/ui/toaster";
+import { validateEnv } from "@/lib/env-check";
 
 export const metadata: Metadata = {
   title: "InstaCollab — Where Brands Meet Instagram Creators",
@@ -30,6 +31,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  validateEnv();
   const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
   return (

@@ -7,15 +7,42 @@ interface PageProps {
   params: { handle: string };
 }
 
+async function findCreatorByHandle(rawHandle: string) {
+  const normalized = rawHandle.trim().replace(/^@/, "").toLowerCase();
+  const isUuid =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      normalized
+    );
+
+  const filters = [
+    `username.ilike.${normalized}`,
+    `instagram_handle.ilike.${normalized}`,
+  ];
+
+  if (isUuid) {
+    filters.push(`id.eq.${normalized}`);
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from("creators")
+    .select(
+      `
+      *,
+      portfolio_items (*)
+    `
+    )
+    .or(filters.join(","))
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data;
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { handle } = params;
 
-  // Fetch creator by handle
-  const { data: creator } = await supabaseAdmin
-    .from("creators")
-    .select("*")
-    .eq("instagram_handle", handle)
-    .single();
+  const creator = await findCreatorByHandle(handle);
 
   if (!creator) {
     return {
@@ -57,19 +84,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function CreatorProfilePage({ params }: PageProps) {
   const { handle } = params;
 
-  // Fetch creator with portfolio
-  const { data: creator, error } = await supabaseAdmin
-    .from("creators")
-    .select(
-      `
-      *,
-      portfolio_items (*)
-    `
-    )
-    .eq("instagram_handle", handle)
-    .single();
+  const creator = await findCreatorByHandle(handle);
 
-  if (error || !creator) {
+  if (!creator) {
     notFound();
   }
 

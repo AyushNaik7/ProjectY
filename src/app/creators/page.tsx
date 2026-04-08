@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Users, Loader2 } from "lucide-react";
+import { Search, Users, Loader2, Sparkles, RefreshCw } from "lucide-react";
 
 interface CreatorItem {
   id: string;
@@ -30,14 +30,28 @@ interface CreatorItem {
   avgViews: number;
 }
 
+interface CreatorRow {
+  id: string;
+  username: string | null;
+  name: string | null;
+  niche: string | null;
+  instagram_followers: number | null;
+  instagram_engagement: number | null;
+  avg_views: number | null;
+}
+
+type SortKey = "followers" | "engagement" | "views";
+
 export default function FindCreatorsPage() {
   const router = useRouter();
   const { user, role, loading: authLoading } = useAuth();
   const [creators, setCreators] = useState<CreatorItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pageError, setPageError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedFollowers, setSelectedFollowers] = useState("all");
+  const [sortBy, setSortBy] = useState<SortKey>("followers");
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -50,6 +64,7 @@ export default function FindCreatorsPage() {
     if (!user) return;
     (async () => {
       try {
+        setPageError(null);
         const supabase = createClient();
         const { data, error } = await supabase
           .from("creators")
@@ -60,7 +75,7 @@ export default function FindCreatorsPage() {
 
         if (error) throw error;
 
-        const mapped: CreatorItem[] = (data || []).map((c: any) => ({
+        const mapped: CreatorItem[] = ((data as CreatorRow[] | null) || []).map((c) => ({
           id: c.id,
           username: c.username || undefined,
           name: c.name || "Unknown Creator",
@@ -73,6 +88,7 @@ export default function FindCreatorsPage() {
         setCreators(mapped);
       } catch (err) {
         console.error("Failed to load creators:", err);
+        setPageError("We could not load creators right now. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -126,7 +142,36 @@ export default function FindCreatorsPage() {
       (selectedFollowers === "1m+" && creator.followers >= 1000000);
 
     return matchesSearch && matchesCategory && matchesFollowers;
+  }).sort((a, b) => {
+    if (sortBy === "engagement") {
+      return b.engagement - a.engagement;
+    }
+    if (sortBy === "views") {
+      return b.avgViews - a.avgViews;
+    }
+    return b.followers - a.followers;
   });
+
+  const avgFollowers =
+    creators.length === 0
+      ? 0
+      : Math.round(
+          creators.reduce((total, creator) => total + creator.followers, 0) /
+            creators.length,
+        );
+
+  const highEngagementCount = creators.filter(
+    (creator) => creator.engagement >= 5,
+  ).length;
+
+  const activeCategoryCount = new Set(
+    creators.map((creator) => creator.niche.toLowerCase()),
+  ).size;
+
+  const reloadPage = () => {
+    setLoading(true);
+    router.refresh();
+  };
 
   if (authLoading || !user) {
     return (
@@ -150,8 +195,39 @@ export default function FindCreatorsPage() {
           Find Creators
         </h1>
         <p className="text-muted-foreground">
-          Browse and discover creators that match your brand
+          Discover high-fit creators and send collaboration requests in one flow.
         </p>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.05 }}
+        className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6"
+      >
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground mb-1">Total creators</p>
+            <p className="text-2xl font-semibold">{creators.length}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground mb-1">Avg followers</p>
+            <p className="text-2xl font-semibold">
+              {Intl.NumberFormat("en-IN").format(avgFollowers)}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground mb-1">High engagement (5%+)</p>
+            <p className="text-2xl font-semibold">{highEngagementCount}</p>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Across {activeCategoryCount} active niches
+            </p>
+          </CardContent>
+        </Card>
       </motion.div>
 
       {/* Search and Filters */}
@@ -174,7 +250,7 @@ export default function FindCreatorsPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="text-sm font-medium text-muted-foreground mb-2 block">
                     Category
@@ -220,18 +296,51 @@ export default function FindCreatorsPage() {
                     </SelectContent>
                   </Select>
                 </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                    Sort By
+                  </label>
+                  <Select
+                    value={sortBy}
+                    onValueChange={(value) => setSortBy(value as SortKey)}
+                  >
+                    <SelectTrigger className="border-border/50">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="followers">Followers</SelectItem>
+                      <SelectItem value="engagement">Engagement</SelectItem>
+                      <SelectItem value="views">Average Views</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
       </motion.div>
 
+      {pageError && (
+        <Card className="mb-6 border-red-200 bg-red-50/60">
+          <CardContent className="p-4 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium text-red-700">Could not load creator directory</p>
+              <p className="text-xs text-red-600">{pageError}</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={reloadPage} className="gap-2">
+              <RefreshCw className="w-3.5 h-3.5" />
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Results */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.2 }}
-        className="mb-4"
+        className="mb-4 flex items-center justify-between"
       >
         <p className="text-sm text-muted-foreground">
           {loading
@@ -240,6 +349,12 @@ export default function FindCreatorsPage() {
                 filteredCreators.length !== 1 ? "s" : ""
               }`}
         </p>
+        {!loading && filteredCreators.length > 0 && (
+          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            <Sparkles className="w-3.5 h-3.5 text-primary" />
+            Sorted by {sortBy}
+          </span>
+        )}
       </motion.div>
 
       {loading ? (
@@ -274,6 +389,17 @@ export default function FindCreatorsPage() {
             <p className="text-sm text-muted-foreground">
               Try adjusting your search or filters
             </p>
+            <Button
+              variant="outline"
+              className="mt-4"
+              onClick={() => {
+                setSearchQuery("");
+                setSelectedCategory("all");
+                setSelectedFollowers("all");
+              }}
+            >
+              Reset filters
+            </Button>
           </CardContent>
         </Card>
       )}

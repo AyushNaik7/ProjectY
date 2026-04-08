@@ -14,6 +14,7 @@ import {
   createRequestContext,
 } from "@/lib/request-context";
 import { timedQuery } from "@/lib/db-timing";
+import { parseJsonBody } from "@/lib/api-utils";
 
 /* ── GET: Fetch paginated messages ── */
 export async function GET(
@@ -116,7 +117,9 @@ export async function GET(
     }
 
     // Get sender names for messages
-    const senderIds = Array.from(new Set(messages.map((m: any) => m.sender_id)));
+    const senderIds = Array.from(
+      new Set((messages || []).map((m: any) => m.sender_id))
+    );
     const senderNames: Record<string, string> = {};
 
     for (const senderId of senderIds) {
@@ -132,20 +135,21 @@ export async function GET(
       }
     }
 
-    const messagesWithSender = messages.map((msg: any) => ({
+    const messagesWithSender = (messages || []).map((msg: any) => ({
       ...msg,
       sender_name: senderNames[msg.sender_id] || "Unknown",
     }));
 
+    const safeMessages = messages || [];
     const nextCursor =
-      messages.length === limit
-        ? messages[messages.length - 1].created_at
+      safeMessages.length === limit
+        ? safeMessages[safeMessages.length - 1].created_at
         : null;
 
     const res = NextResponse.json({
       messages: messagesWithSender,
       nextCursor,
-      hasMore: messages.length === limit,
+      hasMore: safeMessages.length === limit,
     });
     return attachRequestId(res, requestId);
   } catch (err) {
@@ -173,8 +177,13 @@ export async function POST(
     const user = auth.user;
     const uid = user.id;
 
-    const body = await req.json();
-    const { content, message_type = "text", file_url } = body;
+    const parsed = await parseJsonBody<{
+      content: string;
+      message_type?: "text" | "file" | "image";
+      file_url?: string | null;
+    }>(req);
+    if (!parsed.ok) return attachRequestId(parsed.response, requestId);
+    const { content, message_type = "text", file_url } = parsed.data;
 
     if (!content || content.trim().length === 0) {
       const res = NextResponse.json(

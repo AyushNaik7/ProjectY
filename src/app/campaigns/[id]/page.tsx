@@ -122,20 +122,6 @@ export default function CampaignDetailPage() {
     if (user) fetchCampaign();
   }, [user, fetchCampaign]);
 
-  useEffect(() => {
-    if (
-      actionParam === "apply" &&
-      campaign &&
-      !isBrand &&
-      !submitting &&
-      !submitSuccess &&
-      !autoAppliedRef.current
-    ) {
-      autoAppliedRef.current = true;
-      handleQuickApply();
-    }
-  }, [actionParam, campaign, isBrand, submitting, submitSuccess]);
-
   // ─── Toggle save ─────────────────────────────────────────────────
   const handleToggleSave = async () => {
     if (!user || !campaign || isBrand) return;
@@ -163,7 +149,7 @@ export default function CampaignDetailPage() {
   };
 
   // ─── Quick Apply ─────────────────────────────────────────────────
-  const handleQuickApply = async () => {
+  const handleQuickApply = useCallback(async () => {
     if (!user || !campaign) return;
     setSubmitting(true);
     setSubmitError(null);
@@ -201,7 +187,21 @@ export default function CampaignDetailPage() {
     } finally {
       setSubmitting(false);
     }
-  };
+  }, [user, campaign]);
+
+  useEffect(() => {
+    if (
+      actionParam === "apply" &&
+      campaign &&
+      !isBrand &&
+      !submitting &&
+      !submitSuccess &&
+      !autoAppliedRef.current
+    ) {
+      autoAppliedRef.current = true;
+      handleQuickApply();
+    }
+  }, [actionParam, campaign, isBrand, submitting, submitSuccess, handleQuickApply]);
 
   // ─── Send Proposal ──────────────────────────────────────────────
   const handleSendProposal = async () => {

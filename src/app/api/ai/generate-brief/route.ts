@@ -11,6 +11,7 @@ import {
   createRequestContext,
 } from "@/lib/request-context";
 import OpenAI from "openai";
+import { parseJsonBody } from "@/lib/api-utils";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -34,7 +35,9 @@ export async function POST(req: NextRequest) {
     const auth = await requireUser(req);
     if (auth.error) return attachRequestId(auth.error, requestId);
 
-    const body: GenerateBriefPayload = await req.json();
+    const parsed = await parseJsonBody<GenerateBriefPayload>(req);
+    if (!parsed.ok) return attachRequestId(parsed.response, requestId);
+    const body = parsed.data;
     const {
       brand_name,
       product_name,

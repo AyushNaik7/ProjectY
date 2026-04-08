@@ -15,6 +15,7 @@ import {
   createRequestContext,
   logRequestCompleted,
 } from "@/lib/request-context";
+import { parseJsonBody } from "@/lib/api-utils";
 
 export async function POST(req: NextRequest) {
   const { requestId, startTimeMs, log } = createRequestContext(req);
@@ -39,9 +40,18 @@ export async function POST(req: NextRequest) {
       return attachRequestId(res, requestId);
     }
 
-    const body = await req.json();
+    const parsed = await parseJsonBody<{
+      brandName: string;
+      category: string;
+      budgetMin: number;
+      budgetMax: number;
+      website?: string;
+      description?: string;
+    }>(req);
+    if (!parsed.ok) return attachRequestId(parsed.response, requestId);
+
     const { brandName, category, budgetMin, budgetMax, website, description } =
-      body;
+      parsed.data;
 
     // Validation
     if (
@@ -84,15 +94,77 @@ export async function POST(req: NextRequest) {
       return attachRequestId(res, requestId);
     }
 
-    // Upsert brand profile
-    const { error: brandError } = await supabaseAdmin.from("brands").upsert({
-      id: uid,
+    const normalizedEmail =
+      clerkUser.emailAddresses[0]?.emailAddress?.trim().toLowerCase() || "";
+
+    if (!normalizedEmail) {
+      const res = NextResponse.json(
+        { error: "A valid email is required to complete onboarding" },
+        { status: 400 }
+      );
+      return attachRequestId(res, requestId);
+    }
+
+    const brandPayload = {
+      clerk_user_id: uid,
       name: brandName.trim(),
-      email: clerkUser.emailAddresses[0]?.emailAddress || "",
+      email: normalizedEmail,
       industry: category,
       website: typeof website === "string" ? website.trim() : "",
       description: typeof description === "string" ? description.trim() : "",
-    });
+      updated_at: new Date().toISOString(),
+    };
+
+    const { data: existingBrand } = await supabaseAdmin
+      .from("brands")
+      .select("id")
+      .eq("clerk_user_id", uid)
+      .maybeSingle();
+
+    const { data: existingBrandByEmail } = existingBrand?.id
+      ? { data: null }
+      : await supabaseAdmin
+          .from("brands")
+          .select("id, clerk_user_id")
+          .eq("email", normalizedEmail)
+          .maybeSingle();
+
+    let brandError: { message: string } | null = null;
+
+    if (existingBrand?.id) {
+      const { error } = await supabaseAdmin
+        .from("brands")
+        .update(brandPayload)
+        .eq("id", existingBrand.id);
+      brandError = error;
+    } else if (existingBrandByEmail?.id) {
+      if (
+        existingBrandByEmail.clerk_user_id &&
+        existingBrandByEmail.clerk_user_id !== uid
+      ) {
+        const res = NextResponse.json(
+          {
+            error:
+              "This email is already linked to another brand account. Please contact support.",
+          },
+          { status: 409 }
+        );
+        return attachRequestId(res, requestId);
+      }
+
+      const { error } = await supabaseAdmin
+        .from("brands")
+        .update(brandPayload)
+        .eq("id", existingBrandByEmail.id);
+      brandError = error;
+    } else {
+      const { error } = await supabaseAdmin.from("brands").insert({
+        id: globalThis.crypto.randomUUID(),
+        ...brandPayload,
+        created_at: new Date().toISOString(),
+      });
+      brandError = error;
+    }
 
     if (brandError) {
       const res = NextResponse.json(

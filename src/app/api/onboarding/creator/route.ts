@@ -20,6 +20,7 @@ import {
   invalidateAllCampaignMatches,
   invalidateCreatorMatchCache,
 } from "@/lib/cache";
+import { parseJsonBody } from "@/lib/api-utils";
 
 export async function POST(req: NextRequest) {
   const { requestId, startTimeMs, log } = createRequestContext(req);
@@ -44,7 +45,17 @@ export async function POST(req: NextRequest) {
       return attachRequestId(res, requestId);
     }
 
-    const body = await req.json();
+    const parsed = await parseJsonBody<{
+      name: string;
+      instagramHandle: string;
+      niche: string;
+      followers: number;
+      avgViews: number;
+      engagementRate: number;
+      minRatePrivate: number;
+    }>(req);
+    if (!parsed.ok) return attachRequestId(parsed.response, requestId);
+
     const {
       name,
       instagramHandle,
@@ -53,7 +64,7 @@ export async function POST(req: NextRequest) {
       avgViews,
       engagementRate,
       minRatePrivate,
-    } = body;
+    } = parsed.data;
 
     // Verify role
     if (role !== "creator") {
@@ -129,21 +140,91 @@ export async function POST(req: NextRequest) {
     console.log('Username:', username);
     console.log('Email:', clerkUser.emailAddresses[0]?.emailAddress);
     
-    const { error: creatorError } = await supabaseAdmin
+    const normalizedEmail =
+      clerkUser.emailAddresses[0]?.emailAddress?.trim().toLowerCase() || "";
+
+    if (!normalizedEmail) {
+      const res = NextResponse.json(
+        { error: "A valid email is required to complete onboarding" },
+        { status: 400 }
+      );
+      return attachRequestId(res, requestId);
+    }
+
+    const creatorPayload = {
+      clerk_user_id: uid,
+      name: name.trim(),
+      email: normalizedEmail,
+      username,
+      niche,
+      instagram_handle: instagramHandle.trim().replace("@", ""),
+      instagram_followers: followers,
+      avg_views: avgViews,
+      instagram_engagement: engagementRate,
+      min_rate_private: minRatePrivate,
+      verified: false,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { data: existingCreator } = await supabaseAdmin
       .from("creators")
-      .upsert({
-        id: uid,
-        name: name.trim(),
-        email: clerkUser.emailAddresses[0]?.emailAddress || "",
-        username,
-        niche,
-        instagram_handle: instagramHandle.trim().replace("@", ""),
-        instagram_followers: followers,
-        avg_views: avgViews,
-        instagram_engagement: engagementRate,
-        min_rate_private: minRatePrivate,
-        verified: false,
-      });
+      .select("id")
+      .eq("clerk_user_id", uid)
+      .maybeSingle();
+
+    const { data: existingCreatorByEmail } = existingCreator?.id
+      ? { data: null }
+      : await supabaseAdmin
+          .from("creators")
+          .select("id, clerk_user_id")
+          .eq("email", normalizedEmail)
+          .maybeSingle();
+
+    let creatorError: { message: string } | null = null;
+    let creatorId = existingCreator?.id as string | undefined;
+
+    if (existingCreator?.id) {
+      const { error } = await supabaseAdmin
+        .from("creators")
+        .update(creatorPayload)
+        .eq("id", existingCreator.id);
+      creatorError = error;
+    } else if (existingCreatorByEmail?.id) {
+      if (
+        existingCreatorByEmail.clerk_user_id &&
+        existingCreatorByEmail.clerk_user_id !== uid
+      ) {
+        const res = NextResponse.json(
+          {
+            error:
+              "This email is already linked to another creator account. Please contact support.",
+          },
+          { status: 409 }
+        );
+        return attachRequestId(res, requestId);
+      }
+
+      const { error } = await supabaseAdmin
+        .from("creators")
+        .update(creatorPayload)
+        .eq("id", existingCreatorByEmail.id)
+        .select("id")
+        .single();
+      creatorError = error;
+      creatorId = existingCreatorByEmail.id;
+    } else {
+      const { data: insertedCreator, error } = await supabaseAdmin
+        .from("creators")
+        .insert({
+          id: globalThis.crypto.randomUUID(),
+          ...creatorPayload,
+          created_at: new Date().toISOString(),
+        })
+        .select("id")
+        .single();
+      creatorError = error;
+      creatorId = insertedCreator?.id;
+    }
 
     if (creatorError) {
       console.error('Supabase error creating creator:', creatorError);
@@ -168,9 +249,11 @@ export async function POST(req: NextRequest) {
     await invalidateAllCampaignMatches();
 
     // Generate AI embedding asynchronously (don't block the response)
-    generateCreatorEmbedding(uid).catch((err) =>
-      console.error("Background embedding generation failed:", err)
-    );
+    if (creatorId) {
+      generateCreatorEmbedding(creatorId).catch((err) =>
+        console.error("Background embedding generation failed:", err)
+      );
+    }
 
     const res = NextResponse.json({ success: true });
     logRequestCompleted(log, startTimeMs, 200);

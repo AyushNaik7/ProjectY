@@ -1,384 +1,213 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/ClerkAuthContext";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import {
-  Sparkles,
-  Shield,
-  Zap,
-  ArrowRight,
-  Users,
-  Briefcase,
-  TrendingUp,
-  CheckCircle2,
-} from "lucide-react";
+import { ArrowRight, CircleDashed } from "lucide-react";
 
-const features = [
-  {
-    title: "Smart Matching",
-    description:
-      "AI analyzes audience fit, engagement patterns, and content style to connect you with the right partners.",
-    icon: Sparkles,
-  },
-  {
-    title: "Verified Partners",
-    description:
-      "Every profile is verified. Work with authentic creators and established brands you can trust.",
-    icon: Shield,
-  },
-  {
-    title: "Clear Analytics",
-    description:
-      "Track what matters—reach, engagement, and ROI—with dashboards built for decision-making.",
-    icon: TrendingUp,
-  },
-  {
-    title: "Fast Payments",
-    description:
-      "Creators receive payment within 48 hours of delivery. Simple, reliable, and transparent.",
-    icon: Zap,
-  },
-];
-
-const stats = [
-  { label: "Active Creators", value: "10,000+" },
-  { label: "Brand Partners", value: "2,500+" },
-  { label: "Successful Campaigns", value: "50,000+" },
-  { label: "Total Payouts", value: "₹25Cr+" },
-];
-
-const testimonials = [
-  {
-    name: "Priya Sharma",
-    role: "Fashion Creator",
-    text: "I've tripled my brand partnerships in three months. The matches actually make sense for my audience.",
-  },
-  {
-    name: "Rohit Verma",
-    role: "Marketing Lead, D2C Brand",
-    text: "Finding creators used to take weeks. Now we launch campaigns in days with better results.",
-  },
-  {
-    name: "Ananya Patel",
-    role: "Lifestyle Creator",
-    text: "Fast payments and clear communication. Finally, a platform that respects creators.",
-  },
-];
+const creatorSteps = ["Create your profile", "Get AI matches", "Apply and collaborate"];
+const brandSteps = ["Create a campaign", "Review matched creators", "Approve and launch"];
 
 export default function HomePage() {
-  const router = useRouter();
   const { user, role, loading } = useAuth();
+  const router = useRouter();
+  const [howTab, setHowTab] = useState<"creator" | "brand">("creator");
 
   useEffect(() => {
-    if (!loading && user && role) {
-      if (role === "creator") router.push("/dashboard/creator");
-      else if (role === "brand") router.push("/dashboard/brand");
-    }
+    if (!loading && user && role === "creator") router.push("/dashboard/creator");
+    if (!loading && user && role === "brand") router.push("/dashboard/brand");
     if (!loading && user && !role) router.push("/role-select");
-  }, [user, role, loading, router]);
+  }, [loading, user, role, router]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-      </div>
-    );
+  if (loading || user) {
+    return <div className="min-h-screen bg-slate-50" />;
   }
 
-  if (user) return null;
+  const activeSteps = howTab === "creator" ? creatorSteps : brandSteps;
 
   return (
-    <div className="min-h-screen">
-      {/* Navigation */}
-      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
+    <div className="min-h-screen bg-slate-50 text-slate-900">
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <div className="mx-auto flex h-[56px] max-w-[1180px] items-center justify-between px-4">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <Sparkles className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="text-lg font-semibold">InstaCollab</span>
+            <span
+              className="inline-flex h-7 w-7 items-center justify-center rounded-md"
+              style={{ background: "linear-gradient(135deg, #185FA5, #378ADD)" }}
+            >
+              <span className="h-3 w-3 rounded-sm bg-white" />
+            </span>
+            <span className="text-[14px] font-medium">InstaCollab</span>
           </Link>
-          <div className="flex items-center gap-3">
-            <Link href="/login">
-              <Button variant="ghost" size="sm">
-                Sign In
-              </Button>
+          <nav className="hidden items-center gap-6 text-[13px] text-slate-600 md:flex">
+            <a href="#creators">For Creators</a>
+            <a href="#brands">For Brands</a>
+            <a href="#pricing">Pricing</a>
+          </nav>
+          <div className="flex items-center gap-2">
+            <Link href="/login" className="rounded-md border border-slate-300 px-3 py-1.5 text-[13px]">
+              Sign in
             </Link>
-            <Link href="/signup">
-              <Button size="sm">Get Started</Button>
+            <Link
+              href="/signup"
+              className="rounded-md px-3 py-1.5 text-[13px] text-white"
+              style={{ backgroundColor: "var(--ic-blue)" }}
+            >
+              Get started free
             </Link>
           </div>
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="container py-24 md:py-32">
-        <div className="mx-auto max-w-3xl text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border bg-muted px-3 py-1 text-sm">
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
-              <span className="font-medium">India&apos;s Instagram Creator Platform</span>
-            </div>
-            <h1 className="mb-6 text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-              Where Brands Meet Instagram Creators
-            </h1>
-            <p className="mb-8 text-lg text-muted-foreground sm:text-xl">
-              AI-powered matching connects you with the right Instagram influencers. Launch campaigns, collaborate authentically, and grow together.
-            </p>
-            <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <Link href="/signup">
-                <Button size="lg" className="gap-2">
-                  Start Free Today
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Link href="/login">
-                <Button size="lg" variant="outline">
-                  Sign In
-                </Button>
-              </Link>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Stats */}
-      <section className="border-y bg-muted/50">
-        <div className="container py-12">
-          <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
-            {stats.map((stat, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="text-center"
-              >
-                <div className="text-3xl font-bold">{stat.value}</div>
-                <div className="mt-1 text-sm text-muted-foreground">{stat.label}</div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section className="container py-24">
-        <div className="mb-16 text-center">
-          <h2 className="mb-4 text-3xl font-bold">How It Works</h2>
-          <p className="text-lg text-muted-foreground">
-            Get started in minutes
+      <section className="mx-auto grid max-w-[1180px] grid-cols-1 gap-8 px-4 py-12 md:grid-cols-2 md:py-16">
+        <div>
+          <h1 className="text-[28px] leading-tight md:text-[40px] md:leading-tight" style={{ fontWeight: 500 }}>
+            India&apos;s smartest platform for creator-brand collabs
+          </h1>
+          <p className="mt-4 text-[18px] text-slate-600">
+            Match faster, collaborate cleaner, and track everything in one workspace.
           </p>
-        </div>
-        <div className="mx-auto grid max-w-5xl gap-8 md:grid-cols-2">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <Card className="h-full p-8">
-              <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                <Users className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="mb-4 text-xl font-semibold">For Creators</h3>
-              <div className="space-y-3">
-                {[
-                  "Create your profile with portfolio",
-                  "Get matched with relevant campaigns",
-                  "Apply and start earning",
-                ].map((step, i) => (
-                  <div key={i} className="flex items-start gap-3">
-                    <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-primary" />
-                    <span className="text-muted-foreground">{step}</span>
-                  </div>
-                ))}
-              </div>
-              <Link href="/signup" className="mt-6 block">
-                <Button className="w-full">Join as Creator</Button>
-              </Link>
-            </Card>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-          >
-            <Card className="h-full p-8">
-              <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                <Briefcase className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="mb-4 text-xl font-semibold">For Brands</h3>
-              <div className="space-y-3">
-                {[
-                  "Post your campaign requirements",
-                  "Review AI-matched creators",
-                  "Launch and track performance",
-                ].map((step, i) => (
-                  <div key={i} className="flex items-start gap-3">
-                    <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-primary" />
-                    <span className="text-muted-foreground">{step}</span>
-                  </div>
-                ))}
-              </div>
-              <Link href="/signup" className="mt-6 block">
-                <Button className="w-full">Join as Brand</Button>
-              </Link>
-            </Card>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Features */}
-      <section className="border-t bg-muted/50 py-24">
-        <div className="container">
-          <div className="mb-16 text-center">
-            <h2 className="mb-4 text-3xl font-bold">Why Choose Collabo</h2>
-            <p className="text-lg text-muted-foreground">
-              Built for the modern creator economy
-            </p>
-          </div>
-          <div className="mx-auto grid max-w-5xl gap-8 md:grid-cols-2">
-            {features.map((feature, i) => {
-              const Icon = feature.icon;
-              return (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                >
-                  <Card className="h-full p-6">
-                    <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                      <Icon className="h-5 w-5 text-primary" />
-                    </div>
-                    <h3 className="mb-2 text-lg font-semibold">{feature.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {feature.description}
-                    </p>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="container py-24">
-        <div className="mb-16 text-center">
-          <h2 className="mb-4 text-3xl font-bold">Trusted by Creators & Brands</h2>
-        </div>
-        <div className="mx-auto grid max-w-5xl gap-8 md:grid-cols-3">
-          {testimonials.map((testimonial, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link
+              href="/signup"
+              className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-[14px] text-white"
+              style={{ backgroundColor: "var(--ic-blue)" }}
             >
-              <Card className="h-full p-6">
-                <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
-                  &ldquo;{testimonial.text}&rdquo;
-                </p>
-                <div>
-                  <div className="font-semibold">{testimonial.name}</div>
-                  <div className="text-sm text-muted-foreground">{testimonial.role}</div>
-                </div>
-              </Card>
-            </motion.div>
+              I&apos;m a Creator <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link href="/signup" className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-4 py-2 text-[14px]">
+              I&apos;m a Brand <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+          <p className="mt-4 text-[12px] text-slate-500">Trusted by 2,500+ brands and 10,000+ creators</p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-md border border-slate-200 p-3">
+              <p className="text-[11px] text-slate-500">Match Feed</p>
+              <p className="mt-1 text-[14px]" style={{ fontWeight: 500 }}>
+                92% fit campaigns
+              </p>
+            </div>
+            <div className="rounded-md border border-slate-200 p-3">
+              <p className="text-[11px] text-slate-500">Pending Requests</p>
+              <p className="mt-1 text-[14px]" style={{ fontWeight: 500 }}>
+                18 requests
+              </p>
+            </div>
+            <div className="col-span-2 rounded-md border border-slate-200 p-3">
+              <p className="text-[11px] text-slate-500">Pipeline</p>
+              <div className="mt-2 h-2 rounded bg-slate-100">
+                <div className="h-2 rounded" style={{ width: "68%", backgroundColor: "var(--ic-teal)" }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-y border-slate-200 bg-white py-6">
+        <div className="mx-auto flex max-w-[1180px] gap-3 overflow-x-auto px-4">
+          {["D2C", "Beauty", "SaaS", "Travel", "Fintech", "Edtech"].map((x) => (
+            <span key={x} className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1 text-[12px] text-slate-600">
+              <CircleDashed className="h-3 w-3" /> {x}
+            </span>
           ))}
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="container py-24">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="mx-auto max-w-3xl"
-        >
-          <Card className="overflow-hidden border-0 bg-primary text-primary-foreground">
-            <div className="p-12 text-center">
-              <h2 className="mb-4 text-3xl font-bold">Ready to Get Started?</h2>
-              <p className="mb-8 text-lg opacity-90">
-                Join thousands of creators and brands building successful partnerships
-              </p>
-              <Link href="/signup">
-                <Button size="lg" variant="secondary" className="gap-2">
-                  Create Free Account
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
-          </Card>
-        </motion.div>
+      <section id="creators" className="mx-auto max-w-[1180px] px-4 py-12">
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-xl border border-slate-200 bg-white p-6">
+            <h3 className="text-[20px]" style={{ fontWeight: 500 }}>
+              AI that actually understands your content
+            </h3>
+            <p className="mt-2 text-[13px] text-slate-600">
+              Semantic profile matching combines niche, engagement quality, and budget fit.
+            </p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-white p-6">
+            <h3 className="text-[20px]" style={{ fontWeight: 500 }}>
+              Find brands that fit your niche perfectly
+            </h3>
+            <p className="mt-2 text-[13px] text-slate-600">
+              Get ranked opportunities and clear reasons behind each recommendation.
+            </p>
+          </div>
+        </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t">
-        <div className="container py-12">
-          <div className="grid gap-8 md:grid-cols-4">
-            <div>
-              <div className="mb-4 flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                  <Sparkles className="h-4 w-4 text-primary-foreground" />
-                </div>
-                <span className="font-semibold">InstaCollab</span>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                India&apos;s Instagram creator-brand platform
+      <section className="bg-slate-100 py-10">
+        <div className="mx-auto grid max-w-[1180px] grid-cols-2 gap-4 px-4 md:grid-cols-4">
+          {["10,000+ Creators", "2,500+ Brands", "₹2Cr+ Paid Out", "4.9★ Average Rating"].map((s) => (
+            <div key={s} className="rounded-md border border-slate-200 bg-white p-4 text-center text-[16px]" style={{ fontWeight: 500 }}>
+              {s}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-[1180px] px-4 py-12" id="brands">
+        <div className="mb-4 flex gap-2">
+          <button
+            onClick={() => setHowTab("creator")}
+            className="rounded-full px-3 py-1 text-[12px]"
+            style={{
+              backgroundColor: howTab === "creator" ? "var(--ic-blue-light)" : "#fff",
+              color: howTab === "creator" ? "var(--ic-blue)" : "#64748b",
+            }}
+          >
+            Creator flow
+          </button>
+          <button
+            onClick={() => setHowTab("brand")}
+            className="rounded-full px-3 py-1 text-[12px]"
+            style={{
+              backgroundColor: howTab === "brand" ? "var(--ic-blue-light)" : "#fff",
+              color: howTab === "brand" ? "var(--ic-blue)" : "#64748b",
+            }}
+          >
+            Brand flow
+          </button>
+        </div>
+        <div className="grid gap-3 md:grid-cols-3">
+          {activeSteps.map((s, i) => (
+            <div key={s} className="rounded-xl border border-slate-200 bg-white p-5">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-300 text-[12px]">
+                {i + 1}
+              </span>
+              <p className="mt-3 text-[14px]" style={{ fontWeight: 500 }}>
+                {s}
               </p>
             </div>
-            <div>
-              <h4 className="mb-3 font-semibold">Platform</h4>
-              <div className="space-y-2 text-sm">
-                <Link href="/campaigns" className="block text-muted-foreground hover:text-foreground">
-                  Campaigns
-                </Link>
-                <Link href="/creators" className="block text-muted-foreground hover:text-foreground">
-                  Find Creators
-                </Link>
-              </div>
-            </div>
-            <div>
-              <h4 className="mb-3 font-semibold">Company</h4>
-              <div className="space-y-2 text-sm">
-                <Link href="/about" className="block text-muted-foreground hover:text-foreground">
-                  About
-                </Link>
-                <Link href="/contact" className="block text-muted-foreground hover:text-foreground">
-                  Contact
-                </Link>
-              </div>
-            </div>
-            <div>
-              <h4 className="mb-3 font-semibold">Legal</h4>
-              <div className="space-y-2 text-sm">
-                <Link href="/privacy" className="block text-muted-foreground hover:text-foreground">
-                  Privacy
-                </Link>
-                <Link href="/terms" className="block text-muted-foreground hover:text-foreground">
-                  Terms
-                </Link>
-              </div>
-            </div>
+          ))}
+        </div>
+      </section>
+
+      <footer className="border-t border-slate-200 bg-white">
+        <div className="mx-auto grid max-w-[1180px] grid-cols-2 gap-6 px-4 py-8 md:grid-cols-4">
+          <div>
+            <p className="text-[14px]" style={{ fontWeight: 500 }}>
+              InstaCollab
+            </p>
+            <p className="mt-1 text-[12px] text-slate-500">Creator-brand collabs, simplified.</p>
           </div>
-          <div className="mt-8 border-t pt-8 text-center text-sm text-muted-foreground">
-            © 2026 InstaCollab. All rights reserved.
+          <div>
+            <p className="text-[13px]" style={{ fontWeight: 500 }}>
+              Product
+            </p>
+            <p className="mt-1 text-[12px] text-slate-500">Campaigns</p>
+          </div>
+          <div>
+            <p className="text-[13px]" style={{ fontWeight: 500 }}>
+              Resources
+            </p>
+            <p className="mt-1 text-[12px] text-slate-500">Help Center</p>
+          </div>
+          <div>
+            <p className="text-[13px]" style={{ fontWeight: 500 }}>
+              Legal
+            </p>
+            <p className="mt-1 text-[12px] text-slate-500">Terms · Privacy</p>
           </div>
         </div>
       </footer>

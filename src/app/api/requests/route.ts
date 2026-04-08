@@ -17,6 +17,11 @@ import {
 } from "@/lib/request-context";
 import { timedQuery } from "@/lib/db-timing";
 import { randomUUID } from "crypto";
+import {
+  getBrandIdByClerkId,
+  getCreatorIdByClerkId,
+  parseJsonBody,
+} from "@/lib/api-utils";
 
 /* ── POST: brand sends a collaboration request ── */
 export async function POST(req: NextRequest) {
@@ -28,8 +33,13 @@ export async function POST(req: NextRequest) {
 
     const user = auth.user;
     const uid = user.id;
-    const body = await req.json();
-    const { creatorId, campaignId, message } = body;
+    const parsed = await parseJsonBody<{
+      creatorId: string;
+      campaignId?: string;
+      message?: string;
+    }>(req);
+    if (!parsed.ok) return attachRequestId(parsed.response, requestId);
+    const { creatorId, campaignId, message } = parsed.data;
 
     // Verify brand role
     const role = (user.user_metadata as Record<string, unknown>)?.role;
@@ -37,6 +47,15 @@ export async function POST(req: NextRequest) {
       const res = NextResponse.json(
         { error: "Only brands can send collaboration requests" },
         { status: 403 }
+      );
+      return attachRequestId(res, requestId);
+    }
+
+    const brandId = await getBrandIdByClerkId(uid);
+    if (!brandId) {
+      const res = NextResponse.json(
+        { error: "Brand profile not found. Complete onboarding first." },
+        { status: 404 }
       );
       return attachRequestId(res, requestId);
     }
@@ -60,7 +79,7 @@ export async function POST(req: NextRequest) {
             .select("id, brand_id")
             .eq("id", campaignId)
             .single(),
-        { brandId: uid }
+        { brandId }
       );
 
       if (campErr || !campaign) {
@@ -70,7 +89,7 @@ export async function POST(req: NextRequest) {
         );
         return attachRequestId(res, requestId);
       }
-      if (campaign.brand_id !== uid) {
+      if (campaign.brand_id !== brandId) {
         const res = NextResponse.json(
           { error: "You don't own this campaign" },
           { status: 403 }
@@ -83,7 +102,7 @@ export async function POST(req: NextRequest) {
     const dupQuery = supabaseAdmin
       .from("collaboration_requests")
       .select("id")
-      .eq("brand_id", uid)
+      .eq("brand_id", brandId)
       .eq("creator_id", creatorId)
       .eq("status", "pending");
     if (campaignId) dupQuery.eq("campaign_id", campaignId);
@@ -99,7 +118,7 @@ export async function POST(req: NextRequest) {
     // Build insert payload — campaignId may be null for a general request
     const insertPayload: Record<string, unknown> = {
       id: randomUUID(), // Explicitly generate UUID
-      brand_id: uid,
+      brand_id: brandId,
       creator_id: creatorId,
       status: "pending",
       message: typeof message === "string" ? message.trim() : "",
@@ -115,7 +134,7 @@ export async function POST(req: NextRequest) {
           .insert([insertPayload])
           .select("id")
           .single(),
-      { brandId: uid }
+      { brandId }
     );
 
     if (error) {
@@ -148,8 +167,11 @@ export async function PATCH(req: NextRequest) {
 
     const user = auth.user;
     const uid = user.id;
-    const body = await req.json();
-    const { requestId: bodyRequestId, status } = body;
+    const parsed = await parseJsonBody<{ requestId: string; status: string }>(
+      req
+    );
+    if (!parsed.ok) return attachRequestId(parsed.response, requestId);
+    const { requestId: bodyRequestId, status } = parsed.data;
 
     const role = (user.user_metadata as Record<string, unknown>)?.role;
 
@@ -193,7 +215,8 @@ export async function PATCH(req: NextRequest) {
       }
 
       // Verify this brand owns the request
-      if (requestData.brand_id !== uid) {
+      const brandId = await getBrandIdByClerkId(uid);
+      if (!brandId || requestData.brand_id !== brandId) {
         const res = NextResponse.json(
           { error: "Unauthorized" },
           { status: 403 }
@@ -218,7 +241,7 @@ export async function PATCH(req: NextRequest) {
             .from("collaboration_requests")
             .update({ status: "brand_approved", updated_at: new Date().toISOString() })
             .eq("id", bodyRequestId),
-        { brandId: uid }
+        { brandId }
       );
 
       if (updateErr) {
@@ -252,7 +275,8 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Verify this creator owns the request
-    if (requestData.creator_id !== uid) {
+    const creatorId = await getCreatorIdByClerkId(uid);
+    if (!creatorId || requestData.creator_id !== creatorId) {
       const res = NextResponse.json({ error: "Unauthorized" }, { status: 403 });
       return attachRequestId(res, requestId);
     }
@@ -279,7 +303,7 @@ export async function PATCH(req: NextRequest) {
           .from("collaboration_requests")
           .update({ status, updated_at: new Date().toISOString() })
           .eq("id", bodyRequestId),
-      { creatorId: uid }
+      { creatorId }
     );
 
     if (updateErr) {

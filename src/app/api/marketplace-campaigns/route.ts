@@ -21,55 +21,21 @@ import {
   createRequestContext,
   logRequestCompleted,
 } from "@/lib/request-context";
+import { getCreatorIdByClerkId, parseJsonBody } from "@/lib/api-utils";
 
 export async function POST(req: NextRequest) {
   const { requestId, startTimeMs, log } = createRequestContext(req);
 
   try {
-    // Read request body first
-    const body = await req.json();
-    
-    // Try Clerk auth first, then fallback to direct user check
-    let user: any = null;
-    let uid: string = "";
-    let role: string = "";
+    const parsed = await parseJsonBody<Record<string, unknown>>(req);
+    if (!parsed.ok) return attachRequestId(parsed.response, requestId);
 
-    try {
-      const auth = await requireUser(req);
-      if (!auth.error) {
-        user = auth.user;
-        uid = user.id;
-        role = (user.user_metadata as Record<string, unknown>)?.role as string;
-      }
-    } catch (clerkError) {
-      log.warn({ err: clerkError }, "clerk_auth_failed");
-    }
+    const auth = await requireUser(req);
+    if (auth.error) return attachRequestId(auth.error, requestId);
 
-    // If Clerk auth failed, try to get user from request body
-    if (!user && body.userId) {
-      // Look up user in creators table
-      const { data: creator, error: creatorError } = await supabaseAdmin
-        .from("creators")
-        .select("id, name")
-        .eq("id", body.userId)
-        .single();
-
-      if (!creatorError && creator) {
-        uid = creator.id;
-        role = "creator";
-        user = { id: uid, name: creator.name };
-        log.info({ userId: uid }, "auth_via_creator_lookup");
-      }
-    }
-
-    // If still no user, return error
-    if (!user || !uid) {
-      const res = NextResponse.json(
-        { error: "Authentication required" },
-        { status: 401 },
-      );
-      return attachRequestId(res, requestId);
-    }
+    const user = auth.user;
+    const uid = user.id;
+    const role = (user.user_metadata as Record<string, unknown>)?.role as string;
 
     // Verify creator role (allow if role is not set, assume creator)
     if (role && role !== "creator") {
@@ -80,8 +46,17 @@ export async function POST(req: NextRequest) {
       return attachRequestId(res, requestId);
     }
 
+    const creatorId = await getCreatorIdByClerkId(uid);
+    if (!creatorId) {
+      const res = NextResponse.json(
+        { error: "Creator profile not found. Complete onboarding first." },
+        { status: 404 }
+      );
+      return attachRequestId(res, requestId);
+    }
+
     // 1. Get AI-matched campaigns (vector + hybrid scoring)
-    const matchedCampaigns = await getVectorMatchedCampaigns(uid, log);
+    const matchedCampaigns = await getVectorMatchedCampaigns(creatorId, log);
     const campaignIds = matchedCampaigns.map((c) => c.id);
 
     if (campaignIds.length === 0) {
@@ -105,7 +80,7 @@ export async function POST(req: NextRequest) {
     const { data: savedRows } = await supabaseAdmin
       .from("saved_campaigns")
       .select("campaign_id")
-      .eq("creator_id", uid);
+      .eq("creator_id", creatorId);
 
     const savedIds = new Set((savedRows || []).map((r: any) => r.campaign_id));
 

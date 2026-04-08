@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -72,7 +73,7 @@ export function CreatorPublicProfile({ creator }: CreatorPublicProfileProps) {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <div className="relative h-64 bg-gradient-to-br from-primary/20 via-primary/10 to-background">
+      <div className="relative h-64 bg-slate-100">
         <div className="absolute inset-0 bg-grid-white/10" />
       </div>
 
@@ -326,10 +327,12 @@ export function CreatorPublicProfile({ creator }: CreatorPublicProfileProps) {
                   <Card className="overflow-hidden hover:shadow-lg transition-shadow">
                     {item.thumbnail_url && (
                       <div className="aspect-video bg-muted relative overflow-hidden">
-                        <img
+                        <Image
                           src={item.thumbnail_url}
                           alt={item.title}
-                          className="w-full h-full object-cover"
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          className="object-cover"
                         />
                       </div>
                     )}
@@ -366,3 +369,4 @@ export function CreatorPublicProfile({ creator }: CreatorPublicProfileProps) {
     </div>
   );
 }
+

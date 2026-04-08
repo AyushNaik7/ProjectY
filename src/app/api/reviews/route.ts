@@ -14,6 +14,7 @@ import {
   createRequestContext,
 } from "@/lib/request-context";
 import { timedQuery } from "@/lib/db-timing";
+import { parseJsonBody } from "@/lib/api-utils";
 
 /* ── POST: Submit a review ── */
 export async function POST(req: NextRequest) {
@@ -26,9 +27,19 @@ export async function POST(req: NextRequest) {
     const user = auth.user;
     const uid = user.id;
 
-    const body = await req.json();
-    const { collaboration_request_id, rating, review_text, is_public = true } =
-      body;
+    const parsed = await parseJsonBody<{
+      collaboration_request_id: string;
+      rating: number;
+      review_text?: string;
+      is_public?: boolean;
+    }>(req);
+    if (!parsed.ok) return attachRequestId(parsed.response, requestId);
+    const {
+      collaboration_request_id,
+      rating,
+      review_text,
+      is_public = true,
+    } = parsed.data;
 
     // Validation
     if (!collaboration_request_id) {
@@ -241,7 +252,7 @@ export async function GET(req: NextRequest) {
     // Get reviewer names
     const client = await clerkClient();
     const reviewsWithNames = await Promise.all(
-      reviews.map(async (review: any) => {
+      (reviews || []).map(async (review: any) => {
         try {
           const reviewer = await client.users.getUser(review.reviewer_clerk_id);
           return {

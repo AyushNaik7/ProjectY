@@ -14,6 +14,7 @@ import {
   createRequestContext,
 } from "@/lib/request-context";
 import { timedQuery } from "@/lib/db-timing";
+import { parseJsonBody } from "@/lib/api-utils";
 
 /* ── GET: List all conversations for current user ── */
 export async function GET(req: NextRequest) {
@@ -115,7 +116,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Format response
-    const formatted = conversations.map((conv: any) => ({
+    const formatted = (conversations || []).map((conv: any) => ({
       id: conv.id,
       brand_id: conv.brand_id,
       creator_id: conv.creator_id,
@@ -156,8 +157,13 @@ export async function POST(req: NextRequest) {
     const user = auth.user;
     const uid = user.id;
 
-    const body = await req.json();
-    const { brand_id, creator_id, campaign_id } = body;
+    const parsed = await parseJsonBody<{
+      brand_id: string;
+      creator_id: string;
+      campaign_id?: string | null;
+    }>(req);
+    if (!parsed.ok) return attachRequestId(parsed.response, requestId);
+    const { brand_id, creator_id, campaign_id } = parsed.data;
 
     if (!brand_id || !creator_id) {
       const res = NextResponse.json(
