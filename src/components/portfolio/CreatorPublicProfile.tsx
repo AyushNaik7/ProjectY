@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CreatorPortfolio } from "@/types/portfolio";
+import { PublicPageShell } from "@/components/layout/PublicPageShell";
 
 interface CreatorPublicProfileProps {
   creator: CreatorPortfolio;
@@ -71,11 +72,12 @@ export function CreatorPublicProfile({ creator }: CreatorPublicProfileProps) {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <div className="relative h-64 bg-slate-100">
-        <div className="absolute inset-0 bg-grid-white/10" />
-      </div>
+    <PublicPageShell>
+      <div className="bg-background">
+        {/* Hero Section */}
+        <div className="relative h-64 bg-slate-100">
+          <div className="absolute inset-0 bg-grid-white/10" />
+        </div>
 
       <div className="container max-w-6xl -mt-32 pb-16">
         {/* Profile Header */}
@@ -366,7 +368,7 @@ export function CreatorPublicProfile({ creator }: CreatorPublicProfileProps) {
           </motion.div>
         )}
       </div>
-    </div>
+    </PublicPageShell>
   );
 }
 

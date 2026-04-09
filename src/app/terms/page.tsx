@@ -4,29 +4,14 @@
 
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
-import { FileText, ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { FileText } from "lucide-react";
+import { PublicPageShell } from "@/components/layout/PublicPageShell";
 
 export default function TermsOfServicePage() {
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
-          <Link href="/" className="flex items-center">
-            <Image src="/logo.png" alt="InstaCollab" width={144} height={48} className="h-12 w-auto rounded-lg hover:opacity-80 transition-opacity" priority />
-          </Link>
-          <Link href="/">
-            <Button variant="ghost" size="sm" className="gap-2">
-              <ArrowLeft className="w-4 h-4" />
-              Back to Home
-            </Button>
-          </Link>
-        </div>
-      </header>
+    <PublicPageShell>
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-6 py-12">
@@ -435,30 +420,6 @@ export default function TermsOfServicePage() {
         </motion.div>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-border/50 mt-12">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-muted-foreground">
-              © 2026 InstaCollab. All rights reserved.
-            </p>
-            <div className="flex gap-6 text-sm">
-              <Link href="/privacy" className="text-muted-foreground hover:text-foreground">
-                Privacy Policy
-              </Link>
-              <Link href="/terms" className="text-muted-foreground hover:text-foreground">
-                Terms of Service
-              </Link>
-              <Link href="/about" className="text-muted-foreground hover:text-foreground">
-                About
-              </Link>
-              <Link href="/contact" className="text-muted-foreground hover:text-foreground">
-                Contact
-              </Link>
-            </div>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </PublicPageShell>
   );
 }

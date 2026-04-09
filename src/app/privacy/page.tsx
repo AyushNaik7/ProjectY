@@ -2,36 +2,14 @@
 
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
-import { Shield, ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Shield } from "lucide-react";
+import { PublicPageShell } from "@/components/layout/PublicPageShell";
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
-          <Link href="/" className="flex items-center">
-            <Image
-              src="/logo.png"
-              alt="Collabo"
-              width={144}
-              height={48}
-              className="h-12 w-auto rounded-lg hover:opacity-80 transition-opacity"
-              priority
-            />
-          </Link>
-          <Link href="/">
-            <Button variant="ghost" size="sm" className="gap-2">
-              <ArrowLeft className="w-4 h-4" />
-              Back to Home
-            </Button>
-          </Link>
-        </div>
-      </header>
+    <PublicPageShell>
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-6 py-12">
@@ -58,21 +36,21 @@ export default function PrivacyPolicyPage() {
                 <div className="space-y-4 text-muted-foreground leading-relaxed">
                   <p>
                     Welcome to{" "}
-                    <strong className="text-foreground">Collabo</strong>, a
+                    <strong className="text-foreground">InstaCollab</strong>, a
                     comprehensive influencer marketing platform that connects
                     content creators with brands for meaningful collaborations.
-                    Collabo is designed to streamline the process of
+                    InstaCollab is designed to streamline the process of
                     discovering, analyzing, and managing influencer
                     partnerships.
                   </p>
                   <p>
-                    At Collabo, we respect your privacy and are committed to
+                    At InstaCollab, we respect your privacy and are committed to
                     protecting your personal data. This privacy policy explains
                     how we collect, use, store, and protect your information
                     when you use our platform.
                   </p>
                   <p className="font-semibold text-foreground">
-                    Important: Collabo integrates with Instagram through the
+                    Important: InstaCollab integrates with Instagram through the
                     official Meta Platform API (formerly Facebook Platform).
                     When you connect your Instagram account, we access certain
                     data from your Instagram profile through this authorized API
@@ -80,7 +58,7 @@ export default function PrivacyPolicyPage() {
                     campaign matching services.
                   </p>
                   <p>
-                    By using Collabo, you agree to the collection and use of
+                    By using InstaCollab, you agree to the collection and use of
                     information in accordance with this policy. If you do not
                     agree with our policies and practices, please do not use our
                     platform.
@@ -97,7 +75,7 @@ export default function PrivacyPolicyPage() {
                       2.1 Account Information
                     </h3>
                     <p className="mb-2">
-                      When you create a Collabo account, we collect:
+                      When you create a InstaCollab account, we collect:
                     </p>
                     <ul className="list-disc list-inside space-y-1.5 ml-4">
                       <li>Full name and username</li>
@@ -114,7 +92,7 @@ export default function PrivacyPolicyPage() {
                       2.2 Instagram Data (via Meta Platform API)
                     </h3>
                     <p className="mb-2 font-medium text-foreground">
-                      When you authorize Collabo to connect with your Instagram
+                      When you authorize InstaCollab to connect with your Instagram
                       account, we collect the following data through the Meta
                       Platform API:
                     </p>
@@ -176,7 +154,7 @@ export default function PrivacyPolicyPage() {
                           OAuth Access Tokens:
                         </strong>{" "}
                         Securely encrypted authentication tokens that enable
-                        Collabo to access your Instagram data on your behalf
+                        InstaCollab to access your Instagram data on your behalf
                         (these tokens are stored with AES-256 encryption and are
                         never shared with third parties)
                       </li>
@@ -188,7 +166,7 @@ export default function PrivacyPolicyPage() {
                       accessed with your explicit permission through
                       Instagram&apos;s OAuth authorization flow, and you can
                       revoke this access at any time through your Instagram
-                      settings or Collabo dashboard.
+                      settings or InstaCollab dashboard.
                     </p>
                   </div>
 
@@ -261,7 +239,7 @@ export default function PrivacyPolicyPage() {
                       3.1 Service Delivery
                     </h3>
                     <ul className="list-disc list-inside space-y-1.5 ml-4">
-                      <li>To create and manage your Collabo account</li>
+                      <li>To create and manage your InstaCollab account</li>
                       <li>
                         To authenticate your identity and maintain account
                         security
@@ -386,7 +364,7 @@ export default function PrivacyPolicyPage() {
                       <li>
                         <strong className="text-foreground">
                           We DO NOT use your data for advertising outside the
-                          Collabo platform
+                          InstaCollab platform
                         </strong>
                       </li>
                       <li>
@@ -506,7 +484,7 @@ export default function PrivacyPolicyPage() {
                     </p>
                     <ul className="list-disc list-inside space-y-1.5 ml-4 mt-2">
                       <li>
-                        Authorized Collabo employees who require access to
+                        Authorized InstaCollab employees who require access to
                         perform their job functions (e.g., customer support,
                         technical maintenance)
                       </li>
@@ -544,7 +522,7 @@ export default function PrivacyPolicyPage() {
                       All third-party providers are contractually required to
                       maintain the confidentiality and security of your data and
                       are prohibited from using it for any purpose other than
-                      providing services to Collabo.
+                      providing services to InstaCollab.
                     </p>
                   </div>
 
@@ -622,7 +600,7 @@ export default function PrivacyPolicyPage() {
                             Enforce our Terms of Service and other agreements
                           </li>
                           <li>
-                            Protect the rights, property, or safety of Collabo,
+                            Protect the rights, property, or safety of InstaCollab,
                             our users, or the public
                           </li>
                           <li>
@@ -675,7 +653,7 @@ export default function PrivacyPolicyPage() {
                       Policy in addition to this privacy policy. We do not share
                       your Instagram data with Meta beyond what is required for
                       API authentication and functionality. You can review and
-                      revoke Collabo&apos;s access to your Instagram data at any
+                      revoke InstaCollab&apos;s access to your Instagram data at any
                       time through your Instagram account settings.
                     </p>
                   </div>
@@ -698,7 +676,7 @@ export default function PrivacyPolicyPage() {
                       6.1 Active Accounts
                     </h3>
                     <p>
-                      As long as your Collabo account remains active, we will
+                      As long as your InstaCollab account remains active, we will
                       retain your account information, Instagram data, campaign
                       history, and associated data to provide you with
                       continuous service and maintain the functionality of the
@@ -821,12 +799,12 @@ export default function PrivacyPolicyPage() {
                     </p>
                     <ol className="list-decimal list-inside space-y-2 ml-4">
                       <li>
-                        Log in to your Collabo account at{" "}
+                        Log in to your InstaCollab account at{" "}
                         <a
-                          href="https://collabo.com"
+                          href="https://instacollab.com"
                           className="text-primary hover:underline"
                         >
-                          https://collabo.com
+                          https://instacollab.com
                         </a>
                       </li>
                       <li>
@@ -871,10 +849,10 @@ export default function PrivacyPolicyPage() {
                       </p>
                       <p className="text-xl font-bold text-primary my-2">
                         <a
-                          href="mailto:privacy@collabo.com"
+                          href="mailto:privacy@instacollab.com"
                           className="hover:underline"
                         >
-                          privacy@collabo.com
+                          privacy@instacollab.com
                         </a>
                       </p>
                       <p className="font-semibold text-foreground mt-3">
@@ -887,9 +865,9 @@ export default function PrivacyPolicyPage() {
                         Include in your email:
                       </p>
                       <ul className="list-disc list-inside space-y-1 ml-4 mt-1">
-                        <li>Your full name as registered on Collabo</li>
+                        <li>Your full name as registered on InstaCollab</li>
                         <li>The email address associated with your account</li>
-                        <li>Your Collabo username (if known)</li>
+                        <li>Your InstaCollab username (if known)</li>
                         <li>
                           A clear statement that you wish to delete your account
                           and all associated data
@@ -1002,7 +980,7 @@ export default function PrivacyPolicyPage() {
                       7.5 Instagram Data Deletion from Meta
                     </h3>
                     <p>
-                      When you delete your Collabo account, we delete all
+                      When you delete your InstaCollab account, we delete all
                       Instagram data from our systems. However, this does not
                       delete your Instagram account or data stored by
                       Meta/Instagram. To manage your Instagram data and
@@ -1014,10 +992,10 @@ export default function PrivacyPolicyPage() {
                         Navigate to Settings → Security → Apps and Websites
                       </li>
                       <li>
-                        Find &quot;Collabo&quot; in the list of authorized apps
+                        Find &quot;InstaCollab&quot; in the list of authorized apps
                       </li>
                       <li>
-                        Click &quot;Remove&quot; to revoke Collabo&apos;s access
+                        Click &quot;Remove&quot; to revoke InstaCollab&apos;s access
                       </li>
                     </ol>
                   </div>
@@ -1030,17 +1008,17 @@ export default function PrivacyPolicyPage() {
                       If you encounter any issues with account deletion or have
                       questions about the process, please contact us at{" "}
                       <a
-                        href="mailto:privacy@collabo.com"
+                        href="mailto:privacy@instacollab.com"
                         className="text-primary hover:underline font-semibold"
                       >
-                        privacy@collabo.com
+                        privacy@instacollab.com
                       </a>{" "}
                       or{" "}
                       <a
-                        href="mailto:support@collabo.com"
+                        href="mailto:support@instacollab.com"
                         className="text-primary hover:underline font-semibold"
                       >
-                        support@collabo.com
+                        support@instacollab.com
                       </a>
                       . We are committed to honoring your data deletion requests
                       promptly and completely.
@@ -1071,10 +1049,10 @@ export default function PrivacyPolicyPage() {
                       dashboard (Settings → Privacy → Download My Data) or by
                       emailing{" "}
                       <a
-                        href="mailto:privacy@collabo.com"
+                        href="mailto:privacy@instacollab.com"
                         className="text-primary hover:underline"
                       >
-                        privacy@collabo.com
+                        privacy@instacollab.com
                       </a>
                       .
                     </p>
@@ -1089,10 +1067,10 @@ export default function PrivacyPolicyPage() {
                       and preferences at any time through your account settings.
                       If you need assistance correcting your data, contact us at{" "}
                       <a
-                        href="mailto:support@collabo.com"
+                        href="mailto:support@instacollab.com"
                         className="text-primary hover:underline"
                       >
-                        support@collabo.com
+                        support@instacollab.com
                       </a>
                       .
                     </p>
@@ -1184,10 +1162,10 @@ export default function PrivacyPolicyPage() {
                     <p>
                       To exercise any of these rights, please contact us at{" "}
                       <a
-                        href="mailto:privacy@collabo.com"
+                        href="mailto:privacy@instacollab.com"
                         className="text-primary hover:underline font-semibold"
                       >
-                        privacy@collabo.com
+                        privacy@instacollab.com
                       </a>
                       . We will respond to your request within 30 days. We may
                       need to verify your identity before processing certain
@@ -1204,7 +1182,7 @@ export default function PrivacyPolicyPage() {
                 </h2>
                 <div className="space-y-4 text-muted-foreground leading-relaxed">
                   <p>
-                    Collabo uses cookies and similar tracking technologies to
+                    InstaCollab uses cookies and similar tracking technologies to
                     enhance your experience, analyze usage patterns, and improve
                     our services.
                   </p>
@@ -1264,7 +1242,7 @@ export default function PrivacyPolicyPage() {
                     <p>
                       You can control cookies through your browser settings.
                       However, blocking certain cookies may affect platform
-                      functionality. To manage cookie preferences on Collabo, go
+                      functionality. To manage cookie preferences on InstaCollab, go
                       to Settings → Privacy → Cookie Preferences.
                     </p>
                   </div>
@@ -1278,7 +1256,7 @@ export default function PrivacyPolicyPage() {
                 </h2>
                 <div className="space-y-4 text-muted-foreground leading-relaxed">
                   <p>
-                    Collabo is not intended for use by individuals under the age
+                    InstaCollab is not intended for use by individuals under the age
                     of 18. We do not knowingly collect personal information from
                     children under 18. If we become aware that we have collected
                     data from a child under 18, we will take steps to delete
@@ -1288,10 +1266,10 @@ export default function PrivacyPolicyPage() {
                     If you are a parent or guardian and believe your child has
                     provided us with personal information, please contact us at{" "}
                     <a
-                      href="mailto:privacy@collabo.com"
+                      href="mailto:privacy@instacollab.com"
                       className="text-primary hover:underline"
                     >
-                      privacy@collabo.com
+                      privacy@instacollab.com
                     </a>
                     .
                   </p>
@@ -1305,7 +1283,7 @@ export default function PrivacyPolicyPage() {
                 </h2>
                 <div className="space-y-4 text-muted-foreground leading-relaxed">
                   <p>
-                    Collabo operates globally and may transfer your data to
+                    InstaCollab operates globally and may transfer your data to
                     countries outside your country of residence, including
                     countries that may have different data protection laws. When
                     we transfer data internationally, we implement appropriate
@@ -1323,7 +1301,7 @@ export default function PrivacyPolicyPage() {
                     </li>
                   </ul>
                   <p className="mt-3">
-                    By using Collabo, you consent to the transfer of your
+                    By using InstaCollab, you consent to the transfer of your
                     information to countries outside your country of residence
                     as described in this policy.
                   </p>
@@ -1358,7 +1336,7 @@ export default function PrivacyPolicyPage() {
                   </ul>
                   <p className="mt-3">
                     We encourage you to review this Privacy Policy periodically.
-                    Your continued use of Collabo after changes are posted
+                    Your continued use of InstaCollab after changes are posted
                     constitutes your acceptance of the updated policy.
                   </p>
                 </div>
@@ -1383,10 +1361,10 @@ export default function PrivacyPolicyPage() {
                       </h3>
                       <p>
                         <a
-                          href="mailto:support@collabo.com"
+                          href="mailto:support@instacollab.com"
                           className="text-primary hover:underline font-semibold text-lg"
                         >
-                          support@collabo.com
+                          support@instacollab.com
                         </a>
                       </p>
                     </div>
@@ -1397,10 +1375,10 @@ export default function PrivacyPolicyPage() {
                       </h3>
                       <p>
                         <a
-                          href="mailto:privacy@collabo.com"
+                          href="mailto:privacy@instacollab.com"
                           className="text-primary hover:underline font-semibold text-lg"
                         >
-                          privacy@collabo.com
+                          privacy@instacollab.com
                         </a>
                       </p>
                     </div>
@@ -1411,10 +1389,10 @@ export default function PrivacyPolicyPage() {
                       </h3>
                       <p>
                         <a
-                          href="mailto:privacy@collabo.com"
+                          href="mailto:privacy@instacollab.com"
                           className="text-primary hover:underline font-semibold text-lg"
                         >
-                          privacy@collabo.com
+                          privacy@instacollab.com
                         </a>
                       </p>
                       <p className="text-sm mt-1">
@@ -1428,10 +1406,10 @@ export default function PrivacyPolicyPage() {
                       </h3>
                       <p>
                         <a
-                          href="mailto:security@collabo.com"
+                          href="mailto:security@instacollab.com"
                           className="text-primary hover:underline font-semibold text-lg"
                         >
-                          security@collabo.com
+                          security@instacollab.com
                         </a>
                       </p>
                     </div>
@@ -1442,7 +1420,7 @@ export default function PrivacyPolicyPage() {
                       Mailing Address:
                     </h3>
                     <address className="not-italic">
-                      Collabo Inc.
+                      InstaCollab Inc.
                       <br />
                       123 Creator Street, Suite 500
                       <br />
@@ -1461,7 +1439,7 @@ export default function PrivacyPolicyPage() {
                   </p>
 
                   <p className="mt-4 font-semibold text-foreground text-lg">
-                    Thank you for trusting Collabo with your data. Your privacy
+                    Thank you for trusting InstaCollab with your data. Your privacy
                     and security are our top priorities.
                   </p>
                 </div>
@@ -1471,43 +1449,8 @@ export default function PrivacyPolicyPage() {
         </motion.div>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-border/50 mt-12">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-muted-foreground">
-              © 2026 Collabo. All rights reserved.
-            </p>
-            <div className="flex gap-6 text-sm">
-              <Link
-                href="/privacy"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                Privacy Policy
-              </Link>
-              <Link
-                href="/terms"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                Terms of Service
-              </Link>
-              <Link
-                href="/about"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                About
-              </Link>
-              <Link
-                href="/contact"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                Contact
-              </Link>
-            </div>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </PublicPageShell>
   );
 }
+
 

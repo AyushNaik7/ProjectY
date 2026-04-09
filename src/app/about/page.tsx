@@ -2,11 +2,11 @@
 
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
-import { Info, ArrowLeft, Target, Users, Zap, Heart } from "lucide-react";
+import { Info, Target, Users, Zap, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PublicPageShell } from "@/components/layout/PublicPageShell";
 
 export default function AboutPage() {
   const features = [
@@ -20,7 +20,7 @@ export default function AboutPage() {
       icon: Users,
       title: "For Everyone",
       description:
-        "Whether you're a creator looking for brand deals or a brand seeking authentic voices, Collabo is your platform.",
+        "Whether you're a creator looking for brand deals or a brand seeking authentic voices, InstaCollab is your platform.",
     },
     {
       icon: Zap,
@@ -37,21 +37,7 @@ export default function AboutPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
-          <Link href="/" className="flex items-center">
-            <Image src="/logo.png" alt="Collabo" width={144} height={48} className="h-12 w-auto rounded-lg hover:opacity-80 transition-opacity" priority />
-          </Link>
-          <Link href="/">
-            <Button variant="ghost" size="sm" className="gap-2">
-              <ArrowLeft className="w-4 h-4" />
-              Back to Home
-            </Button>
-          </Link>
-        </div>
-      </header>
+    <PublicPageShell>
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-6 py-12">
@@ -63,7 +49,7 @@ export default function AboutPage() {
           <div className="flex items-center gap-3 mb-6">
             <Info className="w-10 h-10 text-primary" />
             <div>
-              <h1 className="text-4xl font-bold">About Collabo</h1>
+              <h1 className="text-4xl font-bold">About InstaCollab</h1>
               <p className="text-muted-foreground">Connecting creators with brands</p>
             </div>
           </div>
@@ -75,7 +61,7 @@ export default function AboutPage() {
                 Empowering Collaborations, One Match at a Time
               </h2>
               <p className="text-lg text-muted-foreground leading-relaxed mb-6">
-                Collabo is a modern platform designed to simplify and enhance the collaboration 
+                InstaCollab is a modern platform designed to simplify and enhance the collaboration 
                 process between content creators and brands. We believe that authentic partnerships 
                 drive the best results, and our mission is to make those connections effortless.
               </p>
@@ -207,7 +193,7 @@ export default function AboutPage() {
             <CardContent className="p-8 text-center">
               <h2 className="text-2xl font-bold mb-4">Ready to Start Collaborating?</h2>
               <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-                Join thousands of creators and brands who are already building successful partnerships on Collabo.
+                Join thousands of creators and brands who are already building successful partnerships on InstaCollab.
               </p>
               <div className="flex gap-4 justify-center">
                 <Link href="/signup">
@@ -226,31 +212,8 @@ export default function AboutPage() {
         </motion.div>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-border/50 mt-12">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-muted-foreground">
-              © 2026 Collabo. All rights reserved.
-            </p>
-            <div className="flex gap-6 text-sm">
-              <Link href="/privacy" className="text-muted-foreground hover:text-foreground">
-                Privacy Policy
-              </Link>
-              <Link href="/terms" className="text-muted-foreground hover:text-foreground">
-                Terms of Service
-              </Link>
-              <Link href="/about" className="text-muted-foreground hover:text-foreground">
-                About
-              </Link>
-              <Link href="/contact" className="text-muted-foreground hover:text-foreground">
-                Contact
-              </Link>
-            </div>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </PublicPageShell>
   );
 }
+
 

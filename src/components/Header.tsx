@@ -16,7 +16,7 @@ export function Header() {
     <header className="border-b">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <div className="text-xl font-bold">
-          Collabo
+          InstaCollab
         </div>
         
         <nav className="flex items-center gap-4">

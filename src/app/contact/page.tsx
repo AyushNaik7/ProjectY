@@ -2,14 +2,14 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
-import { Mail, ArrowLeft, Send, MessageSquare, Phone, MapPin } from "lucide-react";
+import { Mail, Send, MessageSquare, Phone, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { PublicPageShell } from "@/components/layout/PublicPageShell";
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -44,14 +44,14 @@ export default function ContactPage() {
     {
       icon: Mail,
       title: "Email",
-      value: "support@collabo.com",
-      link: "mailto:support@collabo.com",
+      value: "support@instacollab.com",
+      link: "mailto:support@instacollab.com",
     },
     {
       icon: MessageSquare,
       title: "General Inquiries",
-      value: "hello@collabo.com",
-      link: "mailto:hello@collabo.com",
+      value: "hello@instacollab.com",
+      link: "mailto:hello@instacollab.com",
     },
     {
       icon: Phone,
@@ -68,21 +68,7 @@ export default function ContactPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
-          <Link href="/" className="flex items-center">
-            <Image src="/logo.png" alt="Collabo" width={144} height={48} className="h-12 w-auto rounded-lg hover:opacity-80 transition-opacity" priority />
-          </Link>
-          <Link href="/">
-            <Button variant="ghost" size="sm" className="gap-2">
-              <ArrowLeft className="w-4 h-4" />
-              Back to Home
-            </Button>
-          </Link>
-        </div>
-      </header>
+    <PublicPageShell>
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-6 py-12">
@@ -267,7 +253,7 @@ export default function ContactPage() {
                   </p>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">Is Collabo free to use?</h3>
+                  <h3 className="text-lg font-semibold mb-2">Is InstaCollab free to use?</h3>
                   <p className="text-muted-foreground">
                     Yes! Creating an account and browsing is completely free. We may charge a 
                     small platform fee for completed collaborations.
@@ -300,31 +286,8 @@ export default function ContactPage() {
         </motion.div>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-border/50 mt-12">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-muted-foreground">
-              © 2026 Collabo. All rights reserved.
-            </p>
-            <div className="flex gap-6 text-sm">
-              <Link href="/privacy" className="text-muted-foreground hover:text-foreground">
-                Privacy Policy
-              </Link>
-              <Link href="/terms" className="text-muted-foreground hover:text-foreground">
-                Terms of Service
-              </Link>
-              <Link href="/about" className="text-muted-foreground hover:text-foreground">
-                About
-              </Link>
-              <Link href="/contact" className="text-muted-foreground hover:text-foreground">
-                Contact
-              </Link>
-            </div>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </PublicPageShell>
   );
 }
+
 
