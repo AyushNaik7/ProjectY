@@ -23,6 +23,71 @@ import {
 import { timedQuery } from "@/lib/db-timing";
 import { getBrandIdByClerkId, parseJsonBody } from "@/lib/api-utils";
 
+export async function GET(req: NextRequest) {
+  const { requestId, startTimeMs, log } = createRequestContext(req);
+
+  try {
+    const auth = await requireUser(req);
+    if (auth.error) return attachRequestId(auth.error, requestId);
+
+    const role = (auth.user.user_metadata as Record<string, unknown>)?.role;
+
+    if (role === "brand") {
+      const brandId = await getBrandIdByClerkId(auth.user.id);
+      if (!brandId) {
+        const res = NextResponse.json(
+          { error: "Brand profile not found. Complete onboarding first." },
+          { status: 404 }
+        );
+        return attachRequestId(res, requestId);
+      }
+
+      const { data, error } = await timedQuery(log, "campaigns.select_by_brand", () =>
+        supabaseAdmin
+          .from("campaigns")
+          .select("*")
+          .eq("brand_id", brandId)
+          .order("created_at", { ascending: false })
+      );
+
+      if (error) {
+        const res = NextResponse.json({ error: error.message }, { status: 500 });
+        return attachRequestId(res, requestId);
+      }
+
+      const res = NextResponse.json({ campaigns: data || [] });
+      logRequestCompleted(log, startTimeMs, 200);
+      return attachRequestId(res, requestId);
+    }
+
+    const { data, error } = await timedQuery(log, "campaigns.select_active", () =>
+      supabaseAdmin
+        .from("campaigns")
+        .select("*")
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+    );
+
+    if (error) {
+      const res = NextResponse.json({ error: error.message }, { status: 500 });
+      return attachRequestId(res, requestId);
+    }
+
+    const res = NextResponse.json({ campaigns: data || [] });
+    logRequestCompleted(log, startTimeMs, 200);
+    return attachRequestId(res, requestId);
+  } catch (error: unknown) {
+    const err = error as { message?: string };
+    log.error({ err }, "campaigns.fetch_failed");
+    const res = NextResponse.json(
+      { error: err.message || "Internal server error" },
+      { status: 500 }
+    );
+    logRequestCompleted(log, startTimeMs, 500);
+    return attachRequestId(res, requestId);
+  }
+}
+
 export async function POST(req: NextRequest) {
   const { requestId, startTimeMs, log } = createRequestContext(req);
 

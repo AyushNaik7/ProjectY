@@ -21,6 +21,7 @@ import {
   sortCampaigns,
 } from "@/lib/marketplace-utils";
 import { MarketplaceCampaignCard, FilterBar } from "@/components/marketplace";
+import { applyCampaign, patchCampaignStatus } from "@/lib/services/api";
 
 const PAGE_SIZE = 12;
 
@@ -253,9 +254,15 @@ export default function CampaignsPage() {
 
   /** Brands → manage campaign; Creators → send proposal */
   const handleSendProposal = useCallback(
-    (id: string) => {
+    async (id: string) => {
       if (isBrand) {
-        router.push(`/campaigns/${id}`);
+        try {
+          await patchCampaignStatus(id, "active");
+        } catch {
+          // Preserve existing navigation fallback even if API is unavailable.
+        } finally {
+          router.push(`/campaigns/${id}`);
+        }
       } else {
         router.push(`/campaigns/${id}?action=proposal`);
       }
@@ -305,7 +312,16 @@ export default function CampaignsPage() {
   );
 
   const handleQuickApply = useCallback(
-    (id: string) => router.push(`/campaigns/${id}?action=apply`),
+    async (id: string) => {
+      try {
+        await applyCampaign(id);
+        window.alert("Application submitted successfully.");
+      } catch {
+        // Keep original flow if backend is not reachable.
+      } finally {
+        router.push(`/campaigns/${id}?action=apply`);
+      }
+    },
     [router],
   );
 

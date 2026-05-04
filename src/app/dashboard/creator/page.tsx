@@ -5,20 +5,20 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import {
   Activity,
-  BarChart3,
   Brain,
-  Compass,
+  CheckCircle2,
+  Clock3,
+  Eye,
+  Search,
   Sparkles,
   Target,
   TrendingUp,
   Users,
 } from "lucide-react";
 import {
-  Bar,
-  BarChart,
+  Area,
+  AreaChart,
   CartesianGrid,
-  Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -26,10 +26,6 @@ import {
 } from "recharts";
 import DashboardShell from "@/components/DashboardShell";
 import { DashboardCards } from "@/components/dashboard/DashboardCards";
-import {
-  CampaignCard,
-  PreviewCampaign,
-} from "@/components/dashboard/CampaignCard";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/ClerkAuthContext";
 import { createClient } from "@/lib/supabase-browser";
@@ -44,6 +40,12 @@ export default function CreatorDashboard() {
   const [matchLoading, setMatchLoading] = useState(false);
   const [matchTriggered, setMatchTriggered] = useState(false);
   const [matchedCampaigns, setMatchedCampaigns] = useState<MatchedCampaign[]>([]);
+  const [apiStats, setApiStats] = useState<{
+    totalEarnings: number;
+    activeCampaigns: number;
+    newFollowers: number;
+    engagementRate: number;
+  } | null>(null);
 
   useEffect(() => {
     if (loading) return;
@@ -84,6 +86,25 @@ export default function CreatorDashboard() {
     })();
   }, [loading, router, user]);
 
+  useEffect(() => {
+    if (loading || !user) return;
+
+    (async () => {
+      try {
+        const response = await fetch("/api/dashboard", {
+          method: "GET",
+          credentials: "include",
+        });
+
+        if (!response.ok) return;
+        const json = (await response.json()) as { stats?: typeof apiStats };
+        if (json?.stats) setApiStats(json.stats as NonNullable<typeof apiStats>);
+      } catch {
+        // Keep dashboard functional with local fallback stats.
+      }
+    })();
+  }, [loading, user]);
+
   const handleFindCampaigns = async () => {
     if (!creatorProfile) return;
 
@@ -119,13 +140,7 @@ export default function CreatorDashboard() {
     { week: "W5", reach: Math.max(totalReach, 2600), clicks: 370 },
   ];
 
-  const platformBars = [
-    { name: "Instagram", followers: igFollowers },
-    { name: "YouTube", followers: ytFollowers },
-    { name: "TikTok", followers: ttFollowers },
-  ];
-
-  const previewCampaigns: PreviewCampaign[] = useMemo(
+  const previewCampaigns = useMemo(
     () =>
       matchedCampaigns.slice(0, 4).map((campaign) => ({
         id: campaign.id,
@@ -144,18 +159,18 @@ export default function CreatorDashboard() {
     {
       label: "Total Reach",
       value:
-        totalReach > 1_000_000
-          ? `${(totalReach / 1_000_000).toFixed(1)}M`
-          : totalReach > 1000
-          ? `${(totalReach / 1000).toFixed(1)}K`
-          : String(totalReach),
+        (apiStats?.newFollowers || totalReach) > 1_000_000
+          ? `${((apiStats?.newFollowers || totalReach) / 1_000_000).toFixed(1)}M`
+          : (apiStats?.newFollowers || totalReach) > 1000
+          ? `${((apiStats?.newFollowers || totalReach) / 1000).toFixed(1)}K`
+          : String(apiStats?.newFollowers || totalReach),
       delta: "+8.2% this week",
       icon: Users,
       tone: "blue" as const,
     },
     {
       label: "Engagement",
-      value: `${avgEngagement.toFixed(1)}%`,
+      value: `${(apiStats?.engagementRate ?? avgEngagement).toFixed(1)}%`,
       delta: "+1.4% from last month",
       icon: Activity,
       tone: "purple" as const,
@@ -183,138 +198,230 @@ export default function CreatorDashboard() {
     "AI matching model refreshed your profile",
   ];
 
+  const formatCompact = (value: number) => {
+    if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+    if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
+    return String(value);
+  };
+
   return (
     <DashboardShell role="creator">
       <section className="space-y-6">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-3xl border border-white/70 bg-white/65 p-6 shadow-[0_12px_34px_rgba(30,50,122,0.1)] backdrop-blur-xl md:p-8"
+          className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_18px_46px_rgba(6,12,32,0.55)] backdrop-blur-2xl md:p-8"
         >
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="mb-2 inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+              <p className="mb-2 inline-flex items-center gap-2 rounded-full border border-violet-300/30 bg-violet-500/15 px-3 py-1 text-xs font-semibold text-violet-200">
                 <Sparkles className="h-3.5 w-3.5" />
                 Creator HQ
               </p>
-              <h1 className="font-brand text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
+              <h1 className="font-brand text-3xl font-semibold tracking-tight text-slate-100 md:text-4xl">
                 Welcome back, {creatorName}
               </h1>
-              <p className="mt-2 max-w-2xl text-sm text-slate-600 md:text-base">
+              <p className="mt-2 max-w-2xl text-sm text-slate-300 md:text-base">
                 Track growth, review AI-curated opportunities, and respond faster to brands.
               </p>
             </div>
-            <Button
-              onClick={handleFindCampaigns}
-              disabled={matchLoading || profileLoading}
-              className="rounded-2xl bg-gradient-to-r from-blue-600 to-violet-600 px-6 py-6 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 hover:brightness-110"
-            >
-              {matchLoading ? "Matching..." : "Discover Campaign Matches"}
-            </Button>
+            <div className="flex w-full max-w-md items-center gap-3 rounded-2xl border border-white/15 bg-white/5 px-4 py-3 md:w-auto">
+              <Search className="h-4 w-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search campaigns, analytics, or content"
+                className="w-full bg-transparent text-sm text-slate-200 outline-none placeholder:text-slate-500"
+              />
+            </div>
           </div>
         </motion.div>
 
         <DashboardCards metrics={metrics} loading={profileLoading} />
 
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-          <article className="rounded-3xl border border-white/70 bg-white/75 p-6 shadow-[0_10px_30px_rgba(26,40,90,0.08)] xl:col-span-2">
+          <motion.article
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_16px_42px_rgba(8,12,34,0.52)] xl:col-span-2"
+          >
             <div className="mb-5 flex items-center justify-between">
-              <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
-                <TrendingUp className="h-5 w-5 text-blue-600" />
+              <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-100">
+                <TrendingUp className="h-5 w-5 text-violet-300" />
                 Reach Performance
               </h2>
-              <span className="text-xs text-slate-500">Last 5 weeks</span>
+              <span className="text-xs text-slate-400">Last 5 weeks</span>
             </div>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartTrend}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis dataKey="week" tick={{ fill: "#64748b", fontSize: 12 }} />
-                  <YAxis tick={{ fill: "#64748b", fontSize: 12 }} />
+                <AreaChart data={chartTrend}>
+                  <defs>
+                    <linearGradient id="reachGradient" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.95} />
+                      <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.95} />
+                    </linearGradient>
+                    <linearGradient id="areaGlow" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.35} />
+                      <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.05} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#33415566" />
+                  <XAxis dataKey="week" tick={{ fill: "#94a3b8", fontSize: 12 }} />
+                  <YAxis tick={{ fill: "#94a3b8", fontSize: 12 }} />
                   <Tooltip />
-                  <Line
+                  <Area
                     type="monotone"
                     dataKey="reach"
-                    stroke="#2563eb"
+                    stroke="url(#reachGradient)"
                     strokeWidth={3}
-                    dot={{ r: 4, fill: "#4f46e5" }}
+                    fill="url(#areaGlow)"
+                    dot={{ r: 4, fill: "#a78bfa" }}
                   />
-                </LineChart>
+                </AreaChart>
               </ResponsiveContainer>
             </div>
-          </article>
+          </motion.article>
 
-          <article className="rounded-3xl border border-white/70 bg-white/75 p-6 shadow-[0_10px_30px_rgba(26,40,90,0.08)]">
-            <div className="mb-5 flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-violet-600" />
-              <h2 className="text-lg font-semibold text-slate-900">Audience Split</h2>
+          <motion.article
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.04 }}
+            className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_16px_42px_rgba(8,12,34,0.52)]"
+          >
+            <div className="mb-5 flex items-center justify-between gap-2">
+              <h2 className="text-lg font-semibold text-slate-100">Top Performing Content</h2>
+              <span className="rounded-full border border-emerald-300/30 bg-emerald-400/15 px-2 py-1 text-xs font-medium text-emerald-200">
+                +12.6%
+              </span>
             </div>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={platformBars}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis dataKey="name" tick={{ fill: "#64748b", fontSize: 12 }} />
-                  <YAxis tick={{ fill: "#64748b", fontSize: 12 }} />
-                  <Tooltip />
-                  <Bar dataKey="followers" fill="#7c3aed" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+            <div className="mb-4 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-violet-500/15 via-indigo-500/10 to-blue-500/15 p-4">
+              <div className="aspect-[4/3] rounded-xl bg-[radial-gradient(circle_at_top_left,_rgba(124,58,237,0.35),transparent_45%),linear-gradient(140deg,rgba(22,28,58,0.95),rgba(15,23,42,0.9))]" />
             </div>
-          </article>
+            <p className="text-sm font-medium text-slate-100">Studio Reel: Creator Setup Walkthrough</p>
+            <div className="mt-2 flex items-center gap-2 text-sm text-slate-300">
+              <Eye className="h-4 w-4 text-blue-300" />
+              <span>{formatCompact((creatorProfile?.avg_views as number) || 12400)} views</span>
+            </div>
+            <p className="mt-4 text-xs text-slate-400">Best performing in the last 7 days</p>
+          </motion.article>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-          <section className="xl:col-span-2">
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-4">
+          <section className="xl:col-span-3">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
-                <Compass className="h-5 w-5 text-blue-600" />
-                Campaign Preview
+              <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-100">
+                <TrendingUp className="h-5 w-5 text-violet-300" />
+                Campaign Opportunities
               </h2>
-              <Button variant="outline" className="rounded-xl" onClick={() => router.push("/campaigns")}>View all</Button>
+              <div className="flex items-center gap-3">
+                <Button
+                  onClick={handleFindCampaigns}
+                  disabled={matchLoading || profileLoading}
+                  className="rounded-2xl bg-gradient-to-r from-violet-600 to-blue-600 px-5 text-sm font-semibold text-white shadow-lg shadow-violet-500/20 hover:brightness-110"
+                >
+                  {matchLoading ? "Matching..." : "Discover Matches"}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="rounded-xl border-white/20 bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white"
+                  onClick={() => router.push("/campaigns")}
+                >
+                  View all
+                </Button>
+              </div>
             </div>
 
             {matchLoading ? (
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4">
                 {Array.from({ length: 4 }).map((_, index) => (
-                  <div key={index} className="h-64 animate-pulse rounded-3xl border border-white/60 bg-white/60" />
+                  <div key={index} className="h-16 animate-pulse rounded-2xl border border-white/10 bg-white/5" />
                 ))}
               </div>
             ) : previewCampaigns.length === 0 ? (
-              <div className="rounded-3xl border border-dashed border-slate-300 bg-white/60 p-10 text-center">
-                <h3 className="text-lg font-semibold text-slate-900">No campaign matches yet</h3>
-                <p className="mt-2 text-sm text-slate-600">
+              <div className="rounded-3xl border border-dashed border-white/20 bg-white/5 p-10 text-center">
+                <h3 className="text-lg font-semibold text-slate-100">No campaign matches yet</h3>
+                <p className="mt-2 text-sm text-slate-300">
                   Trigger AI matching to load personalized campaign opportunities.
                 </p>
                 <Button
                   onClick={handleFindCampaigns}
-                  className="mt-5 rounded-xl bg-gradient-to-r from-blue-600 to-violet-600 text-white"
+                  className="mt-5 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white"
                 >
                   Generate Matches
                 </Button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {previewCampaigns.map((campaign, index) => (
-                  <CampaignCard
-                    key={campaign.id}
-                    campaign={campaign}
-                    index={index}
-                    ctaLabel="Apply"
-                    secondaryCtaLabel="Message Brand"
-                    onPrimaryAction={(campaignId) => router.push(`/campaigns/${campaignId}`)}
-                    onSecondaryAction={() => router.push("/messages")}
-                  />
-                ))}
+              <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-[0_16px_42px_rgba(8,12,34,0.52)]">
+                <table className="w-full text-left">
+                  <thead className="border-b border-white/10 bg-white/[0.04]">
+                    <tr>
+                      <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-400">Campaign</th>
+                      <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-400">Budget</th>
+                      <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-400">Timeline</th>
+                      <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-400">Status</th>
+                      <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-slate-400">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {previewCampaigns.map((campaign) => {
+                      const status = campaign.status || "active";
+                      const statusStyle =
+                        status === "active"
+                          ? "border-emerald-300/35 bg-emerald-400/15 text-emerald-200"
+                          : status === "draft"
+                          ? "border-slate-300/30 bg-slate-500/15 text-slate-200"
+                          : "border-amber-300/35 bg-amber-400/15 text-amber-200";
+
+                      return (
+                        <tr key={campaign.id} className="border-b border-white/10 last:border-0 hover:bg-white/[0.04]">
+                          <td className="px-5 py-4">
+                            <p className="text-sm font-semibold text-slate-100">{campaign.title}</p>
+                            <p className="text-xs text-slate-400">{campaign.fit || "High fit based on your audience"}</p>
+                          </td>
+                          <td className="px-5 py-4 text-sm text-slate-200">{campaign.budget}</td>
+                          <td className="px-5 py-4 text-sm text-slate-300">{campaign.timeline}</td>
+                          <td className="px-5 py-4">
+                            <span className={`rounded-full border px-2.5 py-1 text-xs font-medium ${statusStyle}`}>
+                              {status.replace("-", " ")}
+                            </span>
+                          </td>
+                          <td className="px-5 py-4">
+                            <div className="flex flex-wrap gap-2">
+                              <button
+                                onClick={() => router.push(`/campaigns/${campaign.id}`)}
+                                className="rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-all hover:brightness-110"
+                              >
+                                Apply
+                              </button>
+                              <button
+                                onClick={() => router.push("/messages")}
+                                className="rounded-xl border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-200 transition-colors hover:bg-white/10"
+                              >
+                                Message
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             )}
           </section>
 
-          <aside className="rounded-3xl border border-white/70 bg-white/75 p-6 shadow-[0_10px_30px_rgba(26,40,90,0.08)]">
-            <h3 className="mb-4 text-lg font-semibold text-slate-900">Recent Activity</h3>
-            <ul className="space-y-3 text-sm text-slate-600">
+          <aside className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_16px_42px_rgba(8,12,34,0.52)]">
+            <h3 className="mb-4 text-lg font-semibold text-slate-100">Activity Feed</h3>
+            <ul className="space-y-3 text-sm text-slate-300">
               {recentActivity.map((item) => (
-                <li key={item} className="rounded-xl border border-slate-200 bg-white px-3 py-2">
-                  {item}
+                <li key={item} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+                  <div className="flex items-start gap-2">
+                    {item.toLowerCase().includes("review") ? (
+                      <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
+                    ) : (
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" />
+                    )}
+                    <span>{item}</span>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -322,7 +429,7 @@ export default function CreatorDashboard() {
         </div>
 
         {!matchTriggered ? (
-          <p className="text-center text-xs text-slate-500">
+          <p className="text-center text-xs text-slate-400">
             AI matching is on-demand to keep performance and cost optimized.
           </p>
         ) : null}

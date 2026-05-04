@@ -8,6 +8,6 @@ interface DashboardShellProps {
   role?: string;
 }
 
-export default function DashboardShell({ children }: DashboardShellProps) {
-  return <DashboardLayout>{children}</DashboardLayout>;
+export default function DashboardShell({ children, role }: DashboardShellProps) {
+  return <DashboardLayout role={role}>{children}</DashboardLayout>;
 }

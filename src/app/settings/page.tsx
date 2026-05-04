@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/ClerkAuthContext";
-import { createClient } from "@/lib/supabase-browser";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -149,48 +148,42 @@ export default function SettingsPage() {
     const loadSettings = async () => {
       try {
         setLoading(true);
-        const supabase = createClient();
+        const response = await fetch("/api/users/me", {
+          method: "GET",
+          credentials: "include",
+        });
+
+        const json = (await response.json()) as { user?: Record<string, unknown>; error?: string };
+        if (!response.ok) {
+          throw new Error(json.error || "Failed to load profile");
+        }
+
+        const data = json.user;
+        if (!data) return;
 
         if (role === "brand") {
-          const { data, error: fetchError } = await supabase
-            .from("brands")
-            .select("*")
-            .eq("id", user.id)
-            .single();
-
-          if (fetchError) throw fetchError;
-          if (data) {
-            setBrandData({
-              name: data.name || "",
-              category: data.category || "",
-              budget_min: data.budget_min || 0,
-              budget_max: data.budget_max || 0,
-              website: data.website || "",
-              description: data.description || "",
-            });
-          }
-        } else if (role === "creator") {
-          const { data, error: fetchError } = await supabase
-            .from("creators")
-            .select("*")
-            .eq("id", user.id)
-            .single();
-
-          if (fetchError) throw fetchError;
-          if (data) {
-            setCreatorData({
-              name: data.name || "",
-              username: data.username || "",
-              niche: data.niche || "",
-              bio: data.bio || "",
-              instagram_handle: data.instagram_handle || "",
-              youtube_handle: data.youtube_handle || "",
-              followers: data.followers || 0,
-              avg_views: data.avg_views || 0,
-              engagement_rate: data.engagement_rate || 0,
-            });
-          }
+          setBrandData({
+            name: (data.name as string) || "",
+            category: (data.category as string) || "",
+            budget_min: (data.budget_min as number) || 0,
+            budget_max: (data.budget_max as number) || 0,
+            website: (data.website as string) || "",
+            description: (data.description as string) || "",
+          });
+          return;
         }
+
+        setCreatorData({
+          name: (data.name as string) || "",
+          username: (data.username as string) || "",
+          niche: (data.niche as string) || "",
+          bio: (data.bio as string) || "",
+          instagram_handle: (data.instagram_handle as string) || "",
+          youtube_handle: (data.youtube_handle as string) || "",
+          followers: ((data.followers as number) || (data.instagram_followers as number) || 0),
+          avg_views: (data.avg_views as number) || 0,
+          engagement_rate: ((data.engagement_rate as number) || (data.instagram_engagement as number) || 0),
+        });
       } catch (err) {
         console.error("Failed to load settings:", err);
         setError("Failed to load your settings. Please refresh the page.");
@@ -240,8 +233,6 @@ export default function SettingsPage() {
     setSaving(true);
 
     try {
-      const supabase = createClient();
-
       if (role === "brand") {
         // Validation
         if (!brandData.name.trim()) {
@@ -260,20 +251,23 @@ export default function SettingsPage() {
           return;
         }
 
-        const { error: updateError } = await supabase
-          .from("brands")
-          .update({
+        const response = await fetch("/api/users/update", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
             name: brandData.name.trim(),
             category: brandData.category,
             budget_min: brandData.budget_min,
             budget_max: brandData.budget_max,
             website: brandData.website?.trim() || null,
             description: brandData.description?.trim() || null,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", user.id);
-
-        if (updateError) throw updateError;
+          }),
+        });
+        if (!response.ok) {
+          const json = (await response.json()) as { error?: string };
+          throw new Error(json.error || "Update failed");
+        }
       } else if (role === "creator") {
         // Validation
         if (!creatorData.name.trim()) {
@@ -292,9 +286,11 @@ export default function SettingsPage() {
           return;
         }
 
-        const { error: updateError } = await supabase
-          .from("creators")
-          .update({
+        const response = await fetch("/api/users/update", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
             name: creatorData.name.trim(),
             username: creatorData.username.trim().toLowerCase(),
             niche: creatorData.niche,
@@ -304,11 +300,12 @@ export default function SettingsPage() {
             followers: creatorData.followers,
             avg_views: creatorData.avg_views,
             engagement_rate: creatorData.engagement_rate,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", user.id);
-
-        if (updateError) throw updateError;
+          }),
+        });
+        if (!response.ok) {
+          const json = (await response.json()) as { error?: string };
+          throw new Error(json.error || "Update failed");
+        }
       }
 
       setSuccess("Settings saved successfully!");

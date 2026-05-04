@@ -17,10 +17,10 @@ interface DashboardCardsProps {
 }
 
 const toneStyles: Record<NonNullable<DashboardMetric["tone"]>, string> = {
-  blue: "from-blue-500/20 to-sky-400/20 text-blue-700",
-  purple: "from-violet-500/20 to-indigo-400/20 text-violet-700",
-  green: "from-emerald-500/20 to-teal-400/20 text-emerald-700",
-  amber: "from-amber-500/20 to-orange-400/20 text-amber-700",
+  blue: "from-blue-500/30 to-sky-500/25 text-blue-200",
+  purple: "from-violet-500/30 to-indigo-500/25 text-violet-200",
+  green: "from-emerald-500/30 to-teal-500/25 text-emerald-200",
+  amber: "from-amber-500/30 to-orange-500/25 text-amber-200",
 };
 
 export function DashboardCards({ metrics, loading = false }: DashboardCardsProps) {
@@ -30,7 +30,7 @@ export function DashboardCards({ metrics, loading = false }: DashboardCardsProps
         {Array.from({ length: 4 }).map((_, index) => (
           <div
             key={index}
-            className="h-32 animate-pulse rounded-3xl border border-white/40 bg-white/70 shadow-sm"
+            className="h-32 animate-pulse rounded-3xl border border-white/10 bg-white/5 shadow-lg shadow-slate-950/60"
           />
         ))}
       </div>
@@ -48,12 +48,13 @@ export function DashboardCards({ metrics, loading = false }: DashboardCardsProps
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.06, duration: 0.35 }}
-            className="group rounded-3xl border border-white/50 bg-white/75 p-6 shadow-[0_8px_30px_rgba(20,30,80,0.06)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_14px_35px_rgba(37,60,153,0.12)]"
+            whileHover={{ y: -4, scale: 1.01 }}
+            className="group rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_16px_36px_rgba(8,12,36,0.55)] backdrop-blur-2xl transition-all duration-300 hover:shadow-[0_20px_40px_rgba(72,56,190,0.35)]"
           >
             <div className="mb-6 flex items-center justify-between">
               <div className="space-y-2">
-                <p className="text-sm font-medium text-slate-500">{metric.label}</p>
-                <h3 className="text-2xl font-semibold tracking-tight text-slate-900">{metric.value}</h3>
+                <p className="text-sm font-medium text-slate-400">{metric.label}</p>
+                <h3 className="text-2xl font-semibold tracking-tight text-slate-100">{metric.value}</h3>
               </div>
               <div
                 className={`rounded-2xl bg-gradient-to-br p-3 ${toneStyles[metric.tone || "blue"]}`}
@@ -62,8 +63,8 @@ export function DashboardCards({ metrics, loading = false }: DashboardCardsProps
               </div>
             </div>
 
-            <div className="flex items-center text-sm text-slate-500">
-              <ArrowUpRight className="mr-1 h-4 w-4 text-emerald-600" />
+            <div className="flex items-center text-sm text-slate-400">
+              <ArrowUpRight className="mr-1 h-4 w-4 text-emerald-300" />
               <span>{metric.delta || "Updated 5 min ago"}</span>
             </div>
           </motion.article>

@@ -4,13 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BarChart3,
+  Clapperboard,
   FolderKanban,
   LayoutDashboard,
   MessageSquare,
   Settings,
-  Sparkles,
   UserCircle2,
   Users,
+  Wallet,
 } from "lucide-react";
 import { UserAvatar } from "@/components/ui/user-avatar";
 
@@ -22,7 +23,50 @@ interface SidebarProps {
   onNavigate?: () => void;
 }
 
-const sidebarLinks = [
+const creatorSidebarLinks = [
+  {
+    href: "/dashboard",
+    label: "Dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    href: "/campaigns",
+    label: "Campaigns",
+    icon: FolderKanban,
+  },
+  {
+    href: "/portfolio",
+    label: "Content",
+    icon: Clapperboard,
+  },
+  {
+    href: "/analytics",
+    label: "Analytics",
+    icon: BarChart3,
+  },
+  {
+    href: "/requests",
+    label: "Payments",
+    icon: Wallet,
+  },
+  {
+    href: "/messages",
+    label: "Audience",
+    icon: Users,
+  },
+  {
+    href: "/settings",
+    label: "Settings",
+    icon: Settings,
+  },
+  {
+    href: "/profile",
+    label: "Profile",
+    icon: UserCircle2,
+  },
+];
+
+const brandSidebarLinks = [
   {
     href: "/dashboard",
     label: "Dashboard",
@@ -69,27 +113,15 @@ export function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
 
-  const roleLabel = role === "brand" ? "Brand workspace" : "Creator workspace";
   const widthClass = collapsed ? "w-24" : "w-72";
+  const links = role === "brand" ? brandSidebarLinks : creatorSidebarLinks;
 
   return (
     <aside
-      className={`${mobile ? "flex" : "sticky top-24 hidden lg:flex"} ${widthClass} h-[calc(100vh-7rem)] flex-col rounded-3xl border border-white/60 bg-white/65 p-4 shadow-[0_16px_42px_rgba(25,44,120,0.12)] backdrop-blur-xl`}
+      className={`${mobile ? "flex" : "sticky top-24 hidden lg:flex"} ${widthClass} h-[calc(100vh-7rem)] flex-col rounded-3xl border border-white/10 bg-white/5 p-4 shadow-[0_20px_55px_rgba(7,10,30,0.45)] backdrop-blur-2xl`}
     >
-      <div className="mb-4 rounded-2xl border border-white/70 bg-gradient-to-br from-blue-600/10 to-violet-500/10 p-4">
-        <div className="flex items-center gap-3">
-          <UserAvatar name={userName} size="lg" />
-          {!collapsed ? (
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-slate-900">{userName}</p>
-              <p className="text-xs text-slate-500">{roleLabel}</p>
-            </div>
-          ) : null}
-        </div>
-      </div>
-
       <nav className="flex-1 space-y-1">
-        {sidebarLinks.map((item) => {
+        {links.map((item) => {
           const Icon = item.icon;
           const active =
             pathname === item.href ||
@@ -103,12 +135,12 @@ export function Sidebar({
               onClick={onNavigate}
               className={`group flex items-center gap-3 rounded-2xl px-3 py-3 text-sm transition-all duration-300 ${
                 active
-                  ? "bg-gradient-to-r from-blue-600 to-violet-600 text-white shadow-lg"
-                  : "text-slate-600 hover:bg-white hover:text-slate-900"
+                  ? "bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 text-white shadow-lg shadow-violet-500/30"
+                  : "text-slate-300 hover:bg-white/10 hover:text-white"
               }`}
               title={collapsed ? item.label : undefined}
             >
-              <Icon className="h-4 w-4" />
+              <Icon className={`h-4 w-4 ${active ? "text-white" : "text-slate-300 group-hover:text-white"}`} />
               {!collapsed ? <span className="font-medium">{item.label}</span> : null}
             </Link>
           );
@@ -116,15 +148,18 @@ export function Sidebar({
       </nav>
 
       {!collapsed ? (
-        <div className="rounded-2xl border border-blue-100 bg-blue-50/80 p-4">
-          <div className="mb-2 flex items-center gap-2 text-blue-700">
-            <Sparkles className="h-4 w-4" />
-            <p className="text-sm font-semibold">Premium Insights</p>
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="flex items-center gap-3">
+            <UserAvatar name={userName} size="md" />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-slate-100">{userName}</p>
+              <div className="mt-0.5 flex items-center gap-2 text-xs text-emerald-200">
+                <span className="inline-block h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]" />
+                <span>Online</span>
+              </div>
+              <p className="mt-1 text-xs text-slate-400">Creator</p>
+            </div>
           </div>
-          <p className="text-xs text-slate-600">Activate deeper trend forecasting and matching intelligence.</p>
-          <button className="mt-3 w-full rounded-xl bg-gradient-to-r from-blue-600 to-violet-600 px-3 py-2 text-sm font-medium text-white transition-all hover:brightness-110">
-            Upgrade
-          </button>
         </div>
       ) : null}
     </aside>
