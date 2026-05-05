@@ -1,10 +1,10 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { CheckCircle, Brain, FileText, Sparkles } from "lucide-react";
 
 export function AIFeaturesSection() {
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -15,7 +15,7 @@ export function AIFeaturesSection() {
     },
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, x: -20 },
     visible: {
       opacity: 1,

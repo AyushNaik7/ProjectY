@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { ArrowRight, Play } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 
 export function HeroSection() {
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -16,7 +16,7 @@ export function HeroSection() {
     },
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
       opacity: 1,
@@ -25,7 +25,7 @@ export function HeroSection() {
     },
   };
 
-  const floatingVariants = {
+  const floatingVariants: Variants = {
     hidden: { opacity: 0, scale: 0.8 },
     visible: {
       opacity: 1,
