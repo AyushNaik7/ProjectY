@@ -66,22 +66,24 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Fetch full campaign data with brand info + marketplace fields
-    const { data: fullCampaigns, error: campError } = await supabaseAdmin
-      .from("campaigns")
-      .select("*, brands(*)")
-      .in("id", campaignIds);
+    const [fullCampaignResult, savedCampaignResult] = await Promise.all([
+      supabaseAdmin
+        .from("campaigns")
+        .select("id, brand_id, title, description, deliverable_type, budget, budget_max, timeline, niche, status, platform, created_at, end_date, spots_left, spots_total, payment_type, is_featured, brands(id, name, logo_url, rating, total_ratings, is_verified, creators_worked_with, industry)")
+        .in("id", campaignIds),
+      supabaseAdmin
+        .from("saved_campaigns")
+        .select("campaign_id")
+        .eq("creator_id", creatorId),
+    ]);
 
+    const { data: fullCampaigns, error: campError } = fullCampaignResult;
     if (campError) {
       log.error({ err: campError }, "marketplace.campaign_fetch_failed");
       throw new Error(campError.message);
     }
 
-    // 3. Fetch saved campaign IDs for this creator
-    const { data: savedRows } = await supabaseAdmin
-      .from("saved_campaigns")
-      .select("campaign_id")
-      .eq("creator_id", creatorId);
-
+    const { data: savedRows } = savedCampaignResult;
     const savedIds = new Set((savedRows || []).map((r: any) => r.campaign_id));
 
     // 4. Build a lookup from full campaign data

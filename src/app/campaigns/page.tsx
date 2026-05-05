@@ -24,6 +24,41 @@ import { MarketplaceCampaignCard, FilterBar } from "@/components/marketplace";
 import { applyCampaign, patchCampaignStatus } from "@/lib/services/api";
 
 const PAGE_SIZE = 12;
+const MARKETPLACE_CACHE_TTL_MS = 5 * 60 * 1000;
+const MARKETPLACE_CACHE_PREFIX = "marketplace-campaigns";
+
+function readMarketplaceCache(userId: string): MarketplaceCampaign[] | null {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const raw = sessionStorage.getItem(`${MARKETPLACE_CACHE_PREFIX}:${userId}`);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as { timestamp?: number; campaigns?: MarketplaceCampaign[] };
+    if (!parsed.timestamp || !Array.isArray(parsed.campaigns)) return null;
+    if (Date.now() - parsed.timestamp > MARKETPLACE_CACHE_TTL_MS) {
+      sessionStorage.removeItem(`${MARKETPLACE_CACHE_PREFIX}:${userId}`);
+      return null;
+    }
+
+    return parsed.campaigns;
+  } catch {
+    return null;
+  }
+}
+
+function writeMarketplaceCache(userId: string, campaigns: MarketplaceCampaign[]) {
+  if (typeof window === "undefined") return;
+
+  try {
+    sessionStorage.setItem(
+      `${MARKETPLACE_CACHE_PREFIX}:${userId}`,
+      JSON.stringify({ timestamp: Date.now(), campaigns }),
+    );
+  } catch {
+    // Ignore cache failures.
+  }
+}
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -97,6 +132,20 @@ export default function CampaignsPage() {
 
       try {
         if (!isBrand) {
+          const cacheKey = user.id;
+          if (!loadMore) {
+            const cachedCampaigns = readMarketplaceCache(cacheKey);
+            if (cachedCampaigns) {
+              setAllCampaigns(cachedCampaigns);
+              setPage(0);
+              setHasMore(false);
+              setFetchError(null);
+              setLoading(false);
+              setLoadingMore(false);
+              return;
+            }
+          }
+
           // ── Creator view: call AI marketplace API for enriched match data ──
           const res = await fetch("/api/marketplace-campaigns", {
             method: "POST",
@@ -124,7 +173,7 @@ export default function CampaignsPage() {
             const supabase = createClient();
             const { data: allActiveCampaigns, error: fallbackError } = await supabase
               .from("campaigns")
-              .select("*, brands(*)")
+              .select("id, brand_id, title, description, deliverable_type, budget, budget_max, timeline, niche, status, platform, created_at, end_date, spots_left, spots_total, payment_type, is_featured, brands(id, name, logo_url, rating, total_ratings, is_verified, creators_worked_with, industry)")
               .eq("status", "active")
               .order("created_at", { ascending: false })
               .limit(20);
@@ -134,6 +183,7 @@ export default function CampaignsPage() {
                 (row: any) => mapRowToMarketplaceCampaign(row)
               );
               setAllCampaigns(fallbackCampaigns);
+              writeMarketplaceCache(cacheKey, fallbackCampaigns);
               setPage(0);
               setHasMore(false);
               setFetchError(null);
@@ -144,6 +194,7 @@ export default function CampaignsPage() {
           }
 
           setAllCampaigns(enrichedCampaigns);
+          writeMarketplaceCache(cacheKey, enrichedCampaigns);
           setPage(0);
           setHasMore(false); // AI results are already ranked & limited
         } else {
@@ -155,7 +206,7 @@ export default function CampaignsPage() {
           const supabase = createClient();
           const { data, error } = await supabase
             .from("campaigns")
-            .select("*, brands(*)")
+            .select("id, brand_id, title, description, deliverable_type, budget, budget_max, timeline, niche, status, platform, created_at, end_date, spots_left, spots_total, payment_type, is_featured, brands(id, name, logo_url, rating, total_ratings, is_verified, creators_worked_with, industry)")
             .eq("brand_id", brandProfileId || "")
             .order("created_at", { ascending: false })
             .range(from, to);

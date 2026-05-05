@@ -1,12 +1,11 @@
 "use client";
 
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useState } from "react";
 import { useAuth } from "@/context/ClerkAuthContext";
 import { TopNav } from "@/components/layout/TopNav";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Footer } from "@/components/layout/Footer";
 import { PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
-import { createClient } from "@/lib/supabase-browser";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -17,7 +16,6 @@ export function DashboardLayout({ children, role: dashboardRole }: DashboardLayo
   const { role: authRole, user } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const [dbDisplayName, setDbDisplayName] = useState<string>("");
 
   const metadata = (user?.user_metadata as Record<string, unknown> | undefined) || {};
   const firstName = ((metadata.first_name as string) || (metadata.firstName as string) || "").trim();
@@ -33,38 +31,7 @@ export function DashboardLayout({ children, role: dashboardRole }: DashboardLayo
   const safeRole = (dashboardRole || authRole) === "brand" ? "brand" : "creator";
   const isCreatorTheme = safeRole === "creator";
 
-  useEffect(() => {
-    if (!user?.id) {
-      setDbDisplayName("");
-      return;
-    }
-
-    let active = true;
-
-    (async () => {
-      try {
-        const supabase = createClient();
-        const table = safeRole === "brand" ? "brands" : "creators";
-
-        const { data } = await supabase
-          .from(table)
-          .select("name")
-          .eq("clerk_user_id", user.id)
-          .maybeSingle();
-
-        const dbName = ((data?.name as string) || "").trim();
-        if (active) setDbDisplayName(dbName);
-      } catch {
-        if (active) setDbDisplayName("");
-      }
-    })();
-
-    return () => {
-      active = false;
-    };
-  }, [safeRole, user?.id]);
-
-  const resolvedUserName = dbDisplayName || userName;
+  const resolvedUserName = userName;
 
   return (
     <div
